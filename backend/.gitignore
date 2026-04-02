@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.*
+
+# Log files
+logs/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files & assets (kecuali yang diizinkan)
+!public/info.txt
+tmp/*
+!tmp/info.txt
+uploads/
+
+# Editor & IDE directories
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+index.html
+/generated/prisma

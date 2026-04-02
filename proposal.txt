@@ -1,0 +1,493 @@
+RANCANG BANGUN APLIKASI WEB MANAJEMEN KEUANGAN
+PRIBADI
+DENGAN ANALISIS POLA PENGELUARAN MENGGUNAKAN
+SENTENCE-BERT DAN K-MEANS CLUSTERING
+Oleh:
+
+PITO DESRI PAUZI
+2211083044
+PROGRAM STUDI SARJANA TERAPAN TEKNOLOGI REKAYASA PERANGKAT
+LUNAK
+JURUSAN TEKNOLOGI INFORMASI
+POLITEKNIK NEGERI PADANG
+2025
+
+IDENTITAS MAHASISWA
+NAMA
+
+Pito Desri Pauzi
+
+NO BP
+
+2211083044
+
+ALAMAT
+
+Lubuk Aur
+
+NO TELEPON
+
+083180541892
+
+INDEKS PRESTASI
+
+Semester 1=3.30 | Semester 2=3.33 | Semester 3=3.58 |
+Semester 4=3.70 | Semester 5=3.50 | Semester 6=3.78
+
+USULAN JUDUL TUGAS
+AKHIR
+
+RANCANG BANGUN APLIKASI WEB MANAJEMEN
+KEUANGAN PRIBADI DENGAN ANALISIS POLA
+PENGELUARAN MENGGUNAKAN SENTENCE-BERT
+DAN K-MEANS CLUSTERING
+
+TARGET SELESAI
+
+6 Bulan
+
+ABSTRAK
+Aplikasi manajemen keuangan pribadi yang ada saat ini umumnya memerlukan pengguna
+untuk melakukan kategorisasi transaksi secara manual, sebuah proses yang repetitif dan
+seringkali tidak konsisten. Akibatnya, wawasan yang didapat dari data keuangan menjadi
+kurang mendalam dan terbatas pada kategori yang telah ditentukan sebelumnya. Proyek
+ini mengusulkan solusi dengan merancang dan membangun sebuah aplikasi web cerdas
+yang mampu menganalisis dan menemukan pola pengeluaran secara otomatis dari
+deskripsi transaksi.
+Metode inti yang digunakan adalah integrasi Sentence-BERT (SBERT) untuk mengubah
+deskripsi transaksi tekstual menjadi representasi vektor yang kaya secara semantik
+(embeddings), diikuti oleh K-Means Clustering untuk mengelompokkan vektor-vektor
+tersebut berdasarkan kedekatan maknanya. Sistem juga dilengkapi fitur-fitur tambahan
+meliputi: (1) Notifikasi & Reminder untuk peringatan budget dan pengingat pencatatan
+rutin; (2) Target Anggaran (Budget Goals) yang terintegrasi dengan hasil klaster K-Means;
+(3) Ekspor Laporan dalam format PDF dan Excel; (4) Riwayat & Log Aktivitas dengan fitur
+pencarian dan filter; serta (5) Gamifikasi berupa sistem streak, badge, dan XP untuk
+meningkatkan engagement pengguna.
+Solusi ini dibangun menggunakan tumpukan teknologi modern (Next.js, Node.js,
+PostgreSQL) untuk memastikan performa yang responsif. Tujuan utamanya adalah
+menyediakan alat bantu yang cerdas dan proaktif bagi pengguna untuk memahami dan
+mengelola keuangan mereka secara lebih efektif.
+Kata Kunci: Manajemen Keuangan, Analisis Pola, K-Means Clustering, SentenceBERT, Gamifikasi, Budget Goals, Aplikasi Web, Unsupervised Learning.
+
+BAB I PENDAHULUAN
+1.1 Latar Belakang
+
+Pengelolaan keuangan pribadi yang efektif merupakan fondasi penting untuk stabilitas
+finansial. Banyak individu kesulitan melacak dan menganalisis pola pengeluaran mereka
+secara mendalam. Aplikasi manajemen keuangan yang ada saat ini seringkali menuntut
+pengguna untuk secara manual mengkategorikan setiap transaksi (misalnya, "Makanan",
+"Transportasi", atau "Hiburan"). Penelitian terbaru menunjukkan bahwa kendala utama
+dalam aplikasi pencatatan keuangan adalah proses input yang memakan waktu dan
+kurangnya fitur analisis otomatis yang cerdas, yang menyebabkan inkonsistensi data [1].
+Pendekatan konvensional ini bersifat top-down dan reaktif. Pengguna hanya dapat
+menganalisis pengeluaran berdasarkan kategori yang sudah mereka tentukan
+sebelumnya. Sistem ini gagal memberikan wawasan baru atau menyoroti pola
+pengeluaran tersembunyi yang mungkin tidak disadari oleh pengguna. Sebagai contoh,
+sistem mungkin tidak dapat secara otomatis mengelompokkan "Beli Kopi Starbucks",
+"Ngopi di Janji Jiwa", dan "Traktiran Kopi Kenangan" ke dalam satu klaster "Jajan Kopi"
+secara otomatis.
+Selain permasalahan kategorisasi, tantangan lain yang dihadapi pengguna aplikasi
+keuangan pribadi adalah rendahnya konsistensi dalam pencatatan transaksi dan
+kurangnya motivasi jangka panjang. Studi menunjukkan bahwa pengguna cenderung
+berhenti menggunakan aplikasi keuangan setelah beberapa minggu karena kurangnya
+fitur yang memberikan umpan balik positif dan motivasi [1]. Oleh karena itu, diperlukan
+pendekatan yang tidak hanya cerdas secara analitik, tetapi juga mampu mendorong
+keterlibatan pengguna secara berkelanjutan.
+Penelitian ini mengusulkan pengembangan aplikasi web cerdas yang mengatasi masalah
+ini dengan mengintegrasikan model Sentence-BERT (S-BERT) dan algoritma K-Means
+Clustering sebagai inti analisis, serta dilengkapi dengan fitur-fitur pendukung seperti
+sistem notifikasi cerdas, manajemen anggaran berbasis klaster, ekspor laporan, dan
+sistem gamifikasi.
+
+1.2 Rumusan Masalah
+
+Berdasarkan latar belakang yang telah diuraikan, maka permasalahan utama dalam
+proyek akhir ini dapat dirumuskan sebagai berikut:
+1. Bagaimana menerapkan model Sentence-BERT (S-BERT) untuk mengubah data
+tekstual deskripsi transaksi keuangan pribadi menjadi representasi vektor
+(embeddings) yang efektif untuk clustering?
+2. Bagaimana mengimplementasikan algoritma K-Means Clustering pada data
+embeddings tersebut untuk mengidentifikasi dan mengelompokkan pola-pola
+pengeluaran yang bermakna?
+3. Bagaimana merancang sistem peramalan yang dapat memprediksi jumlah
+pengeluaran untuk kategori tertentu di masa depan berdasarkan data historis?
+4. Bagaimana merancang dan mengimplementasikan fitur Notifikasi & Reminder,
+Target Anggaran, Ekspor Laporan, Riwayat Aktivitas, dan Gamifikasi yang
+terintegrasi dalam satu platform?
+5. Bagaimana merancang antarmuka pengguna mobile-first yang intuitif untuk
+menyajikan hasil analisis clustering, peramalan, dan fitur pendukung agar mudah
+dipahami oleh pengguna?
+
+1.3 Tujuan dan Manfaat
+
+Selaras dengan rumusan masalah di atas, tujuan dari Proyek Akhir ini adalah:
+6. Membangun alur kerja pra-pemrosesan data dan vektorisasi teks menggunakan
+model Sentence-BERT untuk mengubah data deskripsi transaksi menjadi format
+numerik yang kaya makna.
+7. Mengimplementasikan algoritma K-Means Clustering pada backend sistem
+sebagai mesin inti untuk menemukan dan menyarankan pola-pola pengeluaran
+secara otomatis dari data transaksi yang belum terkategori.
+8. Mengimplementasikan metode peramalan Simple Moving Average (SMA) untuk
+memprediksi tren pengeluaran bulanan berdasarkan kategori.
+9. Membangun sistem Notifikasi & Reminder berbasis event-driven untuk
+mengingatkan pengguna saat budget mendekati batas, saat pola baru
+ditemukan, dan sebagai pengingat pencatatan harian.
+10. Merancang fitur Target Anggaran (Budget Goals) yang terintegrasi langsung
+dengan klaster hasil K-Means, sehingga pengguna dapat menetapkan batas
+pengeluaran per kategori yang ditemukan secara otomatis.
+11. Mengimplementasikan fitur Ekspor Laporan dalam format PDF (ringkasan
+dengan grafik) dan Excel (data mentah) untuk kebutuhan dokumentasi pribadi.
+12. Membangun fitur Riwayat & Log Aktivitas dengan kemampuan pencarian teks
+dan filter berdasarkan kategori, rentang tanggal, dan jenis transaksi.
+13. Mengembangkan sistem Gamifikasi berupa streak pencatatan harian, koleksi
+badge pencapaian, poin XP, dan tantangan mingguan untuk meningkatkan
+engagement dan konsistensi pengguna.
+14. Membangun aplikasi web full-stack dengan desain mobile-first yang responsif,
+dasbor visualisasi data, dan antarmuka interaktif.
+Manfaat yang diharapkan dari proyek ini antara lain:
+• Bagi Pengguna: Menyediakan alat bantu manajemen keuangan yang lebih
+cerdas, mengurangi beban kategorisasi manual, memberikan wawasan baru
+tentang kebiasaan finansial, serta meningkatkan motivasi pencatatan melalui
+gamifikasi.
+• Bagi Dunia Akademik: Menjadi studi kasus implementasi integrasi antara model
+transformer (S-BERT), unsupervised learning (K-Means), metode peramalan,
+dan sistem gamifikasi dalam domain aplikasi keuangan pribadi berbasis web.
+
+1.4 Batasan Masalah
+
+Untuk memastikan proyek dapat diselesaikan dalam waktu yang ditentukan, ruang
+lingkupnya dibatasi sebagai berikut:
+15. Fokus Analisis: Fitur analisis pola (K-Means) dan peramalan difokuskan pada
+data pengeluaran.
+16. Metode: Algoritma yang digunakan adalah Sentence-BERT untuk vektorisasi, KMeans untuk clustering, serta Simple Moving Average (SMA) untuk peramalan.
+Proyek ini tidak melakukan studi perbandingan mendalam dengan algoritma lain.
+17. Fungsionalitas Sistem:
+– Manajemen pengguna (registrasi/login).
+– Fungsi CRUD (Create, Read, Update, Delete) untuk transaksi pemasukan
+dan pengeluaran.
+
+–
+–
+
+Fitur impor data transaksi dari file berformat .CSV.
+Fitur analisis K-Means dengan batas minimal 50 transaksi sebelum fitur dapat
+diaktifkan.
+– Sistem Notifikasi & Reminder: peringatan budget, notifikasi pola baru, dan
+reminder pencatatan harian.
+– Target Anggaran: penetapan budget per klaster dengan visualisasi progress
+bar.
+– Ekspor Laporan dalam format PDF dan Excel (.xlsx).
+– Riwayat & Log Aktivitas dengan fitur pencarian dan filter.
+– Gamifikasi: sistem streak harian, badge, poin XP, dan tantangan mingguan.
+– Dashboard visualisasi: Pie Chart alokasi pengeluaran, Line Chart tren
+bulanan, dan grafik prediksi SMA.
+18. Platform: Aplikasi berbasis web dengan desain mobile-first (responsif). Tidak
+dikembangkan sebagai aplikasi native iOS/Android.
+19. Multi-currency: Sistem hanya mendukung mata uang Rupiah (IDR) pada versi
+pertama.
+
+BAB II TINJAUAN PUSTAKA
+2.1 Penelitian Terkait
+
+Penelitian di bidang aplikasi manajemen keuangan pribadi (PFM) telah berkembang dari
+sekadar pencatatan digital menjadi alat analisis cerdas. Rosidi dan Afriyudi (2023) dalam
+penelitiannya menyoroti bahwa tantangan utama aplikasi PFM saat ini adalah kurangnya
+otomatisasi yang cerdas, yang membuat pengguna enggan mencatat transaksi secara
+rutin karena prosesnya yang manual dan membosankan [1].
+Untuk mengatasi hal ini, beberapa penelitian telah mencoba menerapkan machine
+learning. Tarissa dan Dewayanto (2024) membahas penggunaan machine learning dalam
+kategorisasi transaksi, namun mencatat bahwa pendekatan berbasis aturan (rule-based)
+tradisional seringkali kesulitan menangani data transaksi yang tidak terstruktur dan
+bervariasi [4].
+Pendekatan klasifikasi supervised learning seperti yang dilakukan oleh Tandel dkk. (2021)
+mampu mengkategorikan transaksi bank dengan akurasi yang baik. Namun, metode ini
+memiliki keterbatasan signifikan karena memerlukan dataset terlabel yang besar sebagai
+data latih, yang sulit diperoleh dari pengguna individu [5].
+Penelitian terbaru mulai beralih ke unsupervised learning untuk menemukan pola tanpa
+label. Illah dkk. (2025) dan Kristanti dkk. (2024) mendemonstrasikan efektivitas K-Means
+Clustering untuk segmentasi data keuangan dan perilaku nasabah [6][7]. Kontribusi
+penelitian ini adalah menggabungkan model embedding bahasa modern (SentenceBERT) dengan K-Means Clustering, serta memperkayanya dengan fitur-fitur engagement
+seperti gamifikasi yang belum banyak dieksplorasi dalam penelitian PFM sebelumnya.
+
+2.2 Landasan Teori
+2.2.1 K-Means Clustering
+
+K-Means adalah algoritma unsupervised learning yang digunakan untuk mempartisi
+sekumpulan data menjadi k cluster (kelompok) yang berbeda. Algoritma ini bekerja secara
+iteratif untuk meminimalkan varian dalam setiap cluster [8]. Dalam proyek ini, K-Means
+akan digunakan untuk mengelompokkan vektor transaksi yang dihasilkan oleh S-BERT.
+2.2.2 Sentence-BERT (S-BERT)
+
+Sentence-BERT (S-BERT) adalah modifikasi dari model BERT (Bidirectional Encoder
+Representations from Transformers) yang dirancang khusus untuk menghasilkan
+embeddings untuk kalimat atau frasa utuh. Dengan menggunakan arsitektur siamese
+network, S-BERT mampu menghasilkan vektor yang menangkap makna semantik dari
+sebuah teks [2]. Dalam konteks proyek ini, S-BERT akan mengubah deskripsi transaksi
+yang bervariasi menjadi vektor numerik yang dapat dibandingkan secara matematis.
+2.2.3 Evaluasi Clustering
+
+Karena clustering adalah unsupervised, evaluasi kualitasnya tidak menggunakan metrik
+akurasi. Metode yang digunakan adalah: (1) Elbow Method untuk menentukan jumlah
+cluster K yang optimal; dan (2) Silhouette Score untuk mengukur seberapa baik sebuah
+objek ditempatkan dalam clusternya dibandingkan dengan cluster lain (nilai -1 hingga +1)
+[8].
+2.2.4 Peramalan (Forecasting)
+
+Untuk memprediksi tren pengeluaran, metode Simple Moving Average (SMA) menghitung
+rata-rata dari sejumlah data terakhir untuk memprediksi nilai pada periode berikutnya.
+Metode ini efektif untuk menghaluskan fluktuasi jangka pendek dan mengidentifikasi tren
+[9].
+2.2.5 Sistem Notifikasi
+
+Sistem notifikasi berbasis event-driven memungkinkan aplikasi untuk mengirimkan pesan
+kepada pengguna secara otomatis ketika kondisi tertentu terpenuhi, seperti ketika
+pengeluaran mendekati batas anggaran yang telah ditetapkan. Implementasi dapat
+dilakukan menggunakan mekanisme polling berkala pada backend atau push notification
+pada perangkat mobile.
+2.2.6 Gamifikasi dalam Aplikasi Keuangan
+
+Gamifikasi adalah penerapan elemen desain permainan (game design elements) dalam
+konteks non-permainan untuk meningkatkan motivasi dan keterlibatan pengguna. Elemen
+gamifikasi yang umum diterapkan pada aplikasi produktivitas meliputi sistem poin, badge
+pencapaian, streak aktivitas harian, dan tantangan berkala. Penelitian menunjukkan
+bahwa gamifikasi dapat meningkatkan konsistensi penggunaan aplikasi dan membentuk
+kebiasaan pencatatan keuangan yang lebih baik.
+2.2.7 Arsitektur Perangkat Lunak
+
+Sistem ini akan dibangun dengan arsitektur client-server modern: (1) Frontend
+menggunakan Next.js dengan desain mobile-first dan responsive; (2) Backend
+menggunakan Node.js dan Express.js; (3) Database PostgreSQL dikelola melalui Prisma
+ORM [10][11].
+
+BAB III METODOLOGI
+3.1 Metodologi Pelaksanaan Proyek Akhir
+
+Penelitian ini menggunakan pendekatan prototyping yang dimodifikasi, di mana
+fungsionalitas inti dikembangkan dan diuji secara iteratif dengan tahapan sebagai berikut:
+20. Studi Literatur: Mengumpulkan teori terkait K-Means, Sentence-BERT, metode
+peramalan, sistem notifikasi, gamifikasi, dan teknologi yang akan dipakai.
+21. Analisis Kebutuhan Sistem: Mendefinisikan kebutuhan fungsional dan nonfungsional termasuk semua fitur tambahan.
+22. Perancangan Sistem: Merancang arsitektur, struktur database, desain antarmuka
+mobile-first, dan alur kerja detail dari semua modul.
+23. Implementasi (Coding): Membangun backend (API, ML engine, notifikasi engine),
+kemudian membangun frontend, dan mengintegrasikan keduanya.
+24. Pengujian Sistem: Menguji setiap fitur termasuk alur analisis pola, notifikasi,
+gamifikasi, dan ekspor laporan.
+25. Penyusunan Laporan: Menulis laporan Proyek Akhir sesuai panduan yang
+berlaku.
+
+3.2 Analisis Kebutuhan Sistem
+3.2.1 Kebutuhan Fungsional
+
+26. Manajemen Pengguna: Registrasi, login, dan manajemen profil pengguna.
+27. Manajemen Transaksi: Fungsi CRUD untuk transaksi pemasukan dan
+pengeluaran, termasuk impor CSV.
+28. Analisis Pola (K-Means + S-BERT): Pemicu analisis otomatis, pengelompokan
+transaksi, dan saran nama klaster kepada pengguna.
+29. Manajemen Kategori: Konfirmasi dan penamaan klaster hasil analisis; transaksi
+otomatis terhubung ke kategori baru.
+30. Target Anggaran (Budget Goals): Penetapan batas pengeluaran per
+kategori/klaster; visualisasi progress; peringatan saat mendekati batas.
+31. Notifikasi & Reminder: Notifikasi peringatan budget (>80% dan >100%), notifikasi
+pola baru ditemukan, notifikasi badge/achievement, dan reminder pencatatan
+harian (waktu dapat dikonfigurasi pengguna).
+32. Ekspor Laporan: Ekspor laporan bulanan dalam format PDF (dengan grafik) dan
+Excel (.xlsx) (data mentah transaksi).
+33. Riwayat & Log Aktivitas: Tampilan histori transaksi dengan fitur pencarian teks,
+filter kategori, filter rentang tanggal, dan filter jenis transaksi.
+34. Gamifikasi: Sistem streak pencatatan harian, koleksi badge (>10 jenis badge),
+poin XP per aktivitas, level pengguna berdasarkan XP, dan tantangan mingguan.
+35. Dashboard & Visualisasi: Pie Chart alokasi pengeluaran, Line Chart tren bulanan
+beserta prediksi SMA, ringkasan saldo, dan ringkasan streak/badge.
+36. Peramalan (Forecasting): Prediksi pengeluaran 3 kategori teratas bulan
+berikutnya menggunakan SMA.
+
+3.2.2 Kebutuhan Non-Fungsional
+
+37. Keamanan: Kata sandi di-hash menggunakan bcrypt; data setiap pengguna
+terisolasi; autentikasi menggunakan JWT.
+38. Performa: Proses analisis K-Means untuk 500 transaksi selesai dalam waktu <15
+detik; halaman dashboard load dalam <3 detik.
+
+39. Usability: Antarmuka dirancang mobile-first dengan desain responsif; navigasi
+intuitif dengan bottom navigation bar.
+40. Reliability: Perhitungan keuangan, analisis clustering, dan notifikasi harus akurat
+dan konsisten.
+41. Skalabilitas: Arsitektur backend mendukung penambahan fitur baru tanpa
+refaktor besar.
+
+3.3 Perancangan Sistem
+3.3.1 Arsitektur Sistem
+
+Sistem dibangun dengan arsitektur client-server yang berkomunikasi melalui REST API:
+• Client: Next.js (Frontend, mobile-first responsive)
+• Server: Node.js & Express.js (Backend Logic, ML Execution, Notification Engine)
+• Database: PostgreSQL
+• ORM: Prisma
+• Scheduler: Node-cron (untuk reminder harian dan evaluasi budget otomatis)
+3.3.2 Alur Kerja Analisis (Metode Inti)
+
+42. Pemicu: Pengguna memulai analisis (minimal 50 transaksi belum terkategori).
+43. Pengambilan Data: Backend mengambil transaksi tanpa kategori dari database.
+44. Vektorisasi: S-BERT mengubah deskripsi menjadi vektor embedding semantik.
+45. Penentuan K Optimal: Elbow Method dijalankan untuk menemukan jumlah
+klaster terbaik.
+46. Clustering: K-Means mengelompokkan vektor berdasarkan K optimal.
+47. Evaluasi: Silhouette Score dihitung dan dicatat sebagai metrik kualitas.
+48. Penyajian: Hasil klaster dikirim ke frontend sebagai saran beserta contoh
+transaksi per klaster.
+49. Konfirmasi: Pengguna memvalidasi dan menamai kategori; badge/XP diberikan
+jika relevan.
+50. Penyimpanan: Kategori dan asosiasi transaksi disimpan ke database; notifikasi
+dikirim.
+
+3.3.3 Alur Kerja Gamifikasi
+
+51. Setiap aktivitas pengguna (catat transaksi, konfirmasi klaster, ekspor laporan,
+dll.) menghasilkan XP sesuai bobot yang telah ditetapkan.
+52. XP terakumulasi dan menentukan level pengguna (Level 1-10+).
+53. Streak dihitung berdasarkan konsistensi pencatatan transaksi setiap hari.
+54. Badge diberikan secara otomatis ketika kondisi terpenuhi (contoh: 7 hari streak,
+50 transaksi tercatat, dll.).
+55. Tantangan mingguan direset setiap Senin dan memberikan bonus XP jika
+diselesaikan.
+56. Notifikasi dikirimkan ketika badge baru terbuka atau level naik.
+
+3.4 Evaluasi Hasil Clustering
+
+Untuk memastikan metode yang diterapkan memberikan hasil yang bermakna, evaluasi
+akan dilakukan dengan cara:
+
+57. Penentuan K Optimal (Elbow Method): Eksperimen dengan beberapa nilai K;
+grafik WCSS dibuat untuk mengidentifikasi titik siku yang menyarankan jumlah
+klaster optimal.
+58. Evaluasi Kualitas Cluster (Silhouette Score): Skor dihitung setelah K-Means
+dijalankan dengan K optimal. Nilai ini dicatat dan dilaporkan sebagai ukuran
+kuantitatif kualitas pengelompokan.
+59. Validasi Pengguna: Tingkat penerimaan saran klaster oleh pengguna
+(acceptance rate) dicatat sebagai metrik kualitatif tambahan.
+
+3.5 Jadwal Pelaksanaan
+No
+
+Kegiatan
+
+B1
+
+B2
+
+B3
+
+B4
+
+B5
+
+B6
+
+1
+
+Studi Literatur &
+Finalisasi
+Proposal
+
+███
+
+2
+
+Analisis &
+Perancangan
+Sistem
+
+3
+
+Implementasi
+Backend &
+Database
+
+███
+
+4
+
+Implementasi
+Modul Analisis (SBERT & K-Means)
+
+███
+
+5
+
+Implementasi Fitur
+Tambahan (Notif,
+Budget,
+Gamifikasi,
+Ekspor)
+
+6
+
+Implementasi
+Frontend (UI &
+Visualisasi MobileFirst)
+
+███
+
+7
+
+Integrasi dan
+Pengujian Sistem
+
+███
+
+8
+
+Penyusunan &
+Revisi Laporan
+
+███
+
+9
+
+Sidang Proyek
+Akhir
+
+███
+
+███
+
+███
+███
+
+███
+
+███
+
+DAFTAR PUSTAKA
+
+[1] A. Rosidi dan A. Afriyudi, 'Aplikasi pencatatan keuangan pribadi berbasis web mobile,'
+Jurnal Teknologi Informatika Dan Komputer, vol. 9, no. 1, hal. 100-113, 2023.
+[2] N. Reimers dan I. Gurevych, 'Sentence-BERT: Sentence Embeddings using Siamese
+BERT-Networks,' dalam Proceedings of the 2019 Conference on Empirical Methods in
+Natural Language Processing (EMNLP), 2019, hal. 3982-3992.
+[3] A. Sandi Asmoro dan S. Sriyono, 'Peran Machine Learning dalam Pengambilan
+Keputusan Manajerial di Industri Fintech,' Journal of Accounting and Finance
+Management, vol. 6, no. 3, hal. 997-1003, 2025.
+[4] B. V. Tarissa dan T. Dewayanto, 'Penerapan Machine Learning dan Deep Learning
+pada Peningkatan Deteksi Credit Card Fraud - A Systematic Literature Review,'
+Diponegoro Journal of Accounting, vol. 13, no. 3, hal. 1-15, 2024.
+[5] S. Tandel, L. Jivani, V. Bhesavd, D. B. Phatak, dan P. D. A., 'An Automated Approach
+for Classification of Bank Transactions,' dalam 2021 IEEE 6th International Conference
+for Convergence in Technology (I2CT), Pune, India, 2021, hal. 1-6.
+[6] S. N. Illah, N. Suarna, I. Ali, dan D. Solihudin, 'K-Means Clustering Method to Make
+Credit Payment Grouping Efficient,' Journal of Artificial Intelligence and Engineering
+Applications (JAIEA), vol. 4, no. 2, 2025.
+[7] B. T. Kristanti, A. Junaidi, dan E. P. Mandyartha, 'Implementasi K-Means Clustering
+Dalam Segmentasi Pelanggan Berdasarkan Usia, Pendapatan, Dan Model RFM,' Jurnal
+Informatika dan Teknik Elektro Terapan, vol. 12, no. 3, 2024.
+[8] L. Kaufman and P. J. Rousseeuw, Finding Groups in Data: An Introduction to Cluster
+Analysis. John Wiley & Sons.
+[9] R. J. Hyndman and G. Athanasopoulos, Forecasting: Principles and Practice, 3rd ed.
+OTexts, 2021.
+[10] https://nextjs.org/ [Diakses: 18 Nov 2025].
+[11] 'Prisma: Next-generation ORM for Node.js and TypeScript,' Prisma Data, Inc.
+[12] K. M. Kapp, The Gamification of Learning and Instruction: Game-based Methods and
+Strategies for Training and Education. Pfeiffer, 2012.
+
+
