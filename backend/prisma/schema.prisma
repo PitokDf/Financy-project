@@ -68,6 +68,8 @@ model User {
   analysisRuns   AnalysisRun[]
   notifications  Notification[]
   exportLogs     ExportLog[]
+  recommendationLogs RecommendationLog[]
+  categoryFeedbackEvents CategoryFeedbackEvent[]
   gamification   Gamification?
   reminderConfig ReminderConfig?
 
@@ -93,6 +95,8 @@ model Transaction {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   cluster  Cluster?  @relation(fields: [clusterId], references: [id], onDelete: SetNull)
+  recommendationLogs RecommendationLog[]
+  categoryFeedbackEvents CategoryFeedbackEvent[]
 
   @@index([userId, date])
   @@index([userId, type])
@@ -349,4 +353,42 @@ model UserChallenge {
 
   @@index([gamificationId])
   @@map("user_challenges")
+}
+
+model RecommendationLog {
+  id               String   @id @default(cuid())
+  userId           String
+  transactionId    String
+  suggestedTop3    String[]
+  chosenCategoryId String
+  top1Correct      Boolean
+  inTop3           Boolean
+  inputLatencyMs   Int
+  modelVariant     String
+  createdAt        DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([transactionId])
+  @@map("recommendation_logs")
+}
+
+model CategoryFeedbackEvent {
+  id                       String   @id @default(cuid())
+  userId                   String
+  transactionId            String
+  suggestedTop3            String[]
+  chosenCategoryId         String
+  isCorrected              Boolean
+  correctionFromCategoryId String?
+  createdAt                DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([transactionId])
+  @@map("category_feedback_events")
 }
