@@ -27,13 +27,14 @@ WORKDIR /app
 
 # Copy package files for production install
 COPY package.json bun.lock ./
+# Copy prisma directory BEFORE install to satisfy postinstall script
+COPY prisma ./prisma
 
 # Install only production dependencies
 RUN bun install --frozen-lockfile --production
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
 # Copy node_modules from builder might be better if we have native deps, 
 # but bun install --production is cleaner.
 # Actually, we need the prisma client generated in stage 1 or regenerate it here.
