@@ -1,0 +1,38 @@
+import { redisConfig } from "@/config/redis";
+import frameworkLogger from "@/utils/winston.logger";
+import { Job, Worker } from "bullmq";
+
+export abstract class BaseWorker<T> {
+    protected worker: Worker;
+
+    /**
+     *
+     */
+    constructor(queueName: string) {
+        this.worker = new Worker(
+            queueName,
+            async (job: Job<T>) => {
+                await this.process(job);
+            },
+            { connection: redisConfig }
+        );
+
+        this.worker.on("failed", (job, error) => {
+            frameworkLogger.error(`[${queueName}] Job failed: ${job?.id}`, error)
+        })
+
+        this.worker.on("error", (error) => {
+            frameworkLogger.error(`[${queueName}] Worker error`, error)
+        })
+
+        this.worker.on("completed", (job) => {
+            frameworkLogger.info(`[${queueName}] Job completed: ${job.id}`)
+        })
+
+        this.worker.on("drained", () => {
+            frameworkLogger.info(`[${queueName}] Queue drained`)
+        })
+    }
+
+    protected abstract process(job: Job<T>): Promise<void>;
+}

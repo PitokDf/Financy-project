@@ -2,6 +2,8 @@ import logger from "@/utils/winston.logger"
 import { config } from "@/config";
 import { networkInterfaces } from "node:os";
 import app from "@/app";
+import { initQueue } from "@/bootstrap/queue";
+import { initJobs } from "@/jobs";
 
 let activeServer: any = null;
 let serverStarted = false;
@@ -31,7 +33,6 @@ export function startServer(port: number) {
         // Set timeout to wait for potential errors
         startupTimeout = setTimeout(() => {
             serverStarted = true;
-
             const networks = getNetworkAdresses();
             const urls = [
                 `http://localhost:${port}`,
@@ -42,6 +43,8 @@ export function startServer(port: number) {
 
             logger.serverStartup(port, config.NODE_ENV);
             logger.serverReady(port, urls);
+            initQueue();
+            initJobs();
 
             console.log('\n   ═══════════════════════════════════════════════════════════════');
             console.log('   🚀 EXPRESS SERVER READY');

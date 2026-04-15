@@ -9,7 +9,7 @@ export const checkEmailExists = async (
     next: NextFunction
 ) => {
     const { email } = req.body
-    const userId = req.params.userId
+    const userId = req.params.userId as string | undefined
     if (!email) return next();
 
     const existingUser = await getUserByEmailService(email, userId)

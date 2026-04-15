@@ -1,19 +1,17 @@
-import { CategoryController } from "@/controller/category.controller";
-import authMiddleware from "@/middleware/auth.middleware";
-import { CategoryRepository } from "@/repositories/category.repository";
-import { CategoryService } from "@/service/category.service";
 import { Router } from "express";
+import { CategoryController } from "@/controller/category.controller";
+import { CategoryService } from "@/service/category.service";
+import { CategoryRepository } from "@/repositories/category.repository";
+import authMiddleware from "@/middleware/auth.middleware";
+
+const categoryRepo = new CategoryRepository();
+const categoryService = new CategoryService(categoryRepo);
+const controller = new CategoryController(categoryService);
 
 const categoryRouter = Router();
-const categoryService = new CategoryService(CategoryRepository);
-const categoryController = new CategoryController(categoryService);
 
 categoryRouter.use(authMiddleware);
-
-categoryRouter.get("/", categoryController.getCategories);
-categoryRouter.get("/:categoryId", categoryController.getCategoryById);
-categoryRouter.post("/", categoryController.createCategory);
-categoryRouter.patch("/:categoryId", categoryController.updateCategory);
-categoryRouter.delete("/:categoryId", categoryController.deleteCategory);
+categoryRouter.get("/", controller.getAll);
+categoryRouter.post("/", controller.create);
 
 export default categoryRouter;

@@ -20,6 +20,9 @@ export const createUserSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
+export const registerSchema = createUserSchema;
+export type RegisterDTO = z.infer<typeof registerSchema>;
+
 export const updateUserSchema = z
     .object({
         name: z
@@ -49,4 +52,4 @@ export const loginSchema = z.object({
     password: z.string().nonempty({ message: "Password tidak boleh kosong" })
 });
 
-export type LoginInput = z.infer<typeof loginSchema>;
+export type LoginDTO = z.infer<typeof loginSchema>;

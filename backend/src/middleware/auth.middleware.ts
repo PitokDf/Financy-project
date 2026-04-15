@@ -1,3 +1,4 @@
+import { config } from "@/config";
 import { JwtPayload, JwtUtil, ResponseUtil } from "@/utils";
 import { Auth } from "@/utils/auth";
 import { Request, Response, NextFunction } from "express";
@@ -20,31 +21,26 @@ export default function authMiddleware(
     res: Response,
     next: NextFunction
 ) {
+    const authCookie = req.cookies
     const authHeader = req.headers.authorization;
-    const authCookie = req.cookies;
 
-    // Coba ambil token dari header dulu, fallback ke cookie
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.split(" ")[1];
-    } else if (authCookie?.token) {
-        token = authCookie.token;
-    }
-
-    if (!token) {
+    if ((!authCookie && config.TOKEN_SET_IN == "cookie") || ((!authHeader || !authHeader?.startsWith("Bearer ")) && config.TOKEN_SET_IN == "header")) {
         return ResponseUtil.unauthorized(res, "Unauthorized");
     }
 
     try {
-        const decoded = JwtUtil.verifyAccessToken(token);
-        const today = Math.floor(new Date().getTime() / 1000);
+        let token: string
 
-        if (decoded.exp && today > decoded.exp) {
-            Auth.clearTokenCookieHttpOnly(res);
-            return ResponseUtil.unauthorized(res, "Token expired");
+        switch (config.TOKEN_SET_IN) {
+            case "cookie": token = authCookie.token; break;
+            case "header": token = authHeader?.split(" ")[1]!; break;
         }
 
+        const today = Math.floor(new Date().getTime() / 1000)
+        const decoded = JwtUtil.verify(token);
+        const isExpirytoken = today > decoded.exp!
+
+        if (isExpirytoken) Auth.clearTokenCookieHttpOnly(res)
         req.auth_user = decoded;
         return next();
     } catch (err) {

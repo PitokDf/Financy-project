@@ -181,6 +181,21 @@ class FileUploadService {
     }
 
     /**
+     * CSV upload middleware
+     */
+    csvUpload(fieldName: string, options: Partial<FileUploadOptions> = {}) {
+        const csvOptions: FileUploadOptions = {
+            destination: 'csv',
+            maxSize: 10 * 1024 * 1024, // 10MB
+            allowedTypes: ['text/csv', 'application/vnd.ms-excel'],
+            allowedExtensions: ['.csv'],
+            ...options
+        };
+
+        return this.single(fieldName, csvOptions);
+    }
+
+    /**
      * Get file information
      */
     getFileInfo(file: Express.Multer.File): UploadedFileInfo {

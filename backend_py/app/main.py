@@ -30,7 +30,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # URL Node.js backend
+    allow_origins=["*"],   # semua localhost bisa akses (dev mode)
     allow_methods=["*"],
     allow_headers=["*"],
 )

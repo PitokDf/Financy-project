@@ -1,11 +1,23 @@
 import prisma from "@/config/prisma";
-import { User } from "@prisma/client";
+import { User } from "generated/prisma/client";
 
 export class UserRepository {
     static async findById(id: string): Promise<User | null> {
         return prisma.user.findUnique({
             where: { id }
         })
+    }
+
+    static async findUserProfile(id: string) {
+        return prisma.user.findUnique({
+            where: { id },
+            include: {
+                userStats: true,
+                _count: {
+                    select: { userBadges: true }
+                }
+            }
+        });
     }
 
     static async findByEmail(email: string, ignoreUserId?: string): Promise<User | null> {
@@ -19,17 +31,13 @@ export class UserRepository {
         })
     }
 
-    static async create(data: Pick<User, 'name' | 'email' | 'passwordHash'>): Promise<User> {
+    static async create(data: Pick<User, 'name' | 'email' | 'password'>): Promise<User> {
         return prisma.user.create({
-            data: {
-                name: data.name,
-                email: data.email,
-                passwordHash: data.passwordHash
-            },
+            data,
         });
     }
 
-    static async update(id: string, data: Partial<Pick<User, 'name' | 'passwordHash'>>): Promise<User> {
+    static async update(id: string, data: Partial<Pick<User, 'name' | 'password'>>): Promise<User> {
         return prisma.user.update({
             where: { id },
             data,

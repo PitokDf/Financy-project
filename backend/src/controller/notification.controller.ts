@@ -1,66 +1,44 @@
-import { HttpStatus } from "@/constants/http-status";
-import { MessageCodes } from "@/constants/message";
-import { asyncHandler } from "@/middleware/error.middleware";
-import { NotificationService } from "@/service/notification.service";
-import {
-    createNotificationSchema,
-    getNotificationsQuerySchema,
-    notificationIdParamSchema,
-} from "@/schemas/notification.schema";
-import { ResponseUtil } from "@/utils";
 import { Request, Response } from "express";
+import { NotificationService } from "../service/notification.service";
+import { HttpStatus } from "@/constants/http-status";
+import { ResponseUtil } from "@/utils";
 
 export class NotificationController {
-    constructor(private readonly notificationService: NotificationService) { }
+  static async getNotifications(req: Request, res: Response) {
+    const userId = (req as any).auth_user.id;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-    public getNotifications = asyncHandler(async (req: Request, res: Response) => {
-        const query = getNotificationsQuerySchema.parse(req.query);
-        const userId = String(req.auth_user?.user_id);
+    const notifications = await NotificationService.getNotifications(userId, limit, offset);
+    return ResponseUtil.success(res, notifications, HttpStatus.OK, "Notifications retrieved successfully");
+  }
 
-        const result = await this.notificationService.getNotifications(userId, query);
+  static async getUnreadCount(req: Request, res: Response) {
+    const userId = (req as any).auth_user.id;
+    const count = await NotificationService.getUnreadCount(userId);
+    return ResponseUtil.success(res, { count }, HttpStatus.OK, "Unread count retrieved successfully");
+  }
 
-        return ResponseUtil.success(res, result, HttpStatus.OK, MessageCodes.SUCCESS);
-    });
+  static async markAsRead(req: Request, res: Response) {
+    const userId = (req as any).auth_user.id;
+    const { id } = req.params;
 
-    public getNotificationById = asyncHandler(async (req: Request, res: Response) => {
-        const { notificationId } = notificationIdParamSchema.parse(req.params);
-        const userId = String(req.auth_user?.user_id);
+    await NotificationService.markAsRead(userId, id as string);
+    return ResponseUtil.success(res, null, HttpStatus.OK, "Notification marked as read");
+  }
 
-        const notification = await this.notificationService.getNotificationById(userId, notificationId);
+  static async markAllAsRead(req: Request, res: Response) {
+    const userId = (req as any).auth_user.id;
 
-        return ResponseUtil.success(res, notification, HttpStatus.OK, MessageCodes.SUCCESS);
-    });
+    await NotificationService.markAllAsRead(userId);
+    return ResponseUtil.success(res, null, HttpStatus.OK, "All notifications marked as read");
+  }
 
-    public createNotification = asyncHandler(async (req: Request, res: Response) => {
-        const payload = createNotificationSchema.parse(req.body);
-        const notification = await this.notificationService.createNotification(payload);
+  static async deleteNotification(req: Request, res: Response) {
+    const userId = (req as any).auth_user.id;
+    const { id } = req.params;
 
-        return ResponseUtil.success(res, notification, HttpStatus.CREATED, MessageCodes.CREATED);
-    });
-
-    public markAsRead = asyncHandler(async (req: Request, res: Response) => {
-        const { notificationId } = notificationIdParamSchema.parse(req.params);
-        const userId = String(req.auth_user?.user_id);
-
-        const notification = await this.notificationService.markAsRead(userId, notificationId);
-
-        return ResponseUtil.success(res, notification, HttpStatus.OK, MessageCodes.UPDATED);
-    });
-
-    public markAllAsRead = asyncHandler(async (req: Request, res: Response) => {
-        const userId = String(req.auth_user?.user_id);
-
-        const result = await this.notificationService.markAllAsRead(userId);
-
-        return ResponseUtil.success(res, result, HttpStatus.OK, MessageCodes.UPDATED);
-    });
-
-    public deleteNotification = asyncHandler(async (req: Request, res: Response) => {
-        const { notificationId } = notificationIdParamSchema.parse(req.params);
-        const userId = String(req.auth_user?.user_id);
-
-        const notification = await this.notificationService.deleteNotification(userId, notificationId);
-
-        return ResponseUtil.success(res, notification, HttpStatus.OK, MessageCodes.DELETED);
-    });
+    await NotificationService.deleteNotification(userId, id as string);
+    return ResponseUtil.success(res, null, HttpStatus.OK, "Notification deleted");
+  }
 }

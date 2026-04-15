@@ -27,24 +27,24 @@ export type MessageCode = typeof MessageCodes[keyof typeof MessageCodes];
 
 // Message mapping for actual text
 export const Messages = {
-    SUCCESS: 'Berhasil',
-    CREATED: 'Berhasil dibuat',
-    UPDATED: 'Berhasil diperbarui',
-    DELETED: 'Berhasil dihapus',
-    ACCEPTED: 'Permintaan diterima',
+    SUCCESS: "Berhasil",
+    CREATED: "Berhasil dibuat",
+    UPDATED: "Berhasil diperbarui",
+    DELETED: "Berhasil dihapus",
+    ACCEPTED: "Permintaan diterima",
 
-    BAD_REQUEST: 'Permintaan tidak valid',
-    UNAUTHORIZED: 'Tidak memiliki akses',
-    FORBIDDEN: 'Akses ditolak',
-    NOT_FOUND: 'Data tidak ditemukan',
-    CONFLICT: 'Terjadi konflik data',
-    VALIDATION_FAILED: 'Validasi gagal',
-    INVALID_CREDENTIALS: 'Email atau password salah',
-    TOO_MANY_REQUESTS: 'Terlalu banyak permintaan',
-    UNPROCESSABLE_ENTITY: 'Data tidak dapat diproses',
+    BAD_REQUEST: "Permintaan tidak valid",
+    UNAUTHORIZED: "Tidak memiliki otorisasi",
+    FORBIDDEN: "Akses ditolak",
+    NOT_FOUND: "Data tidak ditemukan",
+    CONFLICT: "Terjadi konflik",
+    VALIDATION_FAILED: "Validasi gagal",
+    INVALID_CREDENTIALS: "Email atau kata sandi salah",
+    TOO_MANY_REQUESTS: "Terlalu banyak permintaan",
+    UNPROCESSABLE_ENTITY: "Permintaan tidak dapat diproses",
 
-    INTERNAL_ERROR: 'Terjadi kesalahan pada server',
-    SERVICE_UNAVAILABLE: 'Layanan tidak tersedia',
+    INTERNAL_ERROR: "Terjadi kesalahan pada server",
+    SERVICE_UNAVAILABLE: "Layanan tidak tersedia",
 } as const;
 
 // Helper function to get message by code

@@ -1,18 +1,30 @@
 import { AuthController } from "@/controller/auth.controller";
-import { UserController } from "@/controller/user.controller";
-import authMiddleware from "@/middleware/auth.middleware";
 import { validateSchema } from "@/middleware/zod.middleware";
-import { createUserSchema } from "@/schemas/user.schema";
-import { checkEmailExists } from "@/validators/user.validator";
+import { UserRepository } from "@/repositories/user.repository";
+import { loginSchema, registerSchema } from "@/schemas/user.schema";
+import { AuthService } from "@/service/auth.service";
 import { Router } from "express";
+
+const authService = new AuthService(UserRepository);
+const controller = new AuthController(authService);
 
 const authRouter = Router()
 
-authRouter.post('/login', AuthController.login)
-authRouter.post('/register', validateSchema(createUserSchema), checkEmailExists, UserController.createUser);
-authRouter.post('/refresh', AuthController.refresh)
+authRouter.post(
+    '/login',
+    validateSchema(loginSchema),
+    controller.login
+)
 
-// Protected
-authRouter.get('/me', authMiddleware, AuthController.me)
+authRouter.post(
+    '/register',
+    validateSchema(registerSchema),
+    controller.register
+)
+
+authRouter.post(
+    '/logout',
+    controller.logout
+)
 
 export default authRouter

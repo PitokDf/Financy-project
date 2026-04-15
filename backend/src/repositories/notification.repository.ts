@@ -1,79 +1,63 @@
 import prisma from "@/config/prisma";
-import { Prisma } from "@prisma/client";
-
-export interface FindNotificationsOptions {
-    userId: string;
-    skip?: number;
-    take?: number;
-    isRead?: boolean;
-    type?: Prisma.NotificationWhereInput["type"];
-    sortBy?: "createdAt" | "isRead";
-    sortOrder?: "asc" | "desc";
-}
+import { NotificationType } from "generated/prisma/enums";
 
 export class NotificationRepository {
-    static async create(data: Prisma.NotificationUncheckedCreateInput) {
-        return prisma.notification.create({ data });
-    }
+  static async create(data: {
+    userId: string;
+    title: string;
+    message: string;
+    type: NotificationType;
+    metadata?: any;
+  }) {
+    return prisma.notification.create({
+      data: {
+        userId: data.userId,
+        title: data.title,
+        message: data.message,
+        type: data.type,
+        metadata: data.metadata || {},
+      },
+    });
+  }
 
-    static async findByIdAndUser(notificationId: string, userId: string) {
-        return prisma.notification.findFirst({
-            where: { id: notificationId, userId },
-        });
-    }
+  static async findManyByUserId(userId: string, limit = 50, offset = 0) {
+    return prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
+    });
+  }
 
-    static async findManyByUser(options: FindNotificationsOptions) {
-        const { userId, skip, take, isRead, type, sortBy = "createdAt", sortOrder = "desc" } = options;
+  static async markAsRead(userId: string, id: string) {
+    return prisma.notification.updateMany({
+      where: { id, userId },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
+  }
 
-        return prisma.notification.findMany({
-            where: {
-                userId,
-                ...(isRead !== undefined ? { isRead } : {}),
-                ...(type ? { type } : {}),
-            },
-            orderBy: {
-                [sortBy]: sortOrder,
-            },
-            skip,
-            take,
-        });
-    }
+  static async markAllAsRead(userId: string) {
+    return prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
+  }
 
-    static async countByUser(options: Omit<FindNotificationsOptions, "skip" | "take" | "sortBy" | "sortOrder">) {
-        const { userId, isRead, type } = options;
+  static async delete(userId: string, id: string) {
+    return prisma.notification.deleteMany({
+      where: { id, userId },
+    });
+  }
 
-        return prisma.notification.count({
-            where: {
-                userId,
-                ...(isRead !== undefined ? { isRead } : {}),
-                ...(type ? { type } : {}),
-            },
-        });
-    }
-
-    static async updateById(notificationId: string, data: Prisma.NotificationUncheckedUpdateInput) {
-        return prisma.notification.update({
-            where: { id: notificationId },
-            data,
-        });
-    }
-
-    static async markAllAsRead(userId: string) {
-        return prisma.notification.updateMany({
-            where: {
-                userId,
-                isRead: false,
-            },
-            data: {
-                isRead: true,
-                readAt: new Date(),
-            },
-        });
-    }
-
-    static async deleteById(notificationId: string) {
-        return prisma.notification.delete({
-            where: { id: notificationId },
-        });
-    }
+  static async countUnread(userId: string) {
+    return prisma.notification.count({
+      where: { userId, isRead: false },
+    });
+  }
 }

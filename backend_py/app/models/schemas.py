@@ -1,6 +1,7 @@
 
+from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 from enum import Enum
 
 
@@ -85,3 +86,23 @@ class HealthResponse(BaseModel):
     status:     str
     model_name: str
     model_ready: bool
+
+
+class RecommendItem(BaseModel):
+    category_id: str
+    score: float
+
+
+class RecommendCategoryRequest(BaseModel):
+    transaction_id: str
+    user_id: str
+    description: str
+    amount: float
+    date: datetime
+    model_variant: Literal["A", "B"] = "A"
+
+
+class RecommendCategoryResponse(BaseModel):
+    success: bool
+    model_variant: str
+    suggestions: list[RecommendItem]

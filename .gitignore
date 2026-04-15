@@ -21,3 +21,9 @@ temp/
 
 # Keep generated static mock HTML out of repo root commits
 *.html
+.github
+demo
+.rtk
+docs
+skills-lock.json
+CLAUDE*

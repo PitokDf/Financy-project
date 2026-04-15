@@ -1,72 +1,41 @@
-import { HttpStatus } from "@/constants/http-status";
-import { MessageCodes } from "@/constants/message";
 import { asyncHandler } from "@/middleware/error.middleware";
 import { TransactionService } from "@/service/transaction.service";
-import {
-    analyzeTransactionsSchema,
-    createTransactionSchema,
-    getTransactionsQuerySchema,
-    transactionIdParamSchema,
-    updateTransactionSchema,
-} from "@/schemas/transaction.schema";
 import { ResponseUtil } from "@/utils";
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
+import { HttpStatus } from "@/constants/http-status";
 
 export class TransactionController {
-    constructor(private readonly transactionService: TransactionService) { }
+    constructor(private readonly service: TransactionService) { }
 
-    public getTransactions = asyncHandler(async (req: Request, res: Response) => {
-        const query = getTransactionsQuerySchema.parse(req.query);
-        const userId = String(req.auth_user?.user_id);
+    public getAll = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
+        const cursor = req.query.cursor as string | undefined;
+        const search = req.query.search as string | undefined;
+        const type = req.query.type as string | undefined;
 
-        const result = await this.transactionService.getTransactions(userId, query);
+        const result = await this.service.getAllPaginated(userId, cursor, limit, search, type);
+        return res.status(HttpStatus.OK).json(result);
+    })
 
-        return ResponseUtil.success(res, result, HttpStatus.OK, MessageCodes.SUCCESS);
-    });
+    public create = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const result = await this.service.create(userId, req.body);
+        return ResponseUtil.success(res, result, HttpStatus.CREATED);
+    })
 
-    public getTransactionById = asyncHandler(async (req: Request, res: Response) => {
-        const { transactionId } = transactionIdParamSchema.parse(req.params);
-        const userId = String(req.auth_user?.user_id);
+    public delete = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const result = await this.service.delete(userId, req.params.trxId as string);
+        return ResponseUtil.success(res, result);
+    })
 
-        const transaction = await this.transactionService.getTransactionById(userId, transactionId);
-
-        return ResponseUtil.success(res, transaction, HttpStatus.OK, MessageCodes.SUCCESS);
-    });
-
-    public createTransaction = asyncHandler(async (req: Request, res: Response) => {
-        const payload = createTransactionSchema.parse(req.body);
-        const userId = String(req.auth_user?.user_id);
-
-        const transaction = await this.transactionService.createTransaction(userId, payload);
-
-        return ResponseUtil.success(res, transaction, HttpStatus.CREATED, MessageCodes.CREATED);
-    });
-
-    public updateTransaction = asyncHandler(async (req: Request, res: Response) => {
-        const { transactionId } = transactionIdParamSchema.parse(req.params);
-        const payload = updateTransactionSchema.parse(req.body);
-        const userId = String(req.auth_user?.user_id);
-
-        const transaction = await this.transactionService.updateTransaction(userId, transactionId, payload);
-
-        return ResponseUtil.success(res, transaction, HttpStatus.OK, MessageCodes.UPDATED);
-    });
-
-    public deleteTransaction = asyncHandler(async (req: Request, res: Response) => {
-        const { transactionId } = transactionIdParamSchema.parse(req.params);
-        const userId = String(req.auth_user?.user_id);
-
-        const deleted = await this.transactionService.deleteTransaction(userId, transactionId);
-
-        return ResponseUtil.success(res, deleted, HttpStatus.OK, MessageCodes.DELETED);
-    });
-
-    public analyzeTransactions = asyncHandler(async (req: Request, res: Response) => {
-        const payload = analyzeTransactionsSchema.parse(req.body);
-        const userId = String(req.auth_user?.user_id);
-
-        const result = await this.transactionService.analyzeTransactions(userId, payload);
-
-        return ResponseUtil.success(res, result, HttpStatus.OK, MessageCodes.SUCCESS);
-    });
+    public importCsv = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        if (!req.file) {
+            return ResponseUtil.error(res, "Tidak ada file CSV yang diunggah", [], HttpStatus.BAD_REQUEST);
+        }
+        const result = await this.service.importCsv(userId, req.file);
+        return ResponseUtil.success(res, result, HttpStatus.CREATED, "CSV berhasil diimpor");
+    })
 }

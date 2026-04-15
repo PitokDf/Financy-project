@@ -14,7 +14,6 @@ export class Auth {
    * Auth.setTokenCookieHttpOnly(res, jwtToken, { duration: 1, unit: 'h' });
    */
     static setTokenCookieHttpOnly(
-        name: string | undefined,
         res: Response,
         token: string,
         expiresIn?: { duration: number; unit: "m" | "h" | "d" | "w" | "infinity" }
@@ -30,11 +29,11 @@ export class Auth {
             default: maxAge = 24 * 60 * 60 * 1000;
         }
 
-        res.cookie(name ?? "token", token, {
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: !!config.COOKIES_DOMAIN,
-            sameSite: !!config.COOKIES_DOMAIN ? "none" : "lax",
-            domain: config.COOKIES_DOMAIN,
+            secure: config.NODE_ENV === 'production',
+            sameSite: config.NODE_ENV === 'production' ? "none" : "lax",
+            domain: config.NODE_ENV === 'production' ? config.COOKIES_DOMAIN : undefined,
             maxAge,
             path: "/",
         });
@@ -43,11 +42,10 @@ export class Auth {
     static clearTokenCookieHttpOnly(res: Response) {
         res.clearCookie("token", {
             httpOnly: true,
-            secure: !!config.COOKIES_DOMAIN,
-            sameSite: !!config.COOKIES_DOMAIN ? 'none' : 'lax',
-            domain: config.COOKIES_DOMAIN,
+            secure: config.NODE_ENV === 'production',
+            sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+            domain: config.NODE_ENV === 'production' ? config.COOKIES_DOMAIN : undefined,
             path: '/'
         });
     }
-
 }

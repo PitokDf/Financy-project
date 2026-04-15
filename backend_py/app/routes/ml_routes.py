@@ -12,6 +12,8 @@ from app.models.schemas import (
     EmbedResponseItem,
     FullPipelineRequest,
     HealthResponse,
+    RecommendCategoryRequest,
+    RecommendCategoryResponse,
 )
 from app.services.embedding_service import (
     MODEL_NAME,
@@ -19,6 +21,7 @@ from app.services.embedding_service import (
     get_model,
 )
 from app.services.clustering_service import run_clustering
+from app.services.recommendation_service import recommend_category_top3
  
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -85,8 +88,8 @@ def cluster_endpoint(body: ClusterRequest):
     if len(body.transaction_ids) != len(body.embeddings):
         raise HTTPException(400, "Jumlah transaction_ids dan embeddings harus sama")
  
-    if len(body.transaction_ids) < 10:
-        raise HTTPException(400, f"Minimal 10 transaksi. Saat ini: {len(body.transaction_ids)}")
+    if len(body.transaction_ids) < 50:
+        raise HTTPException(400, f"Minimal 50 transaksi. Saat ini: {len(body.transaction_ids)}")
  
     embeddings_np = np.array(body.embeddings, dtype=np.float32)
  
@@ -126,10 +129,10 @@ def pipeline_endpoint(body: FullPipelineRequest):
     if not body.transactions:
         raise HTTPException(400, "transactions tidak boleh kosong")
  
-    if len(body.transactions) < 10:
+    if len(body.transactions) < 50:
         raise HTTPException(
             400,
-            f"Minimal 10 transaksi diperlukan. Saat ini: {len(body.transactions)}"
+            f"Minimal 50 transaksi diperlukan. Saat ini: {len(body.transactions)}"
         )
  
     ids          = [t.id for t in body.transactions]
@@ -139,7 +142,7 @@ def pipeline_endpoint(body: FullPipelineRequest):
     try:
         # ── LANGKAH 1: Embed ─────────────────────────────────
         logger.info(f"[Pipeline] Langkah 1 — Embed {len(ids)} transaksi")
-        embeddings_np = embed_transactions(descriptions)
+        embeddings_np = embed_transactions(descriptions, amounts=amounts)
  
         # ── LANGKAH 2: Cluster ───────────────────────────────
         logger.info("[Pipeline] Langkah 2 — K-Means Clustering")
@@ -159,4 +162,22 @@ def pipeline_endpoint(body: FullPipelineRequest):
         raise HTTPException(500, str(e))
  
     return result
+
+
+@router.post("/recommend-category", response_model=RecommendCategoryResponse)
+def recommend_category_endpoint(body: RecommendCategoryRequest):
+    try:
+        suggestions = recommend_category_top3(
+            description=body.description,
+            model_variant=body.model_variant,
+        )
+    except Exception as e:
+        logger.exception("[Recommend] Error")
+        raise HTTPException(500, str(e))
+
+    return RecommendCategoryResponse(
+        success=True,
+        model_variant=body.model_variant,
+        suggestions=suggestions,
+    )
  

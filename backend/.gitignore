@@ -12,7 +12,6 @@ coverage/
 .env
 .env.local
 .env.*.local
-.env.*
 
 # Log files
 logs/
@@ -21,10 +20,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Temporary files & assets (kecuali yang diizinkan)
+public/*
 !public/info.txt
 tmp/*
 !tmp/info.txt
-uploads/
 
 # Editor & IDE directories
 .vscode/
@@ -36,3 +35,9 @@ Thumbs.db
 
 index.html
 /generated/prisma
+
+# Unused lockfiles
+bun.lockb
+bun.lock
+yarn.lock
+pnpm-lock.yaml

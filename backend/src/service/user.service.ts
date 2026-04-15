@@ -3,7 +3,7 @@ import { Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
 import { UserRepository } from "@/repositories/user.repository";
 import { CreateUserInput, UpdateUserInput } from "@/schemas/user.schema";
-import { BcryptUtil, JwtUtil } from "@/utils";
+import { BcryptUtil } from "@/utils";
 import { cacheManager } from "@/utils/cache";
 import logger from "@/utils/winston.logger";
 
@@ -72,6 +72,24 @@ export async function getUserByIdService(userId: string) {
     return { ...user, password: '[REDACTED]' }
 }
 
+export async function getUserProfileService(userId: string) {
+    const user = await UserRepository.findUserProfile(userId);
+
+    if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
+
+    return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        level: user.userStats?.level ?? 1,
+        streak: user.userStats?.streak ?? 0,
+        badgeCount: user._count?.userBadges ?? 0
+    };
+}
+
 export async function getUserByEmailService(email: string, ignoreUserId?: string) {
     const user = await UserRepository.findByEmail(email, ignoreUserId)
 
@@ -89,7 +107,7 @@ function invalidateUserListCache() {
 export async function createUserService(data: CreateUserInput) {
     data.password = (await BcryptUtil.hash(data.password))!
 
-    const user = await UserRepository.create({ ...data, passwordHash: data.password });
+    const user = await UserRepository.create(data);
 
     // Invalidate all paginated cache after create
     invalidateUserListCache();
@@ -120,39 +138,4 @@ export async function deleteUserService(userId: string) {
     invalidateUserListCache();
 
     return { ...user, password: '[REDACTED]' }
-}
-
-export async function loginService(email: string, password: string) {
-    const user = await getUserByEmailService(email);
-    if (!user) throw new AppError(Messages.INVALID_CREDENTIALS, HttpStatus.FORBIDDEN);
-
-    const ok = await BcryptUtil.compare(password, user.passwordHash);
-    if (!ok) throw new AppError(Messages.INVALID_CREDENTIALS, HttpStatus.FORBIDDEN);
-
-    const accessToken = JwtUtil.signAccessToken({ user_id: user.id, email: user.email, name: user.name }, "3D");
-    const refreshToken = JwtUtil.signRefreshToken({ userId: user.id })
-
-    cacheManager.set(refreshToken, Infinity)
-    return { accessToken, refreshToken, user: { ...user, password: '[REDACTED]' } };
-}
-
-export async function refreshTokenService(token: string) {
-    if (!cacheManager.get(token)) throw new AppError('Invalid refresh token');
-
-    const payload = JwtUtil.verifyRefreshToken(token)
-    cacheManager.del(token);
-
-    const user = await UserRepository.findById(payload.userId as string)
-    if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
-
-    const newRefreshToken = JwtUtil.signRefreshToken({ userId: user.id })
-    const accessToken = JwtUtil.signAccessToken({ user_id: user.id, email: user.email, name: user.name }, "3D")
-
-    cacheManager.set(newRefreshToken, Infinity)
-
-    return { accessToken, refreshToken: newRefreshToken };
-}
-
-export const logoutService = (token: string) => {
-    cacheManager.del(token)
 }

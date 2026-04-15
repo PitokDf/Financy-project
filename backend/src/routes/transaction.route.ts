@@ -1,20 +1,24 @@
 import { TransactionController } from "@/controller/transaction.controller";
-import authMiddleware from "@/middleware/auth.middleware";
 import { TransactionRepository } from "@/repositories/transaction.repository";
 import { TransactionService } from "@/service/transaction.service";
+import { GamificationService } from "@/service/gamification.service";
+import { GamificationRepository } from "@/repositories/gamification.repository";
 import { Router } from "express";
+import authMiddleware from "@/middleware/auth.middleware";
+import { fileUploadService } from "@/utils/file-upload";
+
+const transactionRepo = new TransactionRepository();
+const gamificationRepo = new GamificationRepository();
+const gamificationService = new GamificationService(gamificationRepo);
+const service = new TransactionService(transactionRepo, gamificationService);
+const controller = new TransactionController(service);
 
 const transactionRouter = Router();
-const transactionService = new TransactionService(TransactionRepository);
-const transactionController = new TransactionController(transactionService);
 
-transactionRouter.use(authMiddleware);
-
-transactionRouter.get("/", transactionController.getTransactions);
-transactionRouter.post("/analyze", transactionController.analyzeTransactions);
-transactionRouter.get("/:transactionId", transactionController.getTransactionById);
-transactionRouter.post("/", transactionController.createTransaction);
-transactionRouter.patch("/:transactionId", transactionController.updateTransaction);
-transactionRouter.delete("/:transactionId", transactionController.deleteTransaction);
+transactionRouter.use(authMiddleware)
+transactionRouter.get('/', controller.getAll)
+transactionRouter.post('/', controller.create)
+transactionRouter.post('/import-csv', fileUploadService.csvUpload('file'), controller.importCsv)
+transactionRouter.delete('/:trxId', controller.delete)
 
 export default transactionRouter;

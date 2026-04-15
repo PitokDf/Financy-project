@@ -5,11 +5,186 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String // hashed with bcrypt
+  name     String
+  avatar   String? // URL to avatar image
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  transactions   Transaction[]
+  categories     Category[]
+  budgetGoals    BudgetGoal[]
+  notifications  Notification[]
+  userStats      UserStats?
+  activityLogs   ActivityLog[]
+  userBadges     UserBadge[]
+  userChallenges UserChallenge[]
+  exportLogs     ExportLog[]
+  forecasts      Forecast[]
+  userSetting    UserSetting?
+  reminderConfig ReminderConfig?
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model UserStats {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  // XP and Level
+  xp    Int @default(0)
+  level Int @default(1)
+
+  // Streak tracking
+  streak            Int       @default(0)
+  longestStreak     Int       @default(0) @map("longest_streak")
+  lastTransactionAt DateTime? @map("last_transaction_at")
+
+  // Stats
+  totalTransactions Int @default(0) @map("total_transactions")
+  totalIncome       Int @default(0) @map("total_income")
+  totalExpense      Int @default(0) @map("total_expense")
+
+  // Gamification flags
+  hasExported Boolean @default(false) @map("has_exported")
+  hasAnalyzed Boolean @default(false) @map("has_analyzed")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model Badge {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String
+  icon        String // Icon name (e.g., "Star", "Flame", "Trophy")
+  condition   String // Condition code (e.g., "streak_7", "transactions_50")
+  xpReward    Int    @default(0) @map("xp_reward")
+  color       String @default("#FFD700") // Badge color
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  badgeId    String   @map("badge_id")
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Challenge {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  target      Int // Target number to achieve
+  xpReward    Int           @default(50) @map("xp_reward")
+  type        ChallengeType @default(WEEKLY_TRANSACTIONS)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userChallenges UserChallenge[]
+
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  challengeId String    @map("challenge_id")
+  current     Int       @default(0) // Current progress
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+  deadline    DateTime // Challenge deadline (usually end of week)
+  weekNumber  Int       @map("week_number") // ISO week number
+  year        Int // Year for tracking
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId, weekNumber, year])
+  @@map("user_challenges")
+}
+
+enum ChallengeType {
+  WEEKLY_TRANSACTIONS
+  MONTHLY_SAVINGS
+  BUDGET_GOALS
+  ANALYSIS_COUNT
+  STREAK_MAINTAIN
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String          @map("user_id")
+  description String
+  amount      Int // Amount in IDR (smallest unit)
+  type        TransactionType
+  date        DateTime        @db.Date
+
+  // Optional category
+  categoryId String? @map("category_id")
+
+  // Clustering
+  clusterId String? @map("cluster_id")
+
+  // Source tracking
+  source      TransactionSource @default(MANUAL) @map("source")
+  csvImportId String?           @map("csv_import_id")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+  cluster  Cluster?  @relation(fields: [clusterId], references: [id])
+
+  @@index([userId, date])
+  @@index([userId, type])
+  @@index([userId, categoryId])
+  @@map("transactions")
 }
 
 enum TransactionType {
@@ -17,208 +192,108 @@ enum TransactionType {
   EXPENSE
 }
 
-enum NotificationType {
-  BUDGET_WARNING      // pengeluaran > 80% budget
-  BUDGET_EXCEEDED     // pengeluaran > 100% budget
-  ANALYSIS_DONE       // klaster baru ditemukan
-  BADGE_UNLOCKED      // badge baru terbuka
-  LEVEL_UP            // naik level
-  DAILY_REMINDER      // pengingat catat transaksi
-  FORECAST_READY      // prediksi bulan depan siap
-  EXPORT_DONE         // ekspor selesai
-}
-
-enum ExportFormat {
-  PDF
-  EXCEL
-}
-
-enum ExportStatus {
-  PENDING
-  PROCESSING
-  DONE
-  FAILED
-}
-
-enum AnalysisStatus {
-  PENDING
-  PROCESSING
-  DONE
-  FAILED
-}
-
-enum ChallengeType {
-  DAILY
-  WEEKLY
-}
-
-model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String
-  passwordHash  String
-  avatarUrl     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relasi
-  transactions   Transaction[]
-  categories     Category[]
-  budgetGoals    BudgetGoal[]
-  analysisRuns   AnalysisRun[]
-  notifications  Notification[]
-  exportLogs     ExportLog[]
-  recommendationLogs RecommendationLog[]
-  categoryFeedbackEvents CategoryFeedbackEvent[]
-  gamification   Gamification?
-  reminderConfig ReminderConfig?
-
-  @@map("users")
-}
-
-model Transaction {
-  id          String          @id @default(cuid())
-  userId      String
-  type        TransactionType
-  amount      Decimal         @db.Decimal(15, 2)
-  description String          // teks mentah → input ke SBERT
-  date        DateTime
-  categoryId  String?         // null = belum terkategori
-  clusterId   String?         // klaster sementara sebelum dikonfirmasi
-  embedding   Float[]         // vektor SBERT (dimensi 384)
-  isImported  Boolean         @default(false)
-  importBatch String?         // referensi ke batch impor CSV
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  // Relasi
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  cluster  Cluster?  @relation(fields: [clusterId], references: [id], onDelete: SetNull)
-  recommendationLogs RecommendationLog[]
-  categoryFeedbackEvents CategoryFeedbackEvent[]
-
-  @@index([userId, date])
-  @@index([userId, type])
-  @@index([userId, categoryId])
-  @@index([clusterId])
-  @@map("transactions")
+enum TransactionSource {
+  MANUAL
+  CSV_IMPORT
+  API
 }
 
 model Category {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  icon        String?  // emoji, misal "☕"
-  color       String?  // hex color untuk UI
-  isSystem    Boolean  @default(false) // kategori bawaan (Pemasukan, dll)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String  @id @default(uuid())
+  userId          String  @map("user_id")
+  name            String
+  color           String  @default("#888888")
+  icon            String? // Icon name
+  type            TransactionType @default(EXPENSE)
+  isAutoGenerated Boolean @default(false) @map("is_auto_generated")
 
-  // Relasi
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // AI-generated metadata
+  aiConfidence Float?   @map("ai_confidence") // Confidence score from clustering
+  aiKeywords   String[] @map("ai_keywords") // Keywords extracted from transactions
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   budgetGoals  BudgetGoal[]
   forecasts    Forecast[]
-  clusters     Cluster[]    // klaster yang di-map ke kategori ini
 
   @@unique([userId, name])
-  @@index([userId])
   @@map("categories")
 }
 
-model AnalysisRun {
-  id               String         @id @default(cuid())
-  userId           String
-  status           AnalysisStatus @default(PENDING)
-  totalTransactions Int           // jumlah transaksi yang dianalisis
-  kOptimal         Int?           // jumlah K terbaik (Elbow Method)
-  silhouetteScore  Float?         // skor kualitas klaster (−1 s/d +1)
-  wcssValues       Json?          // array WCSS per nilai K untuk grafik Elbow
-  durationMs       Int?           // durasi proses dalam milidetik
-  errorMessage     String?
-  createdAt        DateTime       @default(now())
-  completedAt      DateTime?
-
-  // Relasi
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clusters Cluster[]
-
-  @@index([userId])
-  @@map("analysis_runs")
-}
-
-model Cluster {
-  id            String   @id @default(cuid())
-  analysisRunId String
-  clusterIndex  Int      // indeks klaster (0, 1, 2, …)
-  centroid      Float[]  // vektor centroid klaster
-  size          Int      // jumlah transaksi dalam klaster
-  totalAmount   Decimal  @db.Decimal(15, 2)
-  isConfirmed   Boolean  @default(false)
-  isSkipped     Boolean  @default(false)
-  categoryId    String?  // diisi setelah pengguna konfirmasi
-  confirmedAt   DateTime?
-
-  // Relasi
-  analysisRun  AnalysisRun   @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
-  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  transactions Transaction[]
-
-  @@index([analysisRunId])
-  @@map("clusters")
-}
-
 model BudgetGoal {
-  id         String   @id @default(cuid())
-  userId     String
-  categoryId String
-  limitAmount Decimal  @db.Decimal(15, 2) // batas maksimal pengeluaran
-  month      Int      // 1–12
-  year       Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  categoryId String       @map("category_id")
+  amount     Int // Budget limit in IDR
+  period     BudgetPeriod @default(MONTHLY)
 
-  // Relasi
+  // Alert settings
+  alertThreshold Int     @default(80) @map("alert_threshold") // Alert at % of budget
+  alertSent80    Boolean @default(false) @map("alert_sent_80")
+  alertSent100   Boolean @default(false) @map("alert_sent_100")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, categoryId, month, year])
-  @@index([userId, year, month])
+  @@unique([userId, categoryId])
   @@map("budget_goals")
 }
 
-model Forecast {
-  id              String   @id @default(cuid())
-  userId          String
-  categoryId      String
-  targetMonth     Int      // bulan prediksi
-  targetYear      Int      // tahun prediksi
-  predictedAmount Decimal  @db.Decimal(15, 2)
-  windowSize      Int      @default(3) // jumlah bulan data historis untuk SMA
-  basedOnMonths   Json     // array {month, year, actual} sebagai input SMA
-  createdAt       DateTime @default(now())
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
 
-  // Relasi
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+model Cluster {
+  id            String  @id @default(uuid())
+  userId        String  @map("user_id")
+  analysisRunId String  @map("analysis_run_id")
+  name          String
+  suggestedName String? @map("suggested_name") // AI suggested name
+  color         String  @default("#888888")
+  index         Int     @default(0) // Original cluster index from ML
 
-  @@unique([userId, categoryId, targetMonth, targetYear])
-  @@index([userId, targetYear, targetMonth])
-  @@map("forecasts")
+  // Clustering metrics
+  silhouetteScore Float? @map("silhouette_score")
+  wcss            Float? // Within-cluster sum of squares
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  analysisRun  AnalysisRun   @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("clusters")
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  metadata  Json?            // data tambahan: {categoryId, budgetGoalId, badgeId, …}
-  createdAt DateTime         @default(now())
-  readAt    DateTime?
+  id      String           @id @default(uuid())
+  userId  String           @map("user_id")
+  title   String
+  message String
+  type    NotificationType
+  isRead  Boolean          @default(false) @map("is_read")
 
-  // Relasi
+  // Additional data (JSON for flexibility)
+  metadata Json? // e.g., { transactionId, categoryId, badgeId, etc. }
+
+  // Timestamps
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
@@ -226,169 +301,233 @@ model Notification {
   @@map("notifications")
 }
 
-model ReminderConfig {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  isEnabled       Boolean @default(true)
-  reminderTime    String  @default("21:00") // format "HH:MM"
-  budgetWarningPct Int    @default(80)       // persen threshold peringatan budget
+enum NotificationType {
+  BUDGET_ALERT // Budget threshold reached
+  PATTERN_FOUND // New cluster/pattern discovered
+  ACHIEVEMENT // Badge unlocked
+  LEVEL_UP // Level increased
+  REMINDER // Daily reminder
+  STREAK_WARNING // Streak about to break
+  CHALLENGE_COMPLETE // Weekly challenge completed
+}
 
-  // Relasi
+model ActivityLog {
+  id      String       @id @default(uuid())
+  userId  String       @map("user_id")
+  action  String // e.g., "TRANSACTION_CREATED", "ANALYSIS_RUN"
+  details String // Human-readable description
+  type    ActivityType
+
+  // Related entity IDs
+  metadata Json? // { transactionId, categoryId, etc. }
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, type])
+  @@map("activity_logs")
+}
+
+enum ActivityType {
+  TRANSACTION
+  ANALYSIS
+  BUDGET
+  ACHIEVEMENT
+  CATEGORY
+  EXPORT
+  IMPORT
+  SETTINGS
+}
+
+model CsvImport {
+  id           String @id @default(uuid())
+  userId       String @map("user_id")
+  filename     String
+  rowCount     Int    @map("row_count")
+  successCount Int    @default(0) @map("success_count")
+  errorCount   Int    @default(0) @map("error_count")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("csv_imports")
+}
+
+model ExportLog {
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  format   String // 'csv' | 'pdf' | 'xlsx'
+  status   String  @default("pending") // 'pending' | 'processing' | 'completed' | 'failed'
+  month    Int? // Filter month (1-12)
+  year     Int? // Filter year
+  fileUrl  String? @map("file_url") // URL to exported file
+  fileSize Int?    @map("file_size") // File size in bytes
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("export_logs")
+}
+
+model ForecastCache {
+  id         String  @id @default(uuid())
+  userId     String  @map("user_id")
+  categoryId String? @map("category_id") // null for overall forecast
+
+  // Forecast data
+  method   String @default("SMA") // Simple Moving Average
+  period   Int    @default(3) // Number of periods
+  forecast Json // { month: string, value: number }[]
+
+  // Cache control
+  expiresAt DateTime @map("expires_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, categoryId])
+  @@map("forecast_cache")
+}
+
+model Forecast {
+  id              String  @id @default(uuid())
+  userId          String  @map("user_id")
+  categoryId      String  @map("category_id")
+  targetMonth     Int     @map("target_month") // 1-12
+  targetYear      Int     @map("target_year")
+  predictedAmount Decimal @map("predicted_amount") // Predicted amount in IDR
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, targetMonth, targetYear])
+  @@map("forecasts")
+}
+
+model RecommendationLog {
+  id             String  @id @default(uuid())
+  userId         String  @map("user_id")
+  modelVariant   String  @default("A") @map("model_variant") // "A" or "B"
+  top1Correct    Boolean @default(false) @map("top1_correct")
+  inTop3         Boolean @default(false) @map("in_top3")
+  inputLatencyMs Int     @map("input_latency_ms") // Response time in milliseconds
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("recommendation_logs")
+}
+
+model CategoryFeedbackEvent {
+  id         String @id @default(uuid())
+  userId     String @map("user_id")
+  categoryId String @map("category_id")
+  action     String // "accepted" | "rejected" | "modified"
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("category_feedback_events")
+}
+
+model AnalysisRun {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  status            String  @default("running")
+  totalTransactions Int     @map("total_transactions")
+  kOptimal          Int?    @map("k_optimal") // Optimal number of clusters
+  silhouetteScore   Float?  @map("silhouette_score")
+  wcssValues        Json?   @map("wcss_values") // Within-cluster sum of squares values
+  durationMs        Int?    @map("duration_ms") // Analysis duration in milliseconds
+  errorMessage      String? @map("error_message")
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  clusters Cluster[]
+
+  @@index([userId, createdAt])
+  @@map("analysis_runs")
+}
+
+model UserSetting {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  // Notification preferences
+  pushNotifications  Boolean @default(true) @map("push_notifications")
+  budgetAlerts       Boolean @default(true) @map("budget_alerts")
+  dailyReminder      Boolean @default(true) @map("daily_reminder")
+  reminderTime       String  @default("20:00") @map("reminder_time") // HH:MM format
+
+  // Display preferences
+  currency String @default("IDR")
+  language String @default("id") // id = Indonesian
+
+  // Gamification
+  showGamification Boolean @default(true) @map("show_gamification")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model ReminderConfig {
+  id             String    @id @default(uuid())
+  userId         String    @unique @map("user_id")
+  isEnabled      Boolean   @default(true) @map("is_enabled")
+  reminderTime   String    @default("20:00") @map("reminder_time") // HH:MM format
+  reminderDays   String[]  @default(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) @map("reminder_days")
+  lastReminderAt DateTime? @map("last_reminder_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("reminder_configs")
 }
 
-model ExportLog {
-  id          String       @id @default(cuid())
-  userId      String
-  format      ExportFormat
-  status      ExportStatus @default(PENDING)
-  month       Int
-  year        Int
-  fileUrl     String?      // URL file hasil ekspor
-  fileSize    Int?         // ukuran file dalam bytes
-  options     Json?        // opsi ekspor: {includePieChart, includeTrend, …}
-  errorMessage String?
-  createdAt   DateTime     @default(now())
-  completedAt DateTime?
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String
+  p256dh    String
+  auth      String
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Relasi
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@map("export_logs")
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
 }
 
-model ImportBatch {
-  id               String   @id @default(cuid())
-  userId           String
-  fileName         String
-  totalRows        Int
-  successCount     Int      @default(0)
-  errorCount       Int      @default(0)
-  errorDetails     Json?    // array {row, reason}
-  columnMapping    Json     // pemetaan kolom CSV ke field sistem
-  createdAt        DateTime @default(now())
-
-  @@index([userId])
-  @@map("import_batches")
-}
-
-model Gamification {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  totalXp       Int      @default(0)
-  level         Int      @default(1)
-  currentStreak Int      @default(0) // streak aktif hari ini
-  longestStreak Int      @default(0) // rekor streak terpanjang
-  lastActiveDate DateTime? // tanggal terakhir mencatat transaksi
-  updatedAt     DateTime @updatedAt
-
-  // Relasi
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userBadges UserBadge[]
-  userChallenges UserChallenge[]
-
-  @@map("gamifications")
-}
-
-model Badge {
-  id          String  @id @default(cuid())
-  code        String  @unique // "STREAK_7", "TXN_50", dsb.
-  name        String
-  description String
-  icon        String  // emoji
-  xpReward    Int     @default(0)
-  condition   Json    // {type: "streak", threshold: 7}
-
-  // Relasi
-  userBadges UserBadge[]
-
-  @@map("badges")
-}
-
-model UserBadge {
-  id             String   @id @default(cuid())
-  gamificationId String
-  badgeId        String
-  earnedAt       DateTime @default(now())
-
-  // Relasi
-  gamification Gamification @relation(fields: [gamificationId], references: [id], onDelete: Cascade)
-  badge        Badge        @relation(fields: [badgeId], references: [id])
-
-  @@unique([gamificationId, badgeId])
-  @@map("user_badges")
-}
-
-model Challenge {
-  id          String        @id @default(cuid())
-  type        ChallengeType
-  title       String
-  description String
-  goal        Json          // {metric: "coffee_spend", limit: 50000}
-  xpReward    Int
-  isActive    Boolean       @default(true)
-
-  // Relasi
-  userChallenges UserChallenge[]
-
-  @@map("challenges")
-}
-
-model UserChallenge {
-  id             String   @id @default(cuid())
-  gamificationId String
-  challengeId    String
-  progress       Float    @default(0) // 0.0 – 1.0
-  isCompleted    Boolean  @default(false)
-  completedAt    DateTime?
-  weekStart      DateTime? // untuk tantangan mingguan
-  createdAt      DateTime @default(now())
-
-  // Relasi
-  gamification Gamification @relation(fields: [gamificationId], references: [id], onDelete: Cascade)
-  challenge    Challenge    @relation(fields: [challengeId], references: [id])
-
-  @@index([gamificationId])
-  @@map("user_challenges")
-}
-
-model RecommendationLog {
-  id               String   @id @default(cuid())
-  userId           String
-  transactionId    String
-  suggestedTop3    String[]
-  chosenCategoryId String
-  top1Correct      Boolean
-  inTop3           Boolean
-  inputLatencyMs   Int
-  modelVariant     String
-  createdAt        DateTime @default(now())
-
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([transactionId])
-  @@map("recommendation_logs")
-}
-
-model CategoryFeedbackEvent {
-  id                       String   @id @default(cuid())
-  userId                   String
-  transactionId            String
-  suggestedTop3            String[]
-  chosenCategoryId         String
-  isCorrected              Boolean
-  correctionFromCategoryId String?
-  createdAt                DateTime @default(now())
-
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([transactionId])
-  @@map("category_feedback_events")
-}

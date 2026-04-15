@@ -15,14 +15,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
             req.method,
             req.originalUrl,
             res.statusCode,
-            parseFloat(responseTime),
-            {
-                ip: req.ip || req.connection.remoteAddress,
-                userAgent: req.get("User-Agent"),
-                contentLength: res.get("Content-Length"),
-                startTime: startTime.toISOString(),
-                endTime: endTime.toISOString()
-            }
+            parseFloat(responseTime)
         );
     });
 

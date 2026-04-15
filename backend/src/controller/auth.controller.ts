@@ -1,46 +1,34 @@
-import { HttpStatus } from "@/constants/http-status";
+import { Request, Response } from 'express';
 import { asyncHandler } from "@/middleware/error.middleware";
-import { getUserByIdService, loginService, refreshTokenService } from "@/service/user.service";
-import { ResponseUtil } from "@/utils";
-import { Auth } from "@/utils/auth";
-import { Request, Response } from 'express'
+import { LoginDTO, RegisterDTO } from '@/schemas/user.schema';
+import { AuthService } from '@/service/auth.service';
+import { Auth } from '@/utils/auth';
+import { ResponseUtil } from '@/utils';
 
 export class AuthController {
-    public static login = asyncHandler(async (req: Request, res: Response) => {
-        const payload = req.body;
-        const result = await loginService(payload.email, payload.password);
+    constructor(private readonly authService: AuthService) { }
 
-        Auth.setTokenCookieHttpOnly('refreshToken', res, result.refreshToken)
+    public login = asyncHandler(async (req: Request, res: Response) => {
+        const data = req.body as LoginDTO;
+        const result = await this.authService.login(data);
 
-        return ResponseUtil.success(res, {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            user: result.user
-        }, HttpStatus.OK, "Login berhasil");
-    });
+        Auth.setTokenCookieHttpOnly(res, result.token, { duration: 3, unit: 'd' })
 
-    public static refresh = asyncHandler(async (req: Request, res: Response) => {
-        // Support refresh token dari cookie (web) atau body (mobile)
-        const token = req.cookies?.refreshToken || req.body?.refreshToken
-
-        if (!token) {
-            return ResponseUtil.error(res, "Refresh token tidak ditemukan", undefined, HttpStatus.BAD_REQUEST);
-        }
-
-        const result = await refreshTokenService(token)
-
-        Auth.setTokenCookieHttpOnly('refreshToken', res, result.refreshToken)
-
-        return ResponseUtil.success(res, {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken
-        }, HttpStatus.OK, "Token berhasil diperbarui");
+        return ResponseUtil.success(res, result.user)
     })
 
-    public static me = asyncHandler(async (req: Request, res: Response) => {
-        const authUser = req.auth_user!
-        const user = await getUserByIdService(String(authUser.user_id))
+    public register = asyncHandler(async (req: Request, res: Response) => {
+        const data = req.body as RegisterDTO;
+        const result = await this.authService.register(data);
 
-        return ResponseUtil.success(res, user, HttpStatus.OK, "Profil berhasil diambil");
+        Auth.setTokenCookieHttpOnly(res, result.token, { duration: 3, unit: 'd' })
+
+        return ResponseUtil.success(res, result.user)
+    })
+
+    public logout = asyncHandler(async (req: Request, res: Response) => {
+        Auth.clearTokenCookieHttpOnly(res)
+
+        return ResponseUtil.success(res, {})
     })
 }

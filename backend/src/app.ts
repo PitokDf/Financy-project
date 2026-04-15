@@ -12,7 +12,6 @@ import { ResponseUtil } from "./utils"
 import { HttpStatus } from "./constants/http-status"
 import { corsConfiguration } from "./config/cors"
 import prisma from "./config/prisma"
-import path from "node:path"
 
 const app = express()
 
@@ -48,7 +47,6 @@ app.use(requestLogger)
 
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));
-app.use(express.static(path.join(process.cwd(), "public")));
 
 app.use(App.API_PREFIX, apiRouter)
 

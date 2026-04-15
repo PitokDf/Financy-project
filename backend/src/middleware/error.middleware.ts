@@ -7,7 +7,7 @@ import { ZodError } from "zod";
 import { MulterError } from "multer";
 import { mapPrismaError, isPrismaError } from '@/errors/prisma-error';
 import { HttpStatus } from "@/constants/http-status";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
+import { PrismaClientKnownRequestError } from "generated/prisma/internal/prismaNamespace";
 
 export const notFound = (req: Request, res: Response): void => {
     ResponseUtil.notFound(res, `Route ${req.originalUrl} not found`);
@@ -83,6 +83,8 @@ export const errorHandler = (
         userAgent: req.get('User-Agent'),
         statusCode,
     });
+
+    console.log(err)
 
     ResponseUtil.error(res, message, errors, statusCode);
 };
