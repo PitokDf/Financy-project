@@ -39,6 +39,5 @@ index.html
 
 # Unused lockfiles
 bun.lockb
-bun.lock
 yarn.lock
 pnpm-lock.yaml
