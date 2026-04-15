@@ -57,12 +57,16 @@ jobs:
             exit 1
           fi
           mkdir -p ~/.ssh
-          # Use printf to preserve newlines perfectly
-          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_rsa
+          
+          # Write to raw file first
+          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_rsa_raw
+          
+          # SUPER CLEAN: Remove Windows line endings (\r) AND trailing spaces
+          tr -d '\r' < ~/.ssh/id_rsa_raw | sed 's/[[:space:]]*$//' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           
-          # Debugging info (Safe: only shows format and size)
-          echo "Key file created. Size: $(wc -c < ~/.ssh/id_rsa) bytes"
+          # Debugging info
+          echo "Key file cleaned. Size: $(wc -c < ~/.ssh/id_rsa) bytes"
           head -n 1 ~/.ssh/id_rsa
           tail -n 1 ~/.ssh/id_rsa
           
