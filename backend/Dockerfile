@@ -35,11 +35,6 @@ RUN bun install --frozen-lockfile --production
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-# Copy node_modules from builder might be better if we have native deps, 
-# but bun install --production is cleaner.
-# Actually, we need the prisma client generated in stage 1 or regenerate it here.
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Set environment variables
 ENV NODE_ENV=production
