@@ -1,6 +1,7 @@
 {
   "name": "backend-2",
   "version": "1.0.0",
+  "postinstall": "prisma generate",
   "main": "dist/src/index.js",
   "_moduleAliases": {
     "@": "src"
