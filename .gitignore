@@ -21,7 +21,8 @@ temp/
 
 # Keep generated static mock HTML out of repo root commits
 *.html
-.github
+.github/skills
+.github/copilot*.md
 demo
 .rtk
 docs
