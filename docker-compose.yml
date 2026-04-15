@@ -19,6 +19,8 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - CLIENT_URL=${CLIENT_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - COOKIES_DOMAIN=${COOKIES_DOMAIN}
+      - JWT_ISSUER=${JWT_ISSUER}
     ports:
       - "6789:6789"
     depends_on:
