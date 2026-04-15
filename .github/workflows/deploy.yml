@@ -49,14 +49,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up SSH Key Manual
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ ERROR: Secret SSH_PRIVATE_KEY is EMPTY! Please check your GitHub Repository Secrets."
+          if [ -z "$SSH_KEY" ]; then
+            echo "❌ ERROR: Secret SSH_PRIVATE_KEY is EMPTY!"
             exit 1
           fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          # Use printf to preserve newlines perfectly
+          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          
+          # Debugging info (Safe: only shows format and size)
+          echo "Key file created. Size: $(wc -c < ~/.ssh/id_rsa) bytes"
+          head -n 1 ~/.ssh/id_rsa
+          tail -n 1 ~/.ssh/id_rsa
+          
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
