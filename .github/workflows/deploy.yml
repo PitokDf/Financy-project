@@ -78,8 +78,8 @@ jobs:
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          COOKIES_DOMAIN: ${{ env.COOKIES_DOMAIN }}
-          JWT_ISSUER: ${{ env.JWT_ISSUER }}
+          COOKIES_DOMAIN: ${{ vars.COOKIES_DOMAIN }}
+          JWT_ISSUER: ${{ vars.JWT_ISSUER }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
