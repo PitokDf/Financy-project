@@ -1,5 +1,5 @@
 import { GamificationRepository } from "@/repositories/gamification.repository";
-import { UserStats } from "generated/prisma/client";
+import { UserStats } from "@/generated/prisma/client";
 import prisma from "@/config/prisma";
 import { differenceInCalendarDays } from "date-fns";
 
@@ -81,7 +81,7 @@ export class GamificationService {
 
         const longestStreak = Math.max(newStreak, stats.longestStreak);
 
-        const updatedStats = await this.gamificationRepo.upsertStats(userId, {
+        await this.gamificationRepo.upsertStats(userId, {
             streak: newStreak,
             longestStreak,
             lastTransactionAt: now
@@ -125,7 +125,7 @@ export class GamificationService {
         const year = now.getFullYear();
 
         const activeChallenges = await this.gamificationRepo.getActiveChallenges(userId, weekNumber, year);
-        
+
         if (activeChallenges.length > 0) return activeChallenges;
 
         const allChallenges = await prisma.challenge.findMany();
@@ -139,7 +139,7 @@ export class GamificationService {
         deadline.setHours(23, 59, 59, 999);
 
         const userChallenges = await Promise.all(
-            selected.map(challenge => 
+            selected.map(challenge =>
                 prisma.userChallenge.create({
                     data: {
                         userId,

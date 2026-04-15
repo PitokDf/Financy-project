@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from 'generated/prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 import logger from './winston.logger';
 import { config } from '@/config';
 import { cacheManager } from './cache';

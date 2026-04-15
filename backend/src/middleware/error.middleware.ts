@@ -7,7 +7,7 @@ import { ZodError } from "zod";
 import { MulterError } from "multer";
 import { mapPrismaError, isPrismaError } from '@/errors/prisma-error';
 import { HttpStatus } from "@/constants/http-status";
-import { PrismaClientKnownRequestError } from "generated/prisma/internal/prismaNamespace";
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 
 export const notFound = (req: Request, res: Response): void => {
     ResponseUtil.notFound(res, `Route ${req.originalUrl} not found`);

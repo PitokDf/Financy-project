@@ -1,5 +1,5 @@
 import { CategoryRepository } from "@/repositories/category.repository";
-import { TransactionType } from "generated/prisma/enums";
+import { TransactionType } from "@/generated/prisma/enums";
 
 export class CategoryService {
     constructor(private readonly categoryRepo: CategoryRepository) { }

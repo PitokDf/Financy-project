@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { PushRepository } from "../repositories/push.repository";
+import { PushRepository } from "@/repositories/push.repository";
 
 const publicVapidKey = process.env.VAPID_PUBLIC_KEY || "";
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || "";

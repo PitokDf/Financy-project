@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { User } from "generated/prisma/client";
+import { User } from "@/generated/prisma/client";
 
 export class UserRepository {
     static async findById(id: string): Promise<User | null> {

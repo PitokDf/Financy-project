@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { NotificationType } from "generated/prisma/enums";
+import { NotificationType } from "@/generated/prisma/enums";
 
 export class NotificationRepository {
   static async create(data: {

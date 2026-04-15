@@ -1,4 +1,4 @@
-import { PrismaClient } from 'generated/prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 import logger from './winston.logger';
 
 export type TransactionCallback<T> = (prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<T>;

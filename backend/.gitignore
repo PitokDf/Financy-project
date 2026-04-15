@@ -35,6 +35,7 @@ Thumbs.db
 
 index.html
 /generated/prisma
+/src/generated/prisma
 
 # Unused lockfiles
 bun.lockb

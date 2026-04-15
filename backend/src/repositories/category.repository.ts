@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { TransactionType } from "generated/prisma/enums";
+import { TransactionType } from "@/generated/prisma/enums";
 
 export class CategoryRepository {
     public getAll = async (userId: string) => {
