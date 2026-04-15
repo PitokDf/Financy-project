@@ -58,15 +58,12 @@ jobs:
           fi
           mkdir -p ~/.ssh
           
-          # Write to raw file first
-          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_rsa_raw
-          
-          # SUPER CLEAN: Remove Windows line endings (\r) AND trailing spaces
-          tr -d '\r' < ~/.ssh/id_rsa_raw | sed 's/[[:space:]]*$//' > ~/.ssh/id_rsa
+          # BULLETPROOF: Decode from base64 to avoid ALL formatting issues
+          echo "$SSH_KEY" | base64 -d > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           
-          # Debugging info
-          echo "Key file cleaned. Size: $(wc -c < ~/.ssh/id_rsa) bytes"
+          # Debugging info (Safe)
+          echo "Key file decoded from Base64. Size: $(wc -c < ~/.ssh/id_rsa) bytes"
           head -n 1 ~/.ssh/id_rsa
           tail -n 1 ~/.ssh/id_rsa
           
