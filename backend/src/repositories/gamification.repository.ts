@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { UserStats, Badge, ChallengeType } from "generated/prisma/client";
+import { UserStats } from "generated/prisma/client";
 
 export class GamificationRepository {
     public getStats = async (userId: string): Promise<UserStats | null> => {

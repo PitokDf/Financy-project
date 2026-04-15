@@ -2,16 +2,16 @@ import prisma from "@/config/prisma";
 
 export class PushRepository {
   static async findByEndpoint(endpoint: string) {
-    return prisma.pushSubscription.findUnique({
+    return prisma.pushSubscription.findFirst({
       where: { endpoint }
     });
   }
 
   static async upsert(userId: string, subscription: any) {
     const { endpoint, keys } = subscription;
-    
+
     return prisma.pushSubscription.upsert({
-      where: { 
+      where: {
         userId_endpoint: {
           userId,
           endpoint

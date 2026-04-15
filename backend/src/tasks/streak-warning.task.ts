@@ -6,7 +6,8 @@ import { isToday } from "date-fns";
 export class TaskManager {
     public async streakWarning() {
         console.log("[Task] Starting Streak Warning Task...");
-        const usersWithStreak = await GamificationRepository.getUsersWithActiveStreak();
+        const gamificationRepository = new GamificationRepository()
+        const usersWithStreak = await gamificationRepository.getUsersWithActiveStreak();
 
         let notifiedCount = 0;
 

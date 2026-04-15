@@ -1,4 +1,5 @@
 import { config } from "@/config";
+import { Messages } from "@/constants/message";
 import { JwtPayload, JwtUtil, ResponseUtil } from "@/utils";
 import { Auth } from "@/utils/auth";
 import { Request, Response, NextFunction } from "express";
@@ -25,7 +26,7 @@ export default function authMiddleware(
     const authHeader = req.headers.authorization;
 
     if ((!authCookie && config.TOKEN_SET_IN == "cookie") || ((!authHeader || !authHeader?.startsWith("Bearer ")) && config.TOKEN_SET_IN == "header")) {
-        return ResponseUtil.unauthorized(res, "Unauthorized");
+        return ResponseUtil.forbidden(res, Messages.FORBIDDEN);
     }
 
     try {
@@ -44,6 +45,7 @@ export default function authMiddleware(
         req.auth_user = decoded;
         return next();
     } catch (err) {
-        return ResponseUtil.unauthorized(res, "Invalid or expired token");
+        console.error(err)
+        return ResponseUtil.forbidden(res, "Invalid or expired token");
     }
 }

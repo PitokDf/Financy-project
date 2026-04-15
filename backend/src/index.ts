@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { config } from "./config";
 import logger from "./utils/winston.logger";
 import { startServer } from "./utils/app-utils";
