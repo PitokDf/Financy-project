@@ -98,6 +98,8 @@ jobs:
             CLIENT_URL=$CLIENT_URL
             ALLOWED_ORIGINS=$ALLOWED_ORIGINS
             BACKEND_IMAGE=$REGISTRY/$IMAGE_NAME:main
+            COOKIES_DOMAIN=$COOKIES_DOMAIN
+            JWT_ISSUER=$JWT_ISSUER
             EOF
 
             # Login to GHCR (using the automatic GITHUB_TOKEN)
