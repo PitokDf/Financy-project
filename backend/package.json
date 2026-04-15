@@ -20,7 +20,8 @@
     "db:seed": "npx prisma db seed",
     "db:studio": "npx prisma studio",
     "db:reset": "npx prisma migrate reset --force",
-    "db:prepare": "npx prisma generate"
+    "db:prepare": "npx prisma generate",
+    "postinstall": "npx prisma generate"
   },
   "prisma": {
     "seed": "tsx -r module-alias/register -r dotenv/config prisma/db/seed.ts"
