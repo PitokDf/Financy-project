@@ -11,7 +11,7 @@
     "lint": "NODE_NO_WARNINGS=1 eslint --config eslint.config.cjs 'src/**/*.{ts,js}' --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "NODE_NO_WARNINGS=1 eslint --config eslint.config.cjs 'src/**/*.{ts,js}' --fix",
     "build": "tsc && tsc-alias",
-    "start": "node -r module-alias/register dist/src/index.js",
+    "start": "node dist/src/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
