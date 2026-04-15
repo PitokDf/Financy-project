@@ -1,0 +1,27 @@
+import * as Prisma from './internal/prismaNamespaceBrowser';
+export { Prisma };
+export * as $Enums from './enums';
+export * from './enums';
+export type User = Prisma.UserModel;
+export type UserStats = Prisma.UserStatsModel;
+export type Badge = Prisma.BadgeModel;
+export type UserBadge = Prisma.UserBadgeModel;
+export type Challenge = Prisma.ChallengeModel;
+export type UserChallenge = Prisma.UserChallengeModel;
+export type Transaction = Prisma.TransactionModel;
+export type Category = Prisma.CategoryModel;
+export type BudgetGoal = Prisma.BudgetGoalModel;
+export type Cluster = Prisma.ClusterModel;
+export type Notification = Prisma.NotificationModel;
+export type ActivityLog = Prisma.ActivityLogModel;
+export type CsvImport = Prisma.CsvImportModel;
+export type ExportLog = Prisma.ExportLogModel;
+export type ForecastCache = Prisma.ForecastCacheModel;
+export type Forecast = Prisma.ForecastModel;
+export type RecommendationLog = Prisma.RecommendationLogModel;
+export type CategoryFeedbackEvent = Prisma.CategoryFeedbackEventModel;
+export type AnalysisRun = Prisma.AnalysisRunModel;
+export type UserSetting = Prisma.UserSettingModel;
+export type ReminderConfig = Prisma.ReminderConfigModel;
+export type PushSubscription = Prisma.PushSubscriptionModel;
+//# sourceMappingURL=browser.d.ts.map
