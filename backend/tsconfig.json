@@ -40,7 +40,8 @@
   "include": [
     "src/**/*.ts",
     "prisma/**/**.ts",
-    "generated/**/*.ts"
+    "generated/**/*.ts",
+    "api/**/*ts"
   ],
   "exclude": [
     "node_modules",
