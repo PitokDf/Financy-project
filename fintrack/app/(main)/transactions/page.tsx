@@ -10,14 +10,14 @@ import { TransactionCard } from '@/components/shared/transaction-card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ImportCsvModal } from './_components/import-csv-modal';
 import { DisplayTransaction, useTransactionsPage } from './use-transactions-page';
-import { useCallback, useRef, useMemo, useState } from 'react';
+import { Suspense, useCallback, useRef, useMemo, useState } from 'react';
 import { TransactionsSkeleton } from './_components/skeleton';
 
 type FlatItem =
     | { type: 'header'; date: string; count: number }
     | { type: 'item'; transaction: DisplayTransaction };
 
-export default function TransactionsPage() {
+function TransactionsContent() {
     const observerRef = useRef<IntersectionObserver | null>(null);
     const parentRef = useRef<HTMLDivElement>(null);
     const [showImportModal, setShowImportModal] = useState(false);
@@ -228,5 +228,13 @@ export default function TransactionsPage() {
                 onOpenChange={setShowImportModal}
             />
         </div>
+    );
+}
+
+export default function TransactionsPage() {
+    return (
+        <Suspense fallback={<TransactionsSkeleton />}>
+            <TransactionsContent />
+        </Suspense>
     );
 }
