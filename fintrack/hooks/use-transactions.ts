@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
+import { ErrorResponse } from "@/types";
 
 export interface Transaction {
     id: string;
@@ -29,7 +31,6 @@ export function useTransactions(search?: string, type?: string) {
                 : `/transactions?limit=10${searchParam}${typeParam}`;
 
             const res = await axiosClient.get(url);
-            console.log(res)
             const payload = res as { data: Transaction[], nextCursor?: string, totalIncome?: number, totalExpense?: number };
 
             return {
@@ -58,7 +59,7 @@ export function useTransactions(search?: string, type?: string) {
             queryClient.invalidateQueries({ queryKey: ['user-stats'] });
             toast.success("Transaksi berhasil ditambahkan!");
         },
-        onError: (error: any) => {
+        onError: (error: AxiosError<ErrorResponse>) => {
             toast.error(error.response?.data?.message || "Gagal menambahkan transaksi");
         }
     });
@@ -73,7 +74,7 @@ export function useTransactions(search?: string, type?: string) {
             queryClient.invalidateQueries({ queryKey: ['user-stats'] });
             toast.success("Transaksi berhasil dihapus!");
         },
-        onError: (error: any) => {
+        onError: (error: AxiosError<ErrorResponse>) => {
             toast.error(error.response?.data?.message || "Gagal menghapus transaksi");
         }
     });
@@ -92,7 +93,7 @@ export function useTransactions(search?: string, type?: string) {
             queryClient.invalidateQueries({ queryKey: ['user-stats'] });
             toast.success(`Berhasil mengimpor ${data.data?.successCount || 0} transaksi!`);
         },
-        onError: (error: any) => {
+        onError: (error: AxiosError<ErrorResponse>) => {
             toast.error(error.response?.data?.message || "Gagal mengimpor CSV");
         }
     });
@@ -105,7 +106,7 @@ export function useTransactions(search?: string, type?: string) {
         hasNextPage: transactionsQuery.hasNextPage,
         fetchNextPage: transactionsQuery.fetchNextPage,
         isFetchingNextPage: transactionsQuery.isFetchingNextPage,
-        createTransaction: createMutation.mutate,
+        createTransaction: createMutation.mutateAsync,
         isCreating: createMutation.isPending,
         deleteTransaction: deleteMutation.mutateAsync,
         isDeleting: deleteMutation.isPending,

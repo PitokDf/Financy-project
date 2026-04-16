@@ -35,8 +35,8 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
     });
 
     return (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col h-87.5">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
                     Tren Arus Kas
@@ -44,22 +44,20 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                 <div className="flex items-center bg-muted/60 p-1 rounded-full text-xs font-semibold">
                     <button
                         onClick={() => { setChartType('bar'); storageClient.set(CHART_TYPE_KEY, 'bar') }}
-                        className={`px-3 py-1 rounded-full transition-all ${chartType === 'bar' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                        className={`px-3 py-1 rounded-full transition-all ${chartType === 'bar' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         Batang
                     </button>
                     <button
                         onClick={() => { setChartType('area'); storageClient.set(CHART_TYPE_KEY, 'area') }}
-                        className={`px-3 py-1 rounded-full transition-all ${chartType === 'area' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                        className={`px-3 py-1 rounded-full transition-all ${chartType === 'area' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         Tren
                     </button>
                 </div>
             </div>
 
-            <div className="h-64 w-full">
+            <div className="flex-1 w-full min-h-0">
                 {isLoading ? (
                     <div className="h-full flex items-center justify-center">
                         <Loader2 className="w-6 h-6 text-primary animate-spin" />
