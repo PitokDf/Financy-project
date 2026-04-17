@@ -1,1 +1,0 @@
-{"version":3,"file":"budget.controller.d.ts","sourceRoot":"","sources":["../../../src/controller/budget.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAC5C,OAAO,EAAE,aAAa,EAAE,MAAM,0BAA0B,CAAC;AAIzD,qBAAa,gBAAgB;IACb,OAAO,CAAC,QAAQ,CAAC,aAAa;gBAAb,aAAa,EAAE,aAAa;IAElD,UAAU,8EAGf;IAEK,YAAY,8EAGjB;IAEK,YAAY,8EAGjB;IAEK,YAAY,8EAGjB;CACL"}
