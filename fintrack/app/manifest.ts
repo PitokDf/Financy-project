@@ -11,6 +11,36 @@ export default function manifest(): MetadataRoute.Manifest {
         background_color: '#ffffff',
         theme_color: '#10b981',
         lang: 'id-ID',
+        shortcuts: [
+            {
+                name: 'Buka Dashboard',
+                short_name: 'Dashboard',
+                description: 'Lihat ringkasan keuangan Anda',
+                url: '/dashboard',
+                icons: [{ src: '/icons/icon-dashboard-192x192.png', sizes: '192x192', type: 'image/png' }],
+            },
+            {
+                name: 'Kelola Transaksi',
+                short_name: 'Transaksi',
+                description: 'Lihat dan catat transaksi terbaru',
+                url: '/transactions',
+                icons: [{ src: '/icons/icon-transactions-192x192.png', sizes: '192x192', type: 'image/png' }],
+            },
+            {
+                name: 'Tambah Transaksi',
+                short_name: 'Tambah',
+                description: 'Catat transaksi terbaru',
+                url: '/transactions?action=add',
+                icons: [{ src: '/icons/icon-add-transactions-192x192.png', sizes: '192x192', type: 'image/png' }],
+            },
+            {
+                name: 'Lihat Analisis AI',
+                short_name: 'Analisis',
+                description: 'Pantau klasterisasi pengeluaran',
+                url: '/analysis',
+                icons: [{ src: '/icons/icon-analysis-192x192.png', sizes: '192x192', type: 'image/png' }],
+            }
+        ],
         icons: [
             {
                 src: '/icons/icon-192x192.png',
