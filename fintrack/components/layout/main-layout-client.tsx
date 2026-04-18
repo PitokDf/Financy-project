@@ -36,7 +36,7 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
                     showNotification={showNotification}
                 />
             )}
-            <main className="flex-1 px-4  animate-in fade-in duration-500 pt-4 pb-20">
+            <main className="flex-1 px-4 animate-in fade-in duration-500 pt-4 pb-20">
                 {children}
             </main>
             {!BOTTOM_NAV_HIDDEN_ROUTE.includes(pathname) && <BottomNav />}

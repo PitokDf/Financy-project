@@ -28,11 +28,11 @@ export default function ProfileSkeleton() {
     return (
         <div className="animate-fade-in space-y-5 max-w-md mx-auto">
             {/* Profile Header Card Skeleton */}
-            <div className="border border-border/50 rounded-2xl overflow-hidden bg-card">
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-card">
                 <div className="bg-muted/30 h-20 relative" />
                 <div className="px-4 pb-4 -mt-10 relative z-10">
                     <div className="flex items-center gap-3">
-                        <Skeleton className="w-16 h-16 rounded-full border-4 border-background shrink-0 shadow-lg" />
+                        <Skeleton className="w-16 h-16 rounded-full  border-4 border-background shrink-0 shadow-lg" />
                         <div className="flex-1 pt-8 space-y-2">
                             <Skeleton className="w-32 h-5" />
                             <Skeleton className="w-48 h-3" />

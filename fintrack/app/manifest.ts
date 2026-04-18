@@ -46,7 +46,7 @@ export default function manifest(): MetadataRoute.Manifest {
             },
             {
                 src: '/screenshots/analisis_mobile.png',
-                sizes: '390x844',
+                sizes: '360x740',
                 type: 'image/png',
                 label: 'Tampilan analisis FinTrack',
             },

@@ -9,8 +9,55 @@ import { QueryClientLayout } from '@/components/providers/query-client-provider'
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'FinTrack - Manajemen Keuangan Pribadi',
-  description: 'Aplikasi manajemen keuangan pribadi dengan klasterisasi transaksi otomatis',
+  title: {
+    default: 'FinTrack - Manajemen Keuangan Pribadi dan Klasterisasi',
+    template: '%s | FinTrack',
+  },
+  description: 'Aplikasi manajemen keuangan pribadi yang memanfaatkan klasterisasi transaksi otomatis dan asisten AI untuk mempermudah monitoring pengeluaran.',
+  metadataBase: new URL('https://fintrack.pitok.my.id'),
+  keywords: [
+    'Manajemen Keuangan',
+    'FinTrack',
+    'Personal Finance',
+    'Klasterisasi',
+    'Pengeluaran',
+    'AI',
+    'Fintech',
+    'Indonesia',
+  ],
+  authors: [{ name: 'FinTrack Team' }],
+  creator: 'FinTrack',
+  publisher: 'FinTrack',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: 'FinTrack - Manajemen Keuangan Pribadi Inovatif',
+    description: 'Aplikasi manajemen keuangan pribadi dengan klasterisasi transaksi otomatis berbasis AI untuk membantu Anda mencapai kebebasan finansial.',
+    url: 'https://fintrack.pitok.my.id',
+    siteName: 'FinTrack',
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FinTrack - Kelola Keuangan dengan Mudah',
+    description: 'Aplikasi manajemen keuangan pribadi cerdas dari Indonesia, memaksimalkan klasterisasi AI.',
+    creator: '@fintrack_id',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: '/manifest.webmanifest',
 };
 

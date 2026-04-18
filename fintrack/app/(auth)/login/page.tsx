@@ -7,6 +7,7 @@ import { TrendingUp, Shield, Zap, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/lib/zustand/auth-store';
 import { ReusableForm } from '@/components/ui/reuseable-form';
 import { useAuth } from '@/hooks/use-auth';
+import Image from 'next/image';
 
 const loginSchema = z.object({
     email: z.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
@@ -43,7 +44,8 @@ export default function LoginPage() {
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
                 <div className="relative z-10">
                     <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-5 backdrop-blur-sm">
-                        <span className="text-white font-black text-2xl">F</span>
+                        <Image alt='Icon badge' src={'/icons/badge-72x72.png'} width={38} height={38} />
+                        {/* <span className="text-white font-black text-2xl">F</span> */}
                     </div>
                     <h1 className="text-3xl font-black text-white mb-2">FinTrack</h1>
                     <p className="text-white/80 text-sm font-medium">
