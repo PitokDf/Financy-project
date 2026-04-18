@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { OfflineSyncProvider } from "./offline-sync-provider";
 
 export function QueryClientLayout({
     children,
@@ -22,7 +23,9 @@ export function QueryClientLayout({
 
     return (
         <QueryClientProvider client={client}>
-            {children}
+            <OfflineSyncProvider>
+                {children}
+            </OfflineSyncProvider>
         </QueryClientProvider>
     );
 }

@@ -3,6 +3,8 @@ import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
+import { addPendingMutation } from "@/lib/offline/db";
+import { useOfflineSync } from "@/components/providers/offline-sync-provider";
 
 export interface Transaction {
     id: string;
@@ -20,6 +22,7 @@ export interface Transaction {
 
 export function useTransactions(search?: string, type?: string) {
     const queryClient = useQueryClient();
+    const { isOnline } = useOfflineSync();
 
     const transactionsQuery = useInfiniteQuery({
         queryKey: ['transactions', search, type],
@@ -51,30 +54,111 @@ export function useTransactions(search?: string, type?: string) {
 
     const createMutation = useMutation({
         mutationFn: async (data: Omit<Transaction, 'id' | 'category'>) => {
+            if (!navigator.onLine) {
+                const offlineId = `offline_${Date.now()}`;
+                await addPendingMutation({
+                    id: offlineId,
+                    action: 'CREATE',
+                    data: data
+                });
+                return { ...data, id: offlineId, isOffline: true };
+            }
             const res = await axiosClient.post("/transactions", data);
             return res.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            toast.success("Transaksi berhasil ditambahkan!");
+        onMutate: async (newTx) => {
+            await queryClient.cancelQueries({ queryKey: ['transactions', search, type] });
+            const previousTransactions = queryClient.getQueryData(['transactions', search, type]);
+
+            if (!navigator.onLine) {
+                const offlineTx = {
+                    ...newTx,
+                    id: `offline_${Date.now()}`,
+                    categoryColor: newTx.type === 'EXPENSE' ? '#b92910' : '#059669',
+                    category: 'Pending Sync...',
+                    categoryIcon: '',
+                    isOffline: true
+                };
+
+                queryClient.setQueryData(['transactions', search, type], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any, index: number) => {
+                            if (index === 0) {
+                                return {
+                                    ...page,
+                                    data: [offlineTx, ...page.data]
+                                };
+                            }
+                            return page;
+                        })
+                    };
+                });
+            }
+
+            return { previousTransactions };
         },
-        onError: (error: AxiosError<ErrorResponse>) => {
+        onSuccess: (data) => {
+            if (data && (data as any).isOffline) {
+                toast.success("Transaksi disimpan secara offline!");
+            } else {
+                queryClient.invalidateQueries({ queryKey: ['transactions'] });
+                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+                toast.success("Transaksi berhasil ditambahkan!");
+            }
+        },
+        onError: (error: AxiosError<ErrorResponse>, _, context) => {
+            if (context?.previousTransactions) {
+                queryClient.setQueryData(['transactions', search, type], context.previousTransactions);
+            }
             toast.error(error.response?.data?.message || "Gagal menambahkan transaksi");
         }
     });
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
+            if (!navigator.onLine) {
+                await addPendingMutation({
+                    id: `del_${id}`,
+                    action: 'DELETE',
+                    data: { id }
+                });
+                return { id, isOffline: true };
+            }
             const res = await axiosClient.delete(`/transactions/${id}`);
             return res.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            toast.success("Transaksi berhasil dihapus!");
+        onMutate: async (id) => {
+            await queryClient.cancelQueries({ queryKey: ['transactions', search, type] });
+            const previousTransactions = queryClient.getQueryData(['transactions', search, type]);
+
+            queryClient.setQueryData(['transactions', search, type], (old: any) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => ({
+                        ...page,
+                        data: page.data.filter((tx: Transaction) => tx.id !== id)
+                    }))
+                };
+            });
+
+            return { previousTransactions };
         },
-        onError: (error: AxiosError<ErrorResponse>) => {
+        onSuccess: (data) => {
+            if (data && (data as any).isOffline) {
+                toast.success("Transaksi dihapus secara offline!");
+            } else {
+                queryClient.invalidateQueries({ queryKey: ['transactions'] });
+                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+                toast.success("Transaksi berhasil dihapus!");
+            }
+        },
+        onError: (error: AxiosError<ErrorResponse>, _, context) => {
+            if (context?.previousTransactions) {
+                queryClient.setQueryData(['transactions', search, type], context.previousTransactions);
+            }
             toast.error(error.response?.data?.message || "Gagal menghapus transaksi");
         }
     });
