@@ -1,64 +1,59 @@
 import { GamificationRepository } from "@/repositories/gamification.repository";
 import { PushService } from "@/service/push.service";
-import prisma from "@/config/prisma";
-import { isToday } from "date-fns";
+import { startOfDay } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+import { NotificationRepository } from "@/repositories/notification.repository";
+import frameworkLogger from "@/utils/winston.logger";
+
+const WIB_TIMEZONE = 'Asia/Jakarta';
 
 export class TaskManager {
     public async streakWarning() {
-        console.log("[Task] Starting Streak Warning Task...");
+        frameworkLogger.info("[Task] Starting Streak Warning Task...")
+
         const gamificationRepository = new GamificationRepository()
         const usersWithStreak = await gamificationRepository.getUsersWithActiveStreak();
 
+        const now = new Date();
+        const zonedNow = toZonedTime(now, WIB_TIMEZONE)
+        const todayStart = startOfDay(zonedNow)
+
+        const existingNotification = await NotificationRepository.getExistingNotification(todayStart);
+        const notifiedUserIds = new Set(existingNotification.map(n => n.userId));
+
         let notifiedCount = 0;
 
-        for (const stats of usersWithStreak) {
-            const lastTx = stats.lastTransactionAt;
+        const tasks = usersWithStreak.map(async (stats) => {
+            try {
+                const lastTx = stats.lastTransactionAt;
 
-            if (lastTx && isToday(lastTx)) {
-                continue;
-            }
+                if (lastTx) {
+                    const zonedLastTx = toZonedTime(lastTx, WIB_TIMEZONE);
+                    const lastTxDay = startOfDay(zonedLastTx);
 
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-
-            const existingNotification = await prisma.notification.findFirst({
-                where: {
-                    userId: stats.userId,
-                    type: "STREAK_WARNING",
-                    createdAt: {
-                        gte: todayStart
-                    }
+                    if (lastTxDay.getTime() === todayStart.getTime()) return;
                 }
-            });
 
-            if (existingNotification) continue;
-
-            // 1. Create In-App Notification
-            await prisma.notification.create({
-                data: {
+                if (notifiedUserIds.has(stats.userId)) return;
+                // 1. In-App Notification
+                await NotificationRepository.create({
                     userId: stats.userId,
-                    title: "Streak Anda dalam Bahaya! 🔥",
-                    message: `Jangan biarkan streak ${stats.streak} hari Anda putus. Yuk catat transaksi hari ini!`,
+                    title: "Pertahankan Streak Anda! 🔥",
+                    message: `Streak Anda sudah ${stats.streak} hari. Catat transaksi hari ini agar tidak terputus.`,
                     type: "STREAK_WARNING",
                     metadata: { streak: stats.streak }
-                }
-            });
+                });
 
-            // 2. Send Push Notification
-            try {
-                await PushService.sendNotificationToUser(
-                    stats.userId,
-                    "Streak Anda dalam Bahaya! 🔥",
-                    `Ayo catat transaksi hari ini untuk menjaga streak ${stats.streak} hari Anda!`,
-                    { url: "/dashboard" }
-                );
+                // 2. Push Notification
+                await PushService.sendStreakReminderNotification(stats.userId);
+
+                notifiedCount++;
             } catch (error) {
-                console.error(`Failed to send push warning to user ${stats.userId}:`, error);
+                console.error(`Failed processing user ${stats.userId}:`, error);
             }
+        })
 
-            notifiedCount++;
-        }
-
-        console.log(`[Task] Streak Warning Task completed. Notified ${notifiedCount} users.`);
+        await Promise.allSettled(tasks)
+        frameworkLogger.info(`[Task] Streak Warning Task completed. Notified ${notifiedCount}/${usersWithStreak.length} users.`)
     }
 }

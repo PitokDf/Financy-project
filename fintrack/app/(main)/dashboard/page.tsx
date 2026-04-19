@@ -8,10 +8,12 @@ import {
     Plus,
     Flame,
     Trophy,
+    EyeOff,
+    Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrencyWithSecure } from '@/lib/utils';
 import { useGamification } from '@/hooks/use-gamification';
 import { TransactionCard } from '@/components/shared/transaction-card';
 import { useTransactions } from '@/hooks/use-transactions';
@@ -20,11 +22,13 @@ import { useDashboard } from '@/hooks/use-dashboard';
 import { isToday } from 'date-fns';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import DashboardSkeleton from './_components/skeleton';
+import { useSecureMode } from '@/hooks/use-secure';
 
 export default function DashboardPage() {
     const { stats } = useGamification();
     const { transactions } = useTransactions();
     const { data: dashboardData, isLoading } = useDashboard();
+    const { isSecure, toggle } = useSecureMode()
 
     if (isLoading || !dashboardData) return <DashboardSkeleton />
 
@@ -75,8 +79,11 @@ export default function DashboardPage() {
                             <Wallet className="w-4 h-4 text-white/80" />
                             <p className="text-white/80 text-xs font-medium">Saldo Total</p>
                         </div>
-                        <p className="text-3xl font-black text-white mb-4">
-                            {formatCurrency(summary.totalBalance)}
+                        <p className="text-3xl font-black text-white flex items-center justify-between gap-2 mb-4">
+                            {formatCurrencyWithSecure(summary.totalBalance, isSecure)}
+                            <button className='text-sm font-medium' onClick={() => toggle()}>
+                                {isSecure ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
+                            </button>
                         </p>
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white/15 rounded-xl p-3 backdrop-blur-sm">
@@ -84,14 +91,14 @@ export default function DashboardPage() {
                                     <TrendingUp className="w-3 h-3 text-white/70" />
                                     <p className="text-white/70 text-[10px] font-medium">Pemasukan</p>
                                 </div>
-                                <p className="text-white font-bold text-sm">{formatCurrency(summary.monthlyIncome)}</p>
+                                <p className="text-white font-bold text-sm">{formatCurrencyWithSecure(summary.monthlyIncome, isSecure)}</p>
                             </div>
                             <div className="bg-white/15 rounded-xl p-3 backdrop-blur-sm">
                                 <div className="flex items-center gap-1 mb-1">
                                     <TrendingDown className="wDashboardSkeleton-3 h-3 text-white/70" />
                                     <p className="text-white/70 text-[10px] font-medium">Pengeluaran</p>
                                 </div>
-                                <p className="text-white font-bold text-sm">{formatCurrency(summary.monthlyExpense)}</p>
+                                <p className="text-white font-bold text-sm">{formatCurrencyWithSecure(summary.monthlyExpense, isSecure)}</p>
                             </div>
                         </div>
                     </div>
@@ -107,7 +114,7 @@ export default function DashboardPage() {
                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">AI Forecast</span>
                         </div>
                         <p className="text-2xl font-black mb-1 drop-shadow-sm tabular-nums tracking-tight">
-                            {formatCurrency(dashboardData.forecast.predictedAmount)}
+                            {formatCurrencyWithSecure(dashboardData.forecast.predictedAmount, isSecure)}
                         </p>
                         <p className="text-xs text-indigo-100 font-medium leading-snug">
                             Prediksi pengeluaran di kategori <strong className="text-white">{dashboardData.forecast.categoryName}</strong> bulan depan.
@@ -139,7 +146,7 @@ export default function DashboardPage() {
                             <div className="flex-1">
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-sm font-medium text-foreground">{cat.name}</span>
-                                    <span className="text-xs font-bold text-foreground">{formatCurrency(cat.amount)}</span>
+                                    <span className="text-xs font-bold text-foreground">{formatCurrencyWithSecure(cat.amount, isSecure)}</span>
                                 </div>
                                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                     <div

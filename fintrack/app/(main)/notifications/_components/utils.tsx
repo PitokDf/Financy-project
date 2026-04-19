@@ -3,14 +3,27 @@ import { Bell, Calendar, CheckCheck, Flame, TrendingUp, Trophy, Wallet } from "l
 
 export const getIcon = (type: Notification['type']) => {
   switch (type) {
-    case 'BUDGET_ALERT': return <Wallet className="w-5 h-5 text-orange-500" />;
-    case 'ACHIEVEMENT': return <Trophy className="w-5 h-5 text-yellow-500" />;
-    case 'LEVEL_UP': return <TrendingUp className="w-5 h-5 text-green-500" />;
-    case 'PATTERN_FOUND': return <Brain className="w-5 h-5 text-purple-500" />;
-    case 'STREAK_WARNING': return <Flame className="w-5 h-5 text-red-500" />;
-    case 'REMINDER': return <Calendar className="w-5 h-5 text-blue-500" />;
-    case 'CHALLENGE_COMPLETE': return <CheckCheck className="w-5 h-5 text-emerald-500" />;
-    default: return <Bell className="w-5 h-5 text-gray-500" />;
+    case 'BUDGET_ALERT': return <Wallet className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'ACHIEVEMENT': return <Trophy className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'LEVEL_UP': return <TrendingUp className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'PATTERN_FOUND': return <Brain className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'STREAK_WARNING': return <Flame className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'REMINDER': return <Calendar className={`w-5 h-5 text-${getColor(type)}`} />;
+    case 'CHALLENGE_COMPLETE': return <CheckCheck className={`w-5 h-5 text-${getColor(type)}`} />;
+    default: return <Bell className={`w-5 h-5 text-${getColor(type)}`} />;
+  }
+};
+
+export const getColor = (type: Notification['type']) => {
+  switch (type) {
+    case 'BUDGET_ALERT': return 'orange-500';
+    case 'ACHIEVEMENT': return 'yellow-500';
+    case 'LEVEL_UP': return 'green-500';
+    case 'PATTERN_FOUND': return 'purple-500';
+    case 'STREAK_WARNING': return 'red-500';
+    case 'REMINDER': return 'blue-500';
+    case 'CHALLENGE_COMPLETE': return 'emerald-500';
+    default: return 'gray-500';
   }
 };
 

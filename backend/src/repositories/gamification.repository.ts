@@ -73,6 +73,11 @@ export class GamificationRepository {
             where: {
                 streak: {
                     gt: 0
+                },
+                user: {
+                    userSetting: {
+                        dailyReminder: true
+                    }
                 }
             },
             include: {

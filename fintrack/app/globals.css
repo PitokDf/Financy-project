@@ -184,6 +184,22 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  @keyframes border-glow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2);
+    }
+
+    50% {
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.5);
+    }
+  }
+
+  .animate-border-glow {
+    animation: border-glow 1.5s ease-in-out infinite;
+  }
+
   .text-half {
     background: linear-gradient(to bottom, hsl(0, 0%, 100%) 50%, var(--foreground) 50%);
     -webkit-background-clip: text;
@@ -240,10 +256,12 @@
     display: none;
   }
 }
+
 /* Hide scrollbar for mobile native feel */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

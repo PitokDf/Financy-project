@@ -1,20 +1,17 @@
 import { redisConfig } from "@/config/redis";
 import frameworkLogger from "@/utils/winston.logger";
-import { Job, Worker } from "bullmq";
+import { Job, Worker, ConnectionOptions } from "bullmq";
 
 export abstract class BaseWorker<T> {
-    protected worker: Worker;
+    protected worker: Worker<T, any, string>;
 
-    /**
-     *
-     */
     constructor(queueName: string) {
-        this.worker = new Worker(
+        this.worker = new Worker<T, any, string>(
             queueName,
-            async (job: Job<T>) => {
+            async (job: Job<T, any, string>) => {
                 await this.process(job);
             },
-            { connection: redisConfig }
+            { connection: redisConfig as ConnectionOptions }
         );
 
         this.worker.on("failed", (job, error) => {
@@ -26,7 +23,7 @@ export abstract class BaseWorker<T> {
         })
 
         this.worker.on("completed", (job) => {
-            frameworkLogger.info(`[${queueName}] Job completed: ${job.id}`)
+            frameworkLogger.info(`[${queueName}] Job completed: ${job?.id}`)
         })
 
         this.worker.on("drained", () => {
@@ -34,5 +31,5 @@ export abstract class BaseWorker<T> {
         })
     }
 
-    protected abstract process(job: Job<T>): Promise<void>;
+    protected abstract process(job: Job<T, any, string>): Promise<void>;
 }

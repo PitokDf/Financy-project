@@ -7,16 +7,18 @@ import * as LucideIcon from 'lucide-react'
 
 import { BudgetItem } from "@/hooks/use-budgets";
 
-export function BudgetCard({ budget }: { budget: BudgetItem }) {
+export function BudgetCard({ budget, isBudgetAlert }: { budget: BudgetItem, isBudgetAlert?: boolean }) {
     const status = getBudgetStatus(budget.spentAmount, budget.amount);
     const percentage = Math.round((budget.spentAmount / budget.amount) * 100);
     const StatusIcon = STATUS_CONFIG[status].icon;
     const remaining = budget.amount - budget.spentAmount;
     const IconName = budget.category.icon as keyof typeof LucideIcon;
     const IconComponent = (IconName && LucideIcon[IconName]) ? (LucideIcon[IconName] as LucideIcon.LucideIcon) : null;
-
     return (
-        <Card key={budget.id} className="border-border/50 py-0 shadow-none">
+        <Card key={budget.id} className={cn(
+            "border-border/50 py-0 shadow-none",
+            { 'animate-border-glow': isBudgetAlert }
+        )}>
             <CardContent className="p-4">
                 <div className="flex items-start gap-3 mb-3">
                     <div
@@ -24,8 +26,8 @@ export function BudgetCard({ budget }: { budget: BudgetItem }) {
                         style={{ backgroundColor: budget.category.color + '15' }}
                     >
                         {IconComponent ? (
-                            <IconComponent 
-                                className="w-5 h-5 transition-transform group-hover:scale-110" 
+                            <IconComponent
+                                className="w-5 h-5 transition-transform group-hover:scale-110"
                                 style={{ color: budget.category.color }}
                             />
                         ) : (

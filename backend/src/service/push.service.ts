@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { PushRepository } from "@/repositories/push.repository";
+import frameworkLogger from "@/utils/winston.logger";
 
 const publicVapidKey = process.env.VAPID_PUBLIC_KEY || "";
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || "";
@@ -44,11 +45,29 @@ export class PushService {
         if (error.statusCode === 404 || error.statusCode === 410) {
           await PushRepository.delete(sub.endpoint);
         } else {
-          console.error("Error sending push notification:", error);
+          frameworkLogger.error(error, "Error sending push notification");
         }
       });
     });
 
     return Promise.all(notificationPromises);
   }
-}
+
+  static async sendBudggetReminderNotification(userId: string, budgetId: string, budgetName: string, percentage: number) {
+    await this.sendNotificationToUser(
+      userId,
+      'Pengingat Harian',
+      `Anggaran ${budgetName} sudah terpakai ${percentage}%. Segera kendalikan pengeluaran Anda.`,
+      { url: `/budget?budgetAlert=${budgetId}#${budgetId}` }
+    );
+  }
+
+  static async sendStreakReminderNotification(userId: string) {
+    await this.sendNotificationToUser(
+      userId,
+      "Streak Anda dalam Bahaya! 🔥",
+      `Ayo catat transaksi hari ini untuk menjaga streak Anda!`,
+      { url: '/transactions?action=add' }
+    );
+  }
+} 

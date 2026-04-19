@@ -149,4 +149,19 @@ export class TransactionRepository {
             },
         });
     }
+
+    public getSumExpenseByCategoryAndDate = async (userId: string, categoryId: string, startDate: Date, endDate: Date) => {
+        return prisma.transaction.aggregate({
+            where: {
+                userId,
+                categoryId,
+                type: 'EXPENSE',
+                date: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            },
+            _sum: { amount: true }
+        });
+    }
 }

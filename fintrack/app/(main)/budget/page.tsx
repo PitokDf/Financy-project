@@ -1,31 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Target, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2 } from 'lucide-react';
 import { BudgetCard } from './_components/budget-card';
 import { getBudgetStatus } from './_components/utils';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { BudgetPageSkeleton } from './_components/skeleton';
 
 import { useBudgets } from '@/hooks/use-budgets';
 import { AddBudgetDialog } from './_components/add-budget-dialog';
+import { useSearchParams } from 'next/navigation';
 
-export default function BudgetPage() {
+function BudgetContent() {
     const { budgets, isLoading } = useBudgets();
     const [showAddForm, setShowAddForm] = useState(false);
-
-    if (isLoading || !budgets) {
+    const searchParams = useSearchParams();
+    const budgetAlertId = searchParams.get('budgetAlert')
+    if (isLoading) {
         return <BudgetPageSkeleton />;
     }
 
-    const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
-    const totalSpent = budgets.reduce((s, b) => s + b.spentAmount, 0);
+    const totalBudget = budgets?.reduce((s, b) => s + b.amount, 0) || 0;
+    const totalSpent = budgets?.reduce((s, b) => s + b.spentAmount, 0) || 0;
     const overallPercentage = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
 
-    const warningCount = budgets.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'warning').length;
-    const dangerCount = budgets.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'danger').length;
+    const warningCount = budgets?.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'warning').length || 0;
+    const dangerCount = budgets?.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'danger').length || 0;
 
     const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
@@ -87,13 +89,18 @@ export default function BudgetPage() {
             </div>
 
             <div className="space-y-3">
-                {budgets.length === 0 ? (
+                {budgets?.length === 0 ? (
                     <div className="text-center py-10 bg-muted/20 border border-dashed rounded-2xl">
                         <Target className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
                         <p className="text-sm text-muted-foreground">Belum ada anggaran untuk bulan ini.</p>
                     </div>
                 ) : (
-                    budgets.map((budget) => <BudgetCard key={budget.id} budget={budget} />)
+                    budgets?.map((budget) => <div id={budget.id} key={budget.id} className={cn({
+                        'animate-border-glow': budget.id === budgetAlertId, 'rounded-xl bg-red-500 border-2 border-red-500': budget.id === budgetAlertId
+                    })}>
+                        <BudgetCard budget={budget} />
+                    </div>
+                    )
                 )}
             </div>
 
@@ -116,5 +123,13 @@ export default function BudgetPage() {
                 onOpenChange={setShowAddForm}
             />
         </div>
+    );
+}
+
+export default function BudgetPage() {
+    return (
+        <Suspense fallback={<BudgetPageSkeleton />}>
+            <BudgetContent />
+        </Suspense>
     );
 }

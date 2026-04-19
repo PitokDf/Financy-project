@@ -4,6 +4,7 @@ import { networkInterfaces } from "node:os";
 import app from "@/app";
 import { initQueue } from "@/bootstrap/queue";
 import { initJobs } from "@/jobs";
+import { initWorkers } from "@/worker";
 
 let activeServer: any = null;
 let serverStarted = false;
@@ -45,6 +46,7 @@ export function startServer(port: number) {
             logger.serverReady(port, urls);
             initQueue();
             initJobs();
+            initWorkers();
 
             console.log('\n   ═══════════════════════════════════════════════════════════════');
             console.log('   🚀 EXPRESS SERVER READY');

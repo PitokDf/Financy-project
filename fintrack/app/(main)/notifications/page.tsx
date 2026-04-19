@@ -15,7 +15,7 @@ import {
 import { formatDistanceToNow, isToday, isYesterday, isWithinInterval, subDays, startOfDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { getIcon } from './_components/utils';
+import { getColor, getIcon } from './_components/utils';
 import { useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
                         <div className={cn(
                           "w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300",
                           !n.isRead
-                            ? "bg-primary text-primary-foreground shadow-sm"
+                            ? `bg-${getColor(n.type)}/10 text-primary-foreground shadow-sm`
                             : "bg-muted text-muted-foreground opacity-60"
                         )}>
                           {getIcon(n.type)}

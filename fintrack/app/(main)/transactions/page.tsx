@@ -42,8 +42,6 @@ function TransactionsContent() {
         formatDate,
         isLoading
     } = useTransactionsPage();
-
-
     const flatItems = useMemo<FlatItem[]>(() => {
         return grouped.flatMap(([date, transactions]) => [
             { type: 'header', date, count: transactions.length },

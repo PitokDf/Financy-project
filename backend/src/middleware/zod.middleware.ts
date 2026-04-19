@@ -7,7 +7,7 @@ export const validateSchema = (schema: ZodSchema) => {
         try {
             // Coba parse (validasi) req.body dengan skema yang diberikan
             // Jika validasi gagal, Zod akan melemparkan ZodError
-            schema.parse(req.body);
+            await schema.parseAsync(req.body);
             next(); // Jika validasi berhasil, lanjutkan ke middleware/controller berikutnya
         } catch (error: any) {
             // Jika terjadi ZodError, teruskan ke middleware penanganan error global.

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from "@/middleware/error.middleware";
-import { LoginDTO, RegisterDTO } from '@/schemas/user.schema';
+import { ChangePassword, LoginDTO, RegisterDTO } from '@/schemas/user.schema';
 import { AuthService } from '@/service/auth.service';
 import { Auth } from '@/utils/auth';
 import { ResponseUtil } from '@/utils';
@@ -30,5 +30,11 @@ export class AuthController {
         Auth.clearTokenCookieHttpOnly(res)
 
         return ResponseUtil.success(res, {})
+    })
+
+    public changePassword = asyncHandler(async (req: Request<ChangePassword>, res: Response) => {
+        const updated = await this.authService.changePassword(req.body, req.auth_user?.email!);
+
+        return ResponseUtil.success(res, updated)
     })
 }

@@ -108,9 +108,10 @@ function objectToFormData(
 }
 
 function applyApiErrors<T extends FieldValues>(error: unknown, form: UseFormReturn<T>): boolean {
-  if (!(error instanceof AxiosError)) return false;
+  // if (!(error instanceof AxiosError)) return false;
 
-  const apiErrors: unknown = error.response?.data?.errors;
+  const apiErrors: unknown = (error as ApiErrorResponse).errors;
+
   if (!Array.isArray(apiErrors)) return false;
 
   for (const e of apiErrors as Partial<ApiErrorItem>[]) {
@@ -357,10 +358,9 @@ export function ReusableForm<T extends FieldValues>({
       }
     } catch (error) {
       const handled = applyApiErrors(error, form);
-
+      console.log(handled)
       if (!handled) {
         const axiosError = error as AxiosError<ApiErrorResponse>;
-        console.log(axiosError)
         form.setError("root", {
           type: "server",
           message: axiosError?.message ?? "Terjadi kesalahan pada server",

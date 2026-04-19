@@ -1,4 +1,5 @@
 import { StreakQueue } from "@/queue/streak.queue";
+import frameworkLogger from "@/utils/winston.logger";
 
 export class StreakJob {
     private streakQueue: StreakQueue
@@ -14,11 +15,12 @@ export class StreakJob {
             await this.streakQueue['queue'].removeRepeatableByKey(job.key)
         }
 
-        await this.streakQueue.add({}, {
+        await this.streakQueue.add('streak-job', {}, {
             repeat: {
-                cron: '0 20 * * *'
+                pattern: '0 20 * * *',
+                tz: 'Asia/Jakarta'
             }
         });
-        console.log("[StreakJob] Repeatable job registered for '0 20 * * *'");
+        frameworkLogger.info("[StreakJob] Repeatable job registered for '0 20 * * *'")
     }
 }

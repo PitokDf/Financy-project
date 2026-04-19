@@ -29,6 +29,20 @@ export class NotificationRepository {
     });
   }
 
+  static async getExistingNotification(todayStart: Date) {
+    return prisma.notification.findMany({
+      where: {
+        type: 'STREAK_WARNING',
+        createdAt: {
+          gte: todayStart
+        }
+      },
+      select: {
+        userId: true
+      }
+    })
+  }
+
   static async markAsRead(userId: string, id: string) {
     return prisma.notification.updateMany({
       where: { id, userId },

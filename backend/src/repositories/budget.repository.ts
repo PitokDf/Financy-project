@@ -66,4 +66,33 @@ export class BudgetRepository {
             }
         });
     }
+
+    public findAllWithCategory = async () => {
+        return prisma.budgetGoal.findMany({
+            include: { category: true }
+        });
+    }
+
+    public updateAlertStatus = async (id: string, data: { alertSent80?: boolean, alertSent100?: boolean }) => {
+        return prisma.budgetGoal.update({
+            where: { id },
+            data
+        });
+    }
+
+    public resetMonthlyAlerts = async (startOfMonth: Date) => {
+        return prisma.budgetGoal.updateMany({
+            where: {
+                updatedAt: { lt: startOfMonth },
+                OR: [
+                    { alertSent80: true },
+                    { alertSent100: true }
+                ]
+            },
+            data: {
+                alertSent80: false,
+                alertSent100: false
+            }
+        });
+    }
 }

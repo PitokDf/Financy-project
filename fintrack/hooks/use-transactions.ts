@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
 import { addPendingMutation } from "@/lib/offline/db";
-import { useOfflineSync } from "@/components/providers/offline-sync-provider";
 
 export interface Transaction {
     id: string;
@@ -20,9 +19,15 @@ export interface Transaction {
     };
 }
 
+interface TransactionWithPagination {
+    data: Transaction[]
+    nextCursor?: string
+    totalIncome?: number
+    totalExpense?: number
+}
+
 export function useTransactions(search?: string, type?: string) {
     const queryClient = useQueryClient();
-    const { isOnline } = useOfflineSync();
 
     const transactionsQuery = useInfiniteQuery({
         queryKey: ['transactions', search, type],
@@ -34,12 +39,12 @@ export function useTransactions(search?: string, type?: string) {
                 : `/transactions?limit=10${searchParam}${typeParam}`;
 
             const res = await axiosClient.get(url);
-            const payload = res as { data: Transaction[], nextCursor?: string, totalIncome?: number, totalExpense?: number };
+            const payload = res as TransactionWithPagination;
 
             return {
                 data: payload.data.map((tx) => ({
                     ...tx,
-                    categoryColor: tx.type === 'EXPENSE' ? '#b92910' : '#059669',
+                    categoryColor: tx.category?.color ?? (tx.type === 'EXPENSE' ? '#b92910' : '#059669'),
                     category: tx.category?.name || 'Belum dikategorikan',
                     categoryIcon: tx.category?.icon || ''
                 })),
@@ -79,11 +84,12 @@ export function useTransactions(search?: string, type?: string) {
                     categoryIcon: '',
                     isOffline: true
                 };
-
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 queryClient.setQueryData(['transactions', search, type], (old: any) => {
                     if (!old) return old;
                     return {
                         ...old,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         pages: old.pages.map((page: any, index: number) => {
                             if (index === 0) {
                                 return {
@@ -100,6 +106,7 @@ export function useTransactions(search?: string, type?: string) {
             return { previousTransactions };
         },
         onSuccess: (data) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (data && (data as any).isOffline) {
                 toast.success("Transaksi disimpan secara offline!");
             } else {
@@ -133,10 +140,12 @@ export function useTransactions(search?: string, type?: string) {
             await queryClient.cancelQueries({ queryKey: ['transactions', search, type] });
             const previousTransactions = queryClient.getQueryData(['transactions', search, type]);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             queryClient.setQueryData(['transactions', search, type], (old: any) => {
                 if (!old) return old;
                 return {
                     ...old,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     pages: old.pages.map((page: any) => ({
                         ...page,
                         data: page.data.filter((tx: Transaction) => tx.id !== id)
@@ -147,6 +156,7 @@ export function useTransactions(search?: string, type?: string) {
             return { previousTransactions };
         },
         onSuccess: (data) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (data && (data as any).isOffline) {
                 toast.success("Transaksi dihapus secara offline!");
             } else {

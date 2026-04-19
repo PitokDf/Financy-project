@@ -3,8 +3,9 @@
 import { useState, useRef, memo, Ref } from "react";
 import { ArrowDownRight, ArrowUpRight, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionType } from "@/types";
+import { useSecureMode } from "@/hooks/use-secure";
 
 interface TransactionCardProps {
     id: string;
@@ -32,6 +33,8 @@ export const TransactionCard = memo(
     }: TransactionCardProps) {
         const [translateX, setTranslateX] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
+
+        const { isSecure } = useSecureMode()
 
         const startXRef = useRef(0);
         const ACTION_WIDTH = 80;
@@ -117,7 +120,7 @@ export const TransactionCard = memo(
                                             type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
                                         )}
                                     >
-                                        {type === 'INCOME' ? '+' : '-'}{formatCurrency(amount)}
+                                        {type === 'INCOME' ? '+' : '-'}{formatCurrencyWithSecure(amount, isSecure)}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
                                         {new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}

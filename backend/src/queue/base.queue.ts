@@ -1,24 +1,19 @@
-import Queue, { Job, QueueOptions } from 'bull';
+import { Queue, Job, JobsOptions, QueueOptions, ConnectionOptions } from 'bullmq';
 import { redisConfig } from '@/config/redis';
 
 export abstract class BaseQueue<T> {
-    protected queue: Queue.Queue<T>;
-    public readonly name: string
+    protected queue: Queue<T, any, string>;
+    public readonly name: string;
 
-    constructor(queueName: string, options?: QueueOptions) {
-        this.name = queueName
-        this.queue = new Queue<T>(queueName, {
-            redis: redisConfig,
+    constructor(queueName: string, options?: Omit<QueueOptions, 'connection'>) {
+        this.name = queueName;
+        this.queue = new Queue<T, any, string>(queueName, {
+            connection: redisConfig as ConnectionOptions,
             ...options,
         });
-
-        this.queue.process(this.handle.bind(this));
-
     }
 
-    protected abstract handle(job: Job<T>): Promise<void>;
-
-    async add(data: T, options?: Queue.JobOptions): Promise<Job<T>> {
-        return this.queue.add(data, options);
+    async add(name: string, data: T, options?: JobsOptions): Promise<Job<T, any, string>> {
+        return this.queue.add(name as any, data as any, options) as unknown as Promise<Job<T, any, string>>;
     }
 }

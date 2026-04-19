@@ -1,3 +1,4 @@
+import { getUserByEmailService } from "@/service/user.service";
 import z from "zod";
 
 export const createUserSchema = z.object({
@@ -16,8 +17,31 @@ export const createUserSchema = z.object({
         .string()
         .nonempty({ message: "Password tidak boleh kosong" })
         .min(6, { message: "Password minimal 6 karakter" }),
-});
+})
+    .superRefine(async (values, ctx) => {
+        if (await getUserByEmailService(values.email)) {
+            ctx.addIssue({
+                code: "custom",
+                message: "Email sudah terdaftar",
+                path: ["email"],
+            });
+        }
+    });
 
+export const changePasswordSchema = z.object({
+    currentPassword: z.string().min(6, 'Minimal 6 karakter'),
+    newPassword: z.string().min(6, 'Minimal 6 karakter'),
+}).superRefine((values, ctx) => {
+    if (values.currentPassword === values.newPassword) {
+        ctx.addIssue({
+            code: 'custom',
+            message: 'Kata sandi baru tidak boleh sama dengan yang lama.',
+            path: ['newPassword']
+        })
+    }
+})
+
+export type ChangePassword = z.infer<typeof changePasswordSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
 export const registerSchema = createUserSchema;

@@ -2,7 +2,7 @@ import { HttpStatus } from "@/constants/http-status";
 import { Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
 import { UserRepository } from "@/repositories/user.repository";
-import { LoginDTO, RegisterDTO } from "@/schemas/user.schema";
+import { ChangePassword, LoginDTO, RegisterDTO } from "@/schemas/user.schema";
 import { BcryptUtil, JwtUtil } from "@/utils";
 
 export class AuthService {
@@ -23,6 +23,20 @@ export class AuthService {
         const token = JwtUtil.generate({ ...user, user_id: user.id }, '3d');
 
         return { user, token };
+    }
+
+    public changePassword = async (data: ChangePassword, email: string) => {
+        const existingUser = await this.userRepo.findByEmail(email);
+        if (!existingUser) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
+
+        const isCorrect = await BcryptUtil.compare(data.currentPassword, existingUser.password)
+        if (!isCorrect) throw new AppError('Kata sandi saat ini salah');
+
+        const isPasswordSame = await BcryptUtil.compare(data.newPassword, existingUser.password);
+        if (isPasswordSame) throw new AppError('Kata sandi baru tidak boleh sama dengan saat ini');
+
+        const newPasswordHashed = await BcryptUtil.hash(data.newPassword)
+        return await this.userRepo.update(existingUser.id, { password: newPasswordHashed })
     }
 
     public login = async (data: LoginDTO) => {

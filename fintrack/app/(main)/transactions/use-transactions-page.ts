@@ -50,7 +50,6 @@ export function useTransactionsPage() {
         fetchNextPage,
         isLoading
     } = useTransactions(search, filter);
-
     const grouped = useMemo(() => GROUP_BY_DATE(transactions as DisplayTransaction[]), [transactions]);
 
     const hasMore = hasNextPage;

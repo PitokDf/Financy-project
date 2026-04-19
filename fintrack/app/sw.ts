@@ -82,7 +82,7 @@ self.addEventListener("push", (event) => {
 
     try {
         const data = event.data.json();
-        
+
         // Filter: Only show if userId matches or if no userId filter is provided (legacy)
         if (data.userId && currentUserId && data.userId !== currentUserId) {
             console.log("[SW] Skipping notification for another user:", data.userId);
@@ -90,17 +90,15 @@ self.addEventListener("push", (event) => {
         }
 
         const title = data.title || "Fintrack";
-        const options = {
+        const options: NotificationOptions = {
             body: data.body || "",
             icon: data.icon || "/icons/icon-192x192.png",
-            badge: data.icon || "/icons/badge-72x72.png",
-            data: data.url || "/",
-            vibrate: [100, 50, 100],
+            badge: data.badge || "/icons/badge-72x72.png",
+            data: data.url || "/"
         };
 
         event.waitUntil(self.registration.showNotification(title, options));
-    } catch (e) {
-        // ... (fallback handles text data)
+    } catch {
         event.waitUntil(
             self.registration.showNotification("Fintrack", {
                 body: event.data.text(),
@@ -112,19 +110,21 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
+    const urlToOpen = event.notification.data || "/";
 
     event.waitUntil(
         self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                let client = clientList[0];
-                for (let i = 0; i < clientList.length; i++) {
-                    if (clientList[i].focused) {
-                        client = clientList[i];
-                    }
+            // Jika ada tab yang terbuka, navigasikan ke URL tujuan dan fokuskan
+            for (const client of clientList) {
+                if (client.url.includes(self.location.origin) && "navigate" in client) {
+                    return client.navigate(urlToOpen).then((c) => c?.focus());
                 }
-                return client.focus();
             }
-            return self.clients.openWindow(event.notification.data || "/");
+
+            // Jika tidak ada tab terbuka, buka jendela baru
+            if (self.clients.openWindow) {
+                return self.clients.openWindow(urlToOpen);
+            }
         })
     );
 });
