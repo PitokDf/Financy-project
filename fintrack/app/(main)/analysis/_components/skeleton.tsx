@@ -17,7 +17,7 @@ export function AnalysisDashboardSkeleton() {
 
             {/* Summary cards */}
             <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
+                {Array.from({ length: 2 }).map((_, i) => (
                     <div
                         key={i}
                         className="h-20 rounded-xl bg-muted"

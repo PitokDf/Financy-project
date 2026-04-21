@@ -1,8 +1,9 @@
 import axiosClient from "@/lib/api/client"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 
 export const useAuth = () => {
+    const queryClient = useQueryClient();
     const login = useMutation({
         mutationFn: async (data: { email: string, password: string }) => {
             const result = await axiosClient.post('/auth/login', data);
@@ -35,11 +36,12 @@ export const useAuth = () => {
     })
 
     const updateProfile = useMutation({
-        mutationFn: async (data: { name: string; email: string }) => {
-            const result = await axiosClient.put('/users/me', data);
+        mutationFn: async (data: { name: string; email?: string }) => {
+            const result = await axiosClient.patch('/users/me', data);
             return result.data;
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
             toast.success('Profil berhasil diperbarui!');
         }
     })

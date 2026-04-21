@@ -23,6 +23,11 @@ export interface DashboardResponse {
         predictedAmount: number;
         targetMonth: number;
     } | null;
+    topForecasts?: Array<{
+        categoryName: string;
+        predictedAmount: number;
+        rank: number;
+    }>;
 }
 
 export function useDashboard() {

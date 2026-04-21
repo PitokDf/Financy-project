@@ -84,7 +84,7 @@ export default function AnalysisLabPage() {
 
         try {
             const res = await confirmAnalysis({ runId: analysisResult.runId, clusterMappings });
-            setForecastData(res.forecast);
+            setForecastData(res.topForecasts);
             setUiState('FORECAST_REVEAL');
         } catch {
             // Error toast handled by hook
@@ -283,24 +283,29 @@ export default function AnalysisLabPage() {
                         <p className="text-xs text-muted-foreground mt-1">Kategori AI telah diterapkan ke transaksi Anda.</p>
                     </div>
 
-                    {forecastData ? (
+                    {forecastData && forecastData.length > 0 ? (
                         <div className="w-full gradient-primary p-5 rounded-xl text-white relative overflow-hidden shadow-2xl shadow-primary/30">
                             <div className="absolute -top-12 -right-12 opacity-10">
                                 <Brain className="w-48 h-48" />
                             </div>
-                            <div className="relative z-10 space-y-3">
-                                <div className="flex items-center gap-1.5 bg-white/20 w-fit px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                                    <Sparkles className="w-3 h-3" /> Prediksi Bulan Depan
+                            <div className="relative z-10 space-y-4">
+                                <div className="flex items-center gap-1.5 bg-white/20 w-fit px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2">
+                                    <Sparkles className="w-3 h-3" /> Prediksi 3 Kategori Terbesar
                                 </div>
-                                <div>
-                                    <p className="text-[11px] text-white/70 font-medium">Kategori Utama</p>
-                                    <p className="text-lg font-bold leading-tight">{forecastData.categoryName || 'Kategori AI'}</p>
-                                </div>
-                                <div className="bg-white/15 rounded-xl p-3 backdrop-blur-md border border-white/20">
-                                    <p className="text-[10px] text-white/70 font-medium mb-0.5">Estimasi Pengeluaran</p>
-                                    <p className="text-2xl font-bold tabular-nums tracking-tight">
-                                        {formatCurrency(Number(forecastData.predictedAmount || 0))}
-                                    </p>
+                                <div className="space-y-3 mt-4">
+                                    {forecastData.map((f: any) => (
+                                        <div key={f.categoryName} className="flex items-center justify-between border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                                                    {f.rank}
+                                                </div>
+                                                <p className="text-sm font-bold">{f.categoryName}</p>
+                                            </div>
+                                            <p className="text-sm font-bold tabular-nums">
+                                                {formatCurrency(Number(f.predictedAmount || 0))}
+                                            </p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

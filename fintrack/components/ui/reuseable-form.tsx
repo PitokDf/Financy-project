@@ -13,7 +13,7 @@ import {
 } from "react-hook-form";
 import { useEffect, ReactNode, useState, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ZodType } from "zod";
+import { boolean, ZodType } from "zod";
 import { AxiosError } from "axios";
 import { DropzoneOptions } from "react-dropzone";
 
@@ -154,6 +154,8 @@ interface BaseFieldConfig<T extends FieldValues> {
   description?: string;
   disabled?: boolean;
   className?: string;
+  autoComplete?: 'off' | 'on' | 'new-password' | 'current-password' | 'email' | 'tel' | 'url' | 'search' | 'username' | 'name' | 'address' | 'country' | 'city' | 'state' | 'zip' | 'postal-code' | 'street-address' | 'home' | 'work' | 'mobile' | 'fax' | 'pager' | 'other';
+  autoFocus?: boolean;
   valueToUpperCase?: boolean;
   colSpan?: ColSpan;
   icon?: React.ComponentType<{ className?: string }>;
@@ -662,6 +664,8 @@ function FieldInputSwitch<T extends FieldValues>({
     case "textarea":
       return withIcon(
         <Textarea
+          autoComplete={field.autoComplete}
+          autoFocus={field.autoFocus}
           id={formField.name}
           placeholder={placeholder}
           disabled={field.disabled}
@@ -673,6 +677,8 @@ function FieldInputSwitch<T extends FieldValues>({
     case "password":
       return withIcon(
         <PasswordInput
+          autoComplete={field.autoComplete}
+          autoFocus={field.autoFocus}
           id={formField.name}
           placeholder={placeholder}
           disabled={field.disabled}
@@ -702,6 +708,8 @@ function FieldInputSwitch<T extends FieldValues>({
         <InputCurrency
           {...formField}
           id={formField.name}
+          autoComplete={field.autoComplete}
+          autoFocus={field.autoFocus}
           placeholder={placeholder}
           disabled={field.disabled}
           value={formField.value as number}
@@ -715,6 +723,8 @@ function FieldInputSwitch<T extends FieldValues>({
     case "number":
       return withIcon(
         <Input
+          autoComplete={field.autoComplete}
+          autoFocus={field.autoFocus}
           id={formField.name}
           type="number"
           placeholder={placeholder}
@@ -730,6 +740,8 @@ function FieldInputSwitch<T extends FieldValues>({
     default:
       return withIcon(
         <Input
+          autoComplete={field.autoComplete}
+          autoFocus={field.autoFocus}
           id={formField.name}
           type={field.type ?? "text"}
           placeholder={placeholder}

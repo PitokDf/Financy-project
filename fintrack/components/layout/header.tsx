@@ -32,6 +32,9 @@ const ROUTE_TITLES: Record<string, string> = {
     '/budget': 'Anggaran Bulanan',
     '/notifications': 'Notifikasi',
     '/achievements': 'Pencapaian',
+    '/profile/change-password': 'Ganti Password',
+    '/profile/edit-profile': 'Edit Profil',
+    '/profile/help': 'Bantuan & Dukungan',
 };
 
 export function Header({

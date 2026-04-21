@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - 'clustering/**'
+      - '!clustering/.gitignore'
       - 'docker-compose.yml'
       - '.github/workflows/deploy-clustering.yml'
   workflow_dispatch:

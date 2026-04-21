@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, Plus, X, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrencyWithSecure } from '@/lib/utils';
 import { TransactionForm } from './_components/transaction-form';
 import { TransactionCard } from '@/components/shared/transaction-card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -12,6 +12,7 @@ import { ImportCsvModal } from './_components/import-csv-modal';
 import { DisplayTransaction, useTransactionsPage } from './use-transactions-page';
 import { Suspense, useCallback, useRef, useMemo, useState } from 'react';
 import { TransactionsSkeleton } from './_components/skeleton';
+import { useSecureMode } from '@/hooks/use-secure';
 
 type FlatItem =
     | { type: 'header'; date: string; count: number }
@@ -20,6 +21,7 @@ type FlatItem =
 function TransactionsContent() {
     const observerRef = useRef<IntersectionObserver | null>(null);
     const parentRef = useRef<HTMLDivElement>(null);
+    const { isSecure } = useSecureMode()
     const [showImportModal, setShowImportModal] = useState(false);
 
     const {
@@ -80,14 +82,14 @@ function TransactionsContent() {
                             <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Pemasukan</span>
                         </div>
-                        <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(totalIncome)}</p>
+                        <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">{formatCurrencyWithSecure(totalIncome, isSecure)}</p>
                     </div>
                     <div className="rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                             <TrendingDown className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
                             <span className="text-xs text-red-600 dark:text-red-400 font-medium">Pengeluaran</span>
                         </div>
-                        <p className="text-base font-bold text-red-600 dark:text-red-400">{formatCurrency(totalExpense)}</p>
+                        <p className="text-base font-bold text-red-600 dark:text-red-400">{formatCurrencyWithSecure(totalExpense, isSecure)}</p>
                     </div>
                 </div>
 

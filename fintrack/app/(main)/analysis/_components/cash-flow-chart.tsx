@@ -35,7 +35,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
     });
 
     return (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col h-87.5">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col h-[350px]">
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -57,7 +57,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                 </div>
             </div>
 
-            <div className="flex-1 w-full min-h-0">
+            <div className="flex-1 w-full min-h-[250px]">
                 {isLoading ? (
                     <div className="h-full flex items-center justify-center">
                         <Loader2 className="w-6 h-6 text-primary animate-spin" />

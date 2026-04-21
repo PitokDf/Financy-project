@@ -2,12 +2,14 @@ import { startOfMonth, endOfMonth } from "date-fns";
 import { DashboardRepository } from "@/repositories/dashboard.repository";
 import { CategoryRepository } from "@/repositories/category.repository";
 import { ForecastRepository } from "@/repositories/forecast.repository";
+import { ForecastService } from "@/service/forecast.service";
 
 export class DashboardService {
     constructor(
         private readonly dashboardRepo: DashboardRepository,
         private readonly categoryRepo: CategoryRepository,
-        private readonly forecastRepo: ForecastRepository
+        private readonly forecastRepo: ForecastRepository,
+        private readonly forecastService: ForecastService
     ) { }
 
     public getSummary = async (userId: string) => {
@@ -15,11 +17,12 @@ export class DashboardService {
         const start = startOfMonth(now);
         const end = endOfMonth(now);
 
-        const [allTimeStats, monthlyStats, categoryStats, latestForecast] = await Promise.all([
+        const [allTimeStats, monthlyStats, categoryStats, latestForecast, topForecasts] = await Promise.all([
             this.dashboardRepo.getAllTimeStats(userId),
             this.dashboardRepo.getMonthlyStats(userId, start, end),
             this.dashboardRepo.getTopCategories(userId, start, end),
-            this.forecastRepo.getLatestByUserId(userId)
+            this.forecastRepo.getLatestByUserId(userId),
+            this.forecastService.getTopForecasts(userId, 3)
         ]);
 
         let totalIncomeAllTime = 0;
@@ -71,7 +74,8 @@ export class DashboardService {
                 categoryName: latestForecast.category.name,
                 predictedAmount: Number(latestForecast.predictedAmount),
                 targetMonth: latestForecast.targetMonth
-            } : null
+            } : null,
+            topForecasts
         };
     }
 }

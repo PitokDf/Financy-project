@@ -104,21 +104,52 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
-            {dashboardData?.forecast && (
-                <div className="mb-5 bg-linear-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-lg shadow-indigo-500/20 text-white relative overflow-hidden">
-                    <div className="absolute -top-4 -right-4 opacity-10">
-                        <TrendingUp className="w-24 h-24" />
+            {dashboardData?.topForecasts && dashboardData.topForecasts.length > 0 && (
+                <div className="mb-5 bg-linear-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-5 shadow-xl shadow-indigo-500/20 text-white relative overflow-hidden group">
+                    <div className="absolute -top-10 -right-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                        <TrendingUp className="w-40 h-40" />
                     </div>
                     <div className="relative z-10">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">AI Forecast</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+                                    <TrendingUp className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">AI Forecast Ranking</span>
+                            </div>
+                            <InfoTooltip
+                                triggerClassName='text-white'
+                                content={
+                                    <p className='text-xs'>Prediksi 3 kategori pengeluaran terbesar untuk bulan depan menggunakan algoritma SMA (Simple Moving Average).</p>
+                                }
+                            />
                         </div>
-                        <p className="text-2xl font-black mb-1 drop-shadow-sm tabular-nums tracking-tight">
-                            {formatCurrencyWithSecure(dashboardData.forecast.predictedAmount, isSecure)}
-                        </p>
-                        <p className="text-xs text-indigo-100 font-medium leading-snug">
-                            Prediksi pengeluaran di kategori <strong className="text-white">{dashboardData.forecast.categoryName}</strong> bulan depan.
-                        </p>
+
+                        <div className="space-y-4">
+                            {dashboardData.topForecasts.map((f, index) => (
+                                <div key={f.categoryName} className="flex items-center justify-between group/item">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 backdrop-blur-sm",
+                                            index === 0 ? "bg-amber-400 border-amber-300 text-amber-900 shadow-lg shadow-amber-400/30" :
+                                                index === 1 ? "bg-slate-300 border-slate-200 text-slate-800" :
+                                                    "bg-orange-400/50 border-orange-300 text-orange-950"
+                                        )}>
+                                            {f.rank}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold leading-none mb-1">{f.categoryName}</p>
+                                            <p className="text-[10px] text-white/70 font-medium italic">Estimasi bulan depan</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-base font-black tracking-tight tabular-nums">
+                                            {formatCurrencyWithSecure(f.predictedAmount, isSecure)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
@@ -169,18 +200,23 @@ export default function DashboardPage() {
                     </Link>
                 </div>
                 <div className="space-y-2">
-                    {transactions.slice(0, 4).map((tx) => (
-                        <TransactionCard
-                            key={tx.id}
-                            id={tx.id}
-                            description={tx.description}
-                            amount={tx.amount}
-                            type={tx.type}
-                            date={tx.date}
-                            category={tx.category}
-                            categoryColor={tx.categoryColor}
-                        />
-                    ))}
+                    {transactions.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-4">
+                            <p>Belum ada transaksi</p>
+                        </div>
+                    ) :
+                        transactions.slice(0, 4).map((tx) => (
+                            <TransactionCard
+                                key={tx.id}
+                                id={tx.id}
+                                description={tx.description}
+                                amount={tx.amount}
+                                type={tx.type}
+                                date={tx.date}
+                                category={tx.category}
+                                categoryColor={tx.categoryColor}
+                            />
+                        ))}
                 </div>
             </div>
 

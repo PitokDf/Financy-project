@@ -10,8 +10,10 @@ import { toast } from "sonner";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { NotificationPermissionDialog } from "@/components/notification-permission-dialog";
+import { ExportDialog } from "./export-dialog";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { ConfirmDeleteData } from "./confirm-delete-data";
 
 interface MenuItem {
     icon: React.ElementType;
@@ -30,6 +32,8 @@ export function MenuSection() {
     const { settings, updateSetting } = useUserSettings()
     const { isSubscribed, subscribeUser, unsubscribeUser } = usePushNotifications()
     const [showPermissionDialog, setShowPermissionDialog] = useState(false)
+    const [showExportDialog, setShowExportDialog] = useState(false)
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const router = useRouter()
     const mounted = true
 
@@ -40,7 +44,6 @@ export function MenuSection() {
 
     const handlePushToggle = async (enabled: boolean) => {
         if (enabled) {
-            // Show educational UI first
             setShowPermissionDialog(true);
         } else {
             const success = await unsubscribeUser();
@@ -126,13 +129,13 @@ export function MenuSection() {
                     icon: Download,
                     label: 'Ekspor Data',
                     description: 'Unduh laporan keuangan',
-                    action: () => toast.success('Ekspor data sedang diproses...'),
+                    action: () => setShowExportDialog(true),
                 },
                 {
                     icon: Trash2,
                     label: 'Hapus Semua Data',
                     description: 'Tindakan tidak dapat diurungkan',
-                    action: () => toast.error('Fitur dalam pengembangan'),
+                    action: () => setShowDeleteDialog(true),
                     isDanger: true,
                 },
             ],
@@ -143,7 +146,9 @@ export function MenuSection() {
                 {
                     icon: HelpCircle,
                     label: 'Bantuan & Dukungan',
-                    action: () => toast.info('Fitur dalam pengembangan'),
+                    action() {
+                        router.push('/profile/help')
+                    },
                 },
             ],
         },
@@ -215,6 +220,15 @@ export function MenuSection() {
                 isOpen={showPermissionDialog}
                 onOpenChange={setShowPermissionDialog}
                 onConfirm={confirmPushSubscription}
+            />
+            <ExportDialog
+                isOpen={showExportDialog}
+                onClose={() => setShowExportDialog(false)}
+            />
+
+            <ConfirmDeleteData
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
             />
         </div>
     )

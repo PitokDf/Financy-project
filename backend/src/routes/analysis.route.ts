@@ -13,7 +13,7 @@ const forecastRepo = new ForecastRepository();
 const categoryRepo = new CategoryRepository();
 const analysisRepo = new AnalysisRepository();
 
-const forecastService = new ForecastService(transactionRepo, forecastRepo);
+const forecastService = new ForecastService(transactionRepo, forecastRepo, categoryRepo);
 const service = new AnalysisService(analysisRepo, categoryRepo, transactionRepo, forecastService);
 const controller = new AnalysisController(service);
 

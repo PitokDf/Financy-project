@@ -164,4 +164,59 @@ export class TransactionRepository {
             _sum: { amount: true }
         });
     }
+
+    public getMonthlyAggregates = async (userId: string, categoryId: string, monthsLimit = 6) => {
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - monthsLimit);
+        startDate.setDate(1); // Start from the beginning of the month
+
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                userId,
+                categoryId,
+                type: 'EXPENSE',
+                date: { gte: startDate }
+            },
+            select: {
+                amount: true,
+                date: true
+            },
+            orderBy: { date: 'desc' }
+        });
+
+        const aggregates = new Map<string, number>();
+
+        transactions.forEach(t => {
+            const year = t.date.getFullYear();
+            const month = t.date.getMonth() + 1;
+            const key = `${year}-${month.toString().padStart(2, '0')}`;
+
+            const current = aggregates.get(key) || 0;
+            aggregates.set(key, current + Math.abs(Number(t.amount)));
+        });
+
+        return Array.from(aggregates.entries())
+            .map(([monthKey, total]) => ({ monthKey, total }))
+            .sort((a, b) => b.monthKey.localeCompare(a.monthKey)); // Most recent first
+    }
+
+    public getAllForExport = async (userId: string, month?: number, year?: number) => {
+        const where: any = { userId };
+
+        if (month && year) {
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0); // Last day of month
+            where.date = { gte: startDate, lte: endDate };
+        } else if (year) {
+            const startDate = new Date(year, 0, 1);
+            const endDate = new Date(year, 11, 31);
+            where.date = { gte: startDate, lte: endDate };
+        }
+
+        return prisma.transaction.findMany({
+            where,
+            include: { category: true },
+            orderBy: [{ date: 'asc' }, { createdAt: 'asc' }]
+        });
+    }
 }

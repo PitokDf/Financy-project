@@ -5,13 +5,13 @@ import { Header } from '@/components/layout/header';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 import { useNotifications } from '@/hooks/use-notifications';
+import { cn } from '@/lib/utils';
 
-const BOTTOM_NAV_HIDDEN_ROUTE = ['/notifications', '/achievements', '/profile/change-password']
 const HEADER_HIDDEN_ROUTE = ['/profile']
 const HEADER_HIDDEN_PREFIX = ['/transactions/create']
 
 const HEADER_WITH_AVATAR_ROUTE = ['/dashboard'];
-const HEADER_WITH_BACK_ROUTE = ['/notifications', '/analysis/lab', '/achievements', '/profile/change-password'];
+const HEADER_WITH_BACK_ROUTE = ['/notifications', '/analysis/lab', '/achievements', '/profile/change-password', '/profile/edit-profile', '/profile/help'];
 
 const isHiddenByRules = (pathname: string, exactRoutes: string[], prefixRoutes: string[]) => {
     return exactRoutes.includes(pathname) || prefixRoutes.some((prefix) => pathname.startsWith(prefix));
@@ -36,10 +36,10 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
                     showNotification={showNotification}
                 />
             )}
-            <main className="flex-1 px-4 animate-in fade-in duration-500 pt-4 pb-20">
+            <main className={cn({ "flex-1 px-4 animate-in fade-in duration-500 pt-4 pb-5": true, "pb-20": !HEADER_WITH_BACK_ROUTE.includes(pathname) })}>
                 {children}
             </main>
-            {!BOTTOM_NAV_HIDDEN_ROUTE.includes(pathname) && <BottomNav />}
+            {!HEADER_WITH_BACK_ROUTE.includes(pathname) && <BottomNav />}
         </div>
     );
 }

@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { validateSchema } from "@/middleware/zod.middleware";
 import {
@@ -8,9 +7,13 @@ import {
 import { checkEmailExists } from "@/validators/user.validator";
 import authMiddleware from "@/middleware/auth.middleware";
 import { UserController } from "@/controller/user.controller";
-
+import { UserService } from "@/service/user.service";
+import { UserRepository } from "@/repositories/user.repository";
 import { UserSettingController } from "@/controller/user-setting.controller";
 import { updateUserSettingSchema } from "@/schemas/user-setting.schema";
+
+const userService = new UserService(UserRepository);
+const userController = new UserController(userService);
 
 const userRouter = Router()
 
@@ -53,7 +56,7 @@ userRouter.post(
     "/register",
     validateSchema(createUserSchema),
     checkEmailExists,
-    UserController.createUser);
+    userController.createUser);
 
 // Protected routes - perlu authentication
 userRouter.use(authMiddleware)
@@ -70,7 +73,7 @@ userRouter.use(authMiddleware)
  *       200:
  *         description: Logout successful
  */
-userRouter.post('/logout', UserController.logout);
+userRouter.post('/logout', userController.logout);
 
 /**
  * @swagger
@@ -84,7 +87,7 @@ userRouter.post('/logout', UserController.logout);
  *       200:
  *         description: List of all users
  */
-userRouter.get("/", UserController.getAllUser);
+userRouter.get("/", userController.getAllUser);
 
 userRouter.get("/settings", UserSettingController.getSettings);
 userRouter.patch("/settings", validateSchema(updateUserSettingSchema), UserSettingController.updateSettings);
@@ -101,7 +104,9 @@ userRouter.patch("/settings", validateSchema(updateUserSettingSchema), UserSetti
  *       200:
  *         description: Profile payload retrieved
  */
-userRouter.get("/me", UserController.getMe);
+userRouter.get("/me", userController.getMe);
+userRouter.patch("/me", validateSchema(updateUserSchema), checkEmailExists, userController.updateMe);
+userRouter.delete("/me/data", userController.purgeData);
 
 /**
  * @swagger
@@ -165,12 +170,12 @@ userRouter.get("/me", UserController.getMe);
  *       200:
  *         description: User systematically removed
  */
-userRouter.get("/:userId", UserController.getUserById);
-userRouter.delete("/:userId", UserController.deleteUser);
+userRouter.get("/:userId", userController.getUserById);
+userRouter.delete("/:userId", userController.deleteUser);
 userRouter.patch(
     "/:userId",
     validateSchema(updateUserSchema),
     checkEmailExists,
-    UserController.updateUser);
+    userController.updateUser);
 
 export default userRouter

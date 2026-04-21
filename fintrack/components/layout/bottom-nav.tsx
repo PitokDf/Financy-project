@@ -52,7 +52,7 @@ export function BottomNav() {
                                             isActive ? 'stroke-[2.5] scale-110' : 'stroke-[1.8]'
                                         )}
                                     />
-                                    
+
                                     {/* Small notification dot placeholder if needed in future */}
                                 </div>
 

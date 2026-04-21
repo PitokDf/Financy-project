@@ -1,4 +1,4 @@
-import { getUserByEmailService } from "@/service/user.service";
+import { userService } from "@/service/user.service";
 import z from "zod";
 
 export const createUserSchema = z.object({
@@ -19,7 +19,7 @@ export const createUserSchema = z.object({
         .min(6, { message: "Password minimal 6 karakter" }),
 })
     .superRefine(async (values, ctx) => {
-        if (await getUserByEmailService(values.email)) {
+        if (await userService.findByEmail(values.email)) {
             ctx.addIssue({
                 code: "custom",
                 message: "Email sudah terdaftar",

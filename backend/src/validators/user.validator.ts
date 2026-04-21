@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getUserByEmailService } from "@/service/user.service";
+import { userService } from "@/service/user.service";
 import { AppError } from "@/errors/app-error";
 import { HttpStatus } from "@/constants/http-status";
 
@@ -12,7 +12,7 @@ export const checkEmailExists = async (
     const userId = req.params.userId as string | undefined
     if (!email) return next();
 
-    const existingUser = await getUserByEmailService(email, userId)
+    const existingUser = await userService.findByEmail(email, userId)
 
     if (existingUser) throw new AppError("Email sudah terdaftar", HttpStatus.BAD_REQUEST);
 

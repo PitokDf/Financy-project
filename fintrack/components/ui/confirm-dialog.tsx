@@ -38,6 +38,7 @@ interface ConfirmDialogProps {
   confirmLoading?: boolean;
   confirmLoadingLabel?: React.ReactNode;
   onConfirm?: (inputValue?: string) => ConfirmHandlerResult;
+  confirmToForm?: string;
   preventCloseOnConfirm?: boolean;
   cancelLabel?: React.ReactNode;
   cancelVariant?: ButtonVariant;
@@ -82,6 +83,7 @@ export function ConfirmDialog({
   showInput,
   inputPlaceholder,
   inputRequired,
+  confirmToForm
 }: ConfirmDialogProps) {
   const [internalLoading, setInternalLoading] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
@@ -215,7 +217,7 @@ export function ConfirmDialog({
               </Button>
             )}
             <Button
-              type="button"
+              {...confirmToForm ? { form: confirmToForm, type: 'submit' } : { type: 'button' }}
               variant={confirmVariant}
               onClick={handleConfirm}
               className="w-full sm:w-auto h-10"

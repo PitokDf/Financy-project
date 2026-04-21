@@ -1,10 +1,11 @@
 'use client';
 
 import { Tag, Loader2 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '@/lib/utils';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { formatCurrency, formatCurrencyWithSecure } from '@/lib/utils';
 import { CHART_COLORS } from './constants';
 import { CategoryBreakdown as CategoryBreakdownType } from '@/hooks/use-analysis';
+import { useSecureMode } from '@/hooks/use-secure';
 
 interface CategoryBreakdownProps {
     categories: CategoryBreakdownType[] | undefined;
@@ -13,6 +14,8 @@ interface CategoryBreakdownProps {
 }
 
 export function CategoryBreakdown({ categories, isLoading, totalExpense }: CategoryBreakdownProps) {
+    const { isSecure } = useSecureMode();
+
     return (
         <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="text-sm font-bold flex items-center gap-2 mb-6">
@@ -21,7 +24,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
             </h3>
 
             <div className="flex flex-col items-center gap-6">
-                <div className="h-48 w-48 relative shrink-0">
+                <div className="h-48 w-48 flex items-center justify-center relative shrink-0">
                     {isLoading ? (
                         <div className="h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -29,6 +32,16 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
+                                <Tooltip
+                                    formatter={(value, name) => [formatCurrencyWithSecure(value as number), name]}
+                                    contentStyle={{
+                                        background: 'var(--card)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: '12px',
+                                        fontSize: '11px',
+                                        padding: '6px 10px',
+                                    }}
+                                />
                                 <Pie
                                     data={categories}
                                     cx="50%"
@@ -48,7 +61,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                     )}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">Total</span>
-                        <span className="text-[13px] font-black">{formatCurrency(totalExpense)}</span>
+                        <span className="text-[13px] font-black">{formatCurrencyWithSecure(totalExpense, isSecure)}</span>
                     </div>
                 </div>
 
@@ -60,7 +73,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                                 <span className="text-sm font-medium text-foreground/80">{cat.name}</span>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-bold">{formatCurrency(cat.totalAmount)}</p>
+                                <p className="text-sm font-bold">{formatCurrencyWithSecure(cat.totalAmount, isSecure)}</p>
                                 <p className="text-[10px] text-muted-foreground">
                                     {((cat.totalAmount / totalExpense) * 100).toFixed(1)}%
                                 </p>

@@ -24,118 +24,141 @@ export interface PaginatedUserResponse {
     };
 }
 
-export async function getAllUserService(query?: PaginationQuery) {
-    const page = query?.page || 1;
-    const limit = query?.limit || 10;
-    const skip = (page - 1) * limit;
+export class UserService {
+    constructor(private readonly userRepo: typeof UserRepository) { }
 
-    const cacheKey = `users:all:page:${page}:limit:${limit}`;
+    public findAll = async (query?: PaginationQuery): Promise<PaginatedUserResponse> => {
+        const page = query?.page || 1;
+        const limit = query?.limit || 10;
+        const skip = (page - 1) * limit;
 
-    // Try to get from cache first
-    const cachedResult = cacheManager.get<PaginatedUserResponse>(cacheKey);
-    if (cachedResult) {
-        logger.debug('[CACHE] Users served from cache', { page, limit });
-        return cachedResult;
-    }
+        const cacheKey = `users:all:page:${page}:limit:${limit}`;
 
-    logger.debug('[CACHE] Users cache miss, fetching from database', { page, limit });
-
-    // If not in cache, fetch from database
-    const [users, total] = await Promise.all([
-        UserRepository.findAllOptimized({ skip, take: limit }),
-        UserRepository.count()
-    ]);
-
-    const result = {
-        data: users,
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-            hasNextPage: page < Math.ceil(total / limit),
-            hasPrevPage: page > 1
+        const cachedResult = cacheManager.get<PaginatedUserResponse>(cacheKey);
+        if (cachedResult) {
+            logger.debug('[CACHE] Users served from cache', { page, limit });
+            return cachedResult;
         }
-    };
 
-    // Cache the result for 5 minutes (300 seconds)
-    cacheManager.set(cacheKey, result, 300);
+        logger.debug('[CACHE] Users cache miss, fetching from database', { page, limit });
 
-    return result;
-}
+        const [users, total] = await Promise.all([
+            this.userRepo.findAllOptimized({ skip, take: limit }),
+            this.userRepo.count()
+        ]);
 
-export async function getUserByIdService(userId: string) {
-    const user = await UserRepository.findById(userId)
+        const result = {
+            data: users,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        };
 
-    if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
+        // Cache the result for 5 minutes (300 seconds)
+        cacheManager.set(cacheKey, result, 300);
 
-    return { ...user, password: '[REDACTED]' }
-}
-
-export async function getUserProfileService(userId: string) {
-    const user = await UserRepository.findUserProfile(userId);
-
-    if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
-
-    return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        avatar: user.avatar,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        level: user.userStats?.level ?? 1,
-        streak: user.userStats?.streak ?? 0,
-        badgeCount: user._count?.userBadges ?? 0
-    };
-}
-
-export async function getUserByEmailService(email: string, ignoreUserId?: string) {
-    const user = await UserRepository.findByEmail(email, ignoreUserId)
-
-    return user
-}
-
-/**
- * Helper function to invalidate all user list cache entries
- * since we use pagination (users:all:page:X:limit:Y pattern)
- */
-function invalidateUserListCache() {
-    cacheManager.delPattern('users:all:page:');
-}
-
-export async function createUserService(data: CreateUserInput) {
-    data.password = (await BcryptUtil.hash(data.password))!
-
-    const user = await UserRepository.create(data);
-
-    // Invalidate all paginated cache after create
-    invalidateUserListCache();
-
-    return { ...user, password: '[REDACTED]' }
-}
-
-export async function updateUserService(userId: string, data: UpdateUserInput) {
-    await getUserByIdService(userId)
-    if (data && data.password) {
-        data.password = (await BcryptUtil.hash(data.password))!
+        return result;
     }
 
-    const user = await UserRepository.update(userId, data)
+    public findById = async (userId: string) => {
+        const user = await this.userRepo.findById(userId)
 
-    // Invalidate all paginated cache after update
-    invalidateUserListCache();
+        if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
 
-    return { ...user, password: '[REDACTED]' }
+        return { ...user, password: '[REDACTED]' }
+    }
+
+    public findProfile = async (userId: string) => {
+        const user = await this.userRepo.findUserProfile(userId);
+
+        if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
+
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            avatar: user.avatar,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            level: user.userStats?.level ?? 1,
+            streak: user.userStats?.streak ?? 0,
+            badgeCount: user._count?.userBadges ?? 0
+        };
+    }
+
+    public findByEmail = async (email: string, ignoreUserId?: string) => {
+        const user = await this.userRepo.findByEmail(email, ignoreUserId)
+        return user
+    }
+
+    private invalidateUserListCache() {
+        cacheManager.delPattern('users:all:page:');
+    }
+
+    public create = async (data: CreateUserInput) => {
+        const hashedPassword = (await BcryptUtil.hash(data.password))!
+
+        const user = await this.userRepo.create({
+            ...data,
+            password: hashedPassword
+        });
+
+        // Invalidate all paginated cache after create
+        this.invalidateUserListCache();
+
+        return { ...user, password: '[REDACTED]' }
+    }
+
+    public update = async (userId: string, data: UpdateUserInput) => {
+        await this.findById(userId)
+
+        const updateData: any = { ...data };
+        if (data && data.password) {
+            updateData.password = (await BcryptUtil.hash(data.password))!
+        }
+
+        const user = await this.userRepo.update(userId, updateData)
+
+        // Invalidate all paginated cache after update
+        this.invalidateUserListCache();
+
+        return { ...user, password: '[REDACTED]' }
+    }
+
+    public delete = async (userId: string) => {
+        await this.findById(userId)
+
+        const user = await this.userRepo.delete(userId)
+
+        // Invalidate all paginated cache after delete
+        this.invalidateUserListCache();
+
+        return { ...user, password: '[REDACTED]' }
+    }
+
+    public purgeAllData = async (userId: string, password: string): Promise<void> => {
+        const user = await this.userRepo.findById(userId);
+        if (!user) {
+            throw new AppError("User tidak ditemukan", HttpStatus.NOT_FOUND);
+        }
+
+        const isPasswordValid = await BcryptUtil.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new AppError("Password salah. Periksa kembali password Anda.", HttpStatus.BAD_REQUEST);
+        }
+
+        logger.warn(`[UserDataService] Purging ALL data for user ${userId} (${user.email})`);
+
+        // 2. Delete all user data in a single atomic transaction
+        this.userRepo.purgeDeleteData(userId)
+
+        logger.info(`[UserDataService] Successfully purged all data for user ${userId}`);
+    }
 }
 
-export async function deleteUserService(userId: string) {
-    await getUserByIdService(userId)
-
-    const user = await UserRepository.delete(userId)
-
-    // Invalidate all paginated cache after delete
-    invalidateUserListCache();
-
-    return { ...user, password: '[REDACTED]' }
-}
+export const userService = new UserService(UserRepository);

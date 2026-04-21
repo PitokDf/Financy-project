@@ -52,6 +52,7 @@
     "module-alias": "^2.2.3",
     "multer": "^2.0.1",
     "node-cache": "^5.1.2",
+    "pdfmake": "^0.3.7",
     "pg": "^8.13.0",
     "pino": "^8.19.0",
     "pino-pretty": "^10.3.1",
@@ -59,6 +60,7 @@
     "redis": "^4.7.0",
     "uuid": "^12.0.0",
     "web-push": "^3.6.7",
+    "xlsx": "^0.18.5",
     "zod": "^3.25.74"
   },
   "devDependencies": {
@@ -74,6 +76,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.0.10",
     "@types/nodemailer": "^6.4.17",
+    "@types/pdfmake": "^0.3.2",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",

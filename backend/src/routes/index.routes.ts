@@ -9,6 +9,8 @@ import categoryRouter from "./category.route";
 import notificationRouter from "./notification.routes";
 import pushRouter from "./push.route";
 import budgetRouter from "./budget.route";
+import forecastRouter from "./forecast.route";
+import exportRouter from "./export.route";
 
 const apiRouter = Router()
 
@@ -22,5 +24,7 @@ apiRouter.use('/categories', categoryRouter)
 apiRouter.use('/notifications', notificationRouter)
 apiRouter.use('/push', pushRouter)
 apiRouter.use('/budgets', budgetRouter)
+apiRouter.use('/forecast', forecastRouter)
+apiRouter.use('/export', exportRouter)
 
 export default apiRouter

@@ -8,6 +8,51 @@ export class UserRepository {
         })
     }
 
+    static async purgeDeleteData(userId: string) {
+        await prisma.$transaction([
+            prisma.categoryFeedbackEvent.deleteMany({ where: { userId } }),
+            prisma.recommendationLog.deleteMany({ where: { userId } }),
+            prisma.csvImport.deleteMany({ where: { userId } }),
+            prisma.exportLog.deleteMany({ where: { userId } }),
+            prisma.activityLog.deleteMany({ where: { userId } }),
+            prisma.notification.deleteMany({ where: { userId } }),
+
+            prisma.forecastCache.deleteMany({ where: { userId } }),
+            prisma.forecast.deleteMany({ where: { userId } }),
+
+            prisma.cluster.deleteMany({
+                where: { analysisRun: { userId } }
+            }),
+            prisma.analysisRun.deleteMany({ where: { userId } }),
+
+            // Budget
+            prisma.budgetGoal.deleteMany({ where: { userId } }),
+
+            prisma.userBadge.deleteMany({ where: { userId } }),
+            prisma.userChallenge.deleteMany({ where: { userId } }),
+
+            prisma.transaction.deleteMany({ where: { userId } }),
+
+            prisma.category.deleteMany({ where: { userId } }),
+
+            prisma.userStats.updateMany({
+                where: { userId },
+                data: {
+                    xp: 0,
+                    level: 1,
+                    streak: 0,
+                    longestStreak: 0,
+                    lastTransactionAt: null,
+                    totalTransactions: 0,
+                    totalIncome: 0,
+                    totalExpense: 0,
+                    hasExported: false,
+                    hasAnalyzed: false,
+                },
+            }),
+        ]);
+    }
+
     static async findUserProfile(id: string) {
         return prisma.user.findUnique({
             where: { id },

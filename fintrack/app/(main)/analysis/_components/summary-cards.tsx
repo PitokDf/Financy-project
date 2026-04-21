@@ -1,6 +1,6 @@
-import React from 'react';
 import { Wallet, TrendingUp, TrendingDown } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrencyWithSecure } from '@/lib/utils';
+import { useSecureMode } from '@/hooks/use-secure';
 
 interface SummaryCardsProps {
     savings: number;
@@ -10,6 +10,8 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ savings, savingsRate, totalIncome, totalExpense }: SummaryCardsProps) {
+    const { isSecure } = useSecureMode()
+
     return (
         <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 hide-scrollbar">
             <div className="min-w-[85%] snap-center shrink-0 bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center justify-between">
@@ -18,7 +20,7 @@ export function SummaryCards({ savings, savingsRate, totalIncome, totalExpense }
                         <Wallet className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">Tabungan Bersih</span>
                     </div>
-                    <p className="text-xl font-bold text-primary">{formatCurrency(savings)}</p>
+                    <p className="text-xl font-bold text-primary">{formatCurrencyWithSecure(savings, isSecure)}</p>
                 </div>
                 <div className="text-right">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase">Savings Rate</p>
@@ -32,7 +34,7 @@ export function SummaryCards({ savings, savingsRate, totalIncome, totalExpense }
                         <TrendingUp className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">Pemasukan</span>
                     </div>
-                    <p className="text-sm font-bold">{formatCurrency(totalIncome)}</p>
+                    <p className="text-sm font-bold">{formatCurrencyWithSecure(totalIncome, isSecure)}</p>
                 </div>
                 <div className="h-8 w-px bg-border mx-2"></div>
                 <div className="space-y-1 text-right">
@@ -40,7 +42,7 @@ export function SummaryCards({ savings, savingsRate, totalIncome, totalExpense }
                         <span className="text-[10px] font-bold uppercase tracking-wider">Pengeluaran</span>
                         <TrendingDown className="w-4 h-4" />
                     </div>
-                    <p className="text-sm font-bold">{formatCurrency(totalExpense)}</p>
+                    <p className="text-sm font-bold">{formatCurrencyWithSecure(totalExpense, isSecure)}</p>
                 </div>
             </div>
         </div>

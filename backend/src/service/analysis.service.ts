@@ -461,9 +461,7 @@ export class AnalysisService {
             });
         }
 
-        const forecast = topCategoryId
-            ? await this.forecastService.forecastTopCategory(payload.userId, topCategoryId)
-            : null;
+        const topForecasts = await this.forecastService.getTopForecasts(payload.userId, 3);
 
         await this.analysisRepo.updateRun(run.id, {
             status: "completed",
@@ -527,7 +525,7 @@ export class AnalysisService {
             runId: run.id,
             status: "completed",
             createdCategories,
-            forecast,
+            topForecasts,
         };
     };
 }

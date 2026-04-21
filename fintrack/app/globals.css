@@ -180,6 +180,10 @@
 }
 
 @layer utilities {
+  .recharts-wrapper *:focus {
+    outline: none !important;
+  }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
