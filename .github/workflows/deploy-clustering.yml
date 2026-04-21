@@ -1,15 +1,15 @@
-name: CI/CD Pipeline - Deploy Backend
+name: CI/CD Pipeline - Deploy Clustering
 
 on:
   push:
     branches: ["main"]
-    paths-ignore:
+    paths:
       - 'clustering/**'
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: pitokdf/financy-backend
+  IMAGE_NAME: pitokdf/financy-clustering
 
 jobs:
   build-and-push:
@@ -38,9 +38,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./clustering
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
@@ -49,15 +49,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Create project directory on VPS if it does not exist
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            mkdir -p ~/financy-project
 
       - name: Copy docker-compose file to VPS
         uses: appleboy/scp-action@master
@@ -80,17 +71,19 @@ jobs:
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          BACKEND_IMAGE_NAME: pitokdf/financy-backend
           COOKIES_DOMAIN: ${{ secrets.COOKIES_DOMAIN }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: DATABASE_URL,JWT_SECRET,REDIS_PASSWORD,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY,CLIENT_URL,ALLOWED_ORIGINS,REGISTRY,IMAGE_NAME,COOKIES_DOMAIN,JWT_ISSUER
+          envs: DATABASE_URL,JWT_SECRET,REDIS_PASSWORD,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY,CLIENT_URL,ALLOWED_ORIGINS,REGISTRY,IMAGE_NAME,BACKEND_IMAGE_NAME,COOKIES_DOMAIN,JWT_ISSUER
           script: |
             cd ~/financy-project
 
-            # Create .env file 
+            # Update .env file to ensure CLUSTERING_IMAGE is present
+            # We keep other variables as they were
             cat <<EOF > .env
             DATABASE_URL=$DATABASE_URL
             JWT_SECRET=$JWT_SECRET
@@ -99,17 +92,22 @@ jobs:
             VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY
             CLIENT_URL=$CLIENT_URL
             ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-            BACKEND_IMAGE=$REGISTRY/$IMAGE_NAME:main
-            CLUSTERING_IMAGE=$REGISTRY/pitokdf/financy-clustering:main
+            BACKEND_IMAGE=$REGISTRY/$BACKEND_IMAGE_NAME:main
+            CLUSTERING_IMAGE=$REGISTRY/$IMAGE_NAME:main
             COOKIES_DOMAIN=$COOKIES_DOMAIN
             JWT_ISSUER=$JWT_ISSUER
             EOF
 
-            # Login to GHCR (using the automatic GITHUB_TOKEN)
+            # Copy docker-compose.yml to the target directory (sent from CI context)
+            # Since appleboy/ssh-action doesn't transfer files, we assume the user's deploy.yml
+            # or a previous step ensures the compose file is there.
+            # In clustering deploy, we should also copy the latest docker-compose.yml
+            
+            # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
 
             docker compose pull
-            docker compose up -d
+            docker compose up -d clustering
             
-            # Clean up old unused images to save disk space
+            # Clean up
             docker image prune -af

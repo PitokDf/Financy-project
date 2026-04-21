@@ -31,9 +31,9 @@ export function ClusterPieChart({ clusters }: { clusters: AnalysisRunResult['clu
                         ))}
                     </Pie>
                     <Tooltip
-                        formatter={(value) => {
-                            if (value == null) return ['', '']
-                            return [formatCurrency(value.toString()), '']
+                        formatter={(value, name) => {
+                            if (value == null) return ['', name];
+                            return [formatCurrency(value.toString()), name];
                         }}
                         contentStyle={{
                             background: 'var(--card)',

@@ -15,6 +15,13 @@ export class AnalysisController {
         return ResponseUtil.success(res, result, HttpStatus.OK, "Analysis berhasil dijalankan");
     });
 
+    public runV2 = asyncHandler(async (req: Request, res: Response) => {
+        const payload = runAnalysisSchema.parse({ ...req.body });
+        const result = await this.service.runV2(payload, req.auth_user!.user_id);
+
+        return ResponseUtil.success(res, result, HttpStatus.OK, "Analysis V2 berhasil dijalankan");
+    });
+
     public confirm = asyncHandler(async (req: Request, res: Response) => {
         const payload = confirmAnalysisSchema.parse({ ...req.body, userId: req.auth_user!.user_id });
         const result = await this.service.confirm(payload);

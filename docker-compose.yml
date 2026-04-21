@@ -21,10 +21,25 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - COOKIES_DOMAIN=${COOKIES_DOMAIN}
       - JWT_ISSUER=${JWT_ISSUER}
+      - ML_SERVICE_URL=http://clustering:8000
     ports:
       - "6789:6789"
     depends_on:
       - redis
+      - clustering
+
+  clustering:
+    build:
+      context: ./clustering
+      dockerfile: Dockerfile
+    image: ${CLUSTERING_IMAGE:-financy-clustering:latest}
+    container_name: financy-clustering
+    restart: always
+    volumes:
+      - ./clustering/classifier_model.joblib:/app/classifier_model.joblib
+      - ./clustering/feedback_corrections.json:/app/feedback_corrections.json
+    ports:
+      - "8000:8000"
 
   redis:
     image: redis:alpine

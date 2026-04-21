@@ -97,7 +97,7 @@ export class TransactionRepository {
                     lte: endDate,
                 },
                 type: 'EXPENSE',
-                // categoryId: null
+                categoryId: null,
             },
             orderBy: [
                 { date: "asc" },

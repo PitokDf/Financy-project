@@ -1,15 +1,14 @@
 import re
 import time
 from collections import Counter
-from typing import List, Literal, Optional
+from typing import List, Optional
 
+import joblib
 import numpy as np
 import umap
-import hdbscan
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 
 STOPWORDS = {
@@ -18,8 +17,8 @@ STOPWORDS = {
     "biaya", "via", "the", "a", "an", "of", "to", "in", "for", "at",
 }
 
-SIMILARITY_THRESHOLD = 0.72
-MODEL_NAME = "intfloat/multilingual-e5-small"
+SIMILARITY_THRESHOLD = 0.75
+MODEL_NAME = "intfloat/multilingual-e5-base"
 
 
 class ClusteringService:
@@ -30,7 +29,6 @@ class ClusteringService:
         self,
         transactions,
         existing_categories: Optional[List[dict]] = None,
-        method: Literal["kmeans", "hdbscan"] = "hdbscan",
         k_min: int = 4,
         k_max: int = 12
     ) -> dict:
@@ -39,13 +37,9 @@ class ClusteringService:
         descriptions = [t.description for t in transactions]
         ids = [t.id for t in transactions]
 
-        # Embedding asli (384 dimensi)
         embeddings = self._embed(descriptions)
+        reduced_embeddings = self._reduce_dimension(embeddings, n_components=10, n_neighbors=15)
 
-        # Reduced embedding untuk clustering (UMAP)
-        reduced_embeddings = self._reduce_dimension(embeddings, n_components=5, n_neighbors=15)
-
-        # Pre-assignment ke kategori existing
         pre_assigned = []
         unmatched_indices = list(range(len(transactions)))
 
@@ -57,10 +51,7 @@ class ClusteringService:
                     text += " " + " ".join(cat['keywords'][:5])
                 cat_texts.append(text)
 
-            # Gunakan embedding ASLI (384 dim) untuk similarity dengan kategori
-            cat_embeddings = self._embed(cat_texts)
-
-            # Similarity menggunakan embedding asli
+            cat_embeddings = self._embed(cat_texts, is_query=True)
             sim_matrix = cosine_similarity(embeddings, cat_embeddings)
 
             matched = set()
@@ -79,7 +70,6 @@ class ClusteringService:
 
             unmatched_indices = [i for i in range(len(transactions)) if i not in matched]
 
-        # Clustering hanya pada unmatched
         clusters = []
         wcss_values = {}
         k_optimal = 0
@@ -87,19 +77,13 @@ class ClusteringService:
 
         if len(unmatched_indices) >= 5:
             um = np.array(unmatched_indices)
-            unmatched_emb = reduced_embeddings[um]          # pakai reduced untuk clustering
+            unmatched_emb = reduced_embeddings[um]
             unmatched_ids = [ids[i] for i in um]
             unmatched_desc = [descriptions[i] for i in um]
 
-            if method == "kmeans":
-                k_optimal, wcss_raw = self._find_optimal_k(unmatched_emb, k_min, k_max)
-                labels = self._kmeans(unmatched_emb, k_optimal)
-                wcss_values = {str(k): v for k, v in wcss_raw.items()}
-            else:
-                labels = self._hdbscan(unmatched_emb)
-                unique_labels = set(labels)
-                k_optimal = len(unique_labels) - (1 if -1 in unique_labels else 0)
-
+            k_optimal, wcss_raw = self._find_optimal_k(unmatched_emb, k_min, k_max)
+            labels = self._kmeans(unmatched_emb, k_optimal)
+            wcss_values = {str(k): v for k, v in wcss_raw.items()}
             sil = self._silhouette(unmatched_emb, labels)
             clusters = self._build_clusters(labels, unmatched_ids, unmatched_desc)
 
@@ -114,7 +98,8 @@ class ClusteringService:
             "duration_ms": duration_ms
         }
 
-    def _embed(self, descriptions: List[str]) -> np.ndarray:
+    def _embed(self, descriptions: List[str], is_query: bool = False) -> np.ndarray:
+        prefix = "query: " if is_query else "passage: "
         cleaned = []
         for d in descriptions:
             text = d.lower().strip()
@@ -126,12 +111,11 @@ class ClusteringService:
             text = re.sub(r'\d+', '', text)
             text = re.sub(r'[^\w\s]', ' ', text)
             text = re.sub(r'\s+', ' ', text).strip()
-            cleaned.append(text)
+            cleaned.append(prefix + text)
 
-        embeddings = self.model.encode(cleaned, batch_size=32, show_progress_bar=False)
-        return normalize(embeddings)
+        return self.model.encode(cleaned, batch_size=32, show_progress_bar=False, normalize_embeddings=True)
 
-    def _reduce_dimension(self, embeddings: np.ndarray, n_components: int = 5, n_neighbors: int = 15):
+    def _reduce_dimension(self, embeddings: np.ndarray, n_components: int = 10, n_neighbors: int = 15) -> np.ndarray:
         reducer = umap.UMAP(
             n_neighbors=n_neighbors,
             n_components=n_components,
@@ -141,16 +125,6 @@ class ClusteringService:
         )
         return reducer.fit_transform(embeddings)
 
-    def _hdbscan(self, embeddings: np.ndarray) -> np.ndarray:
-        clusterer = hdbscan.HDBSCAN(
-            min_cluster_size=5,
-            min_samples=3,
-            metric='euclidean',
-            cluster_selection_method='eom',
-            prediction_data=True
-        )
-        return clusterer.fit_predict(embeddings)
-
     def _find_optimal_k(self, embeddings: np.ndarray, k_min: int, k_max: int) -> tuple[int, dict]:
         n = len(embeddings)
         actual_k_max = min(k_max, n - 1)
@@ -158,12 +132,14 @@ class ClusteringService:
             return k_min, {str(k_min): 0.0}
 
         wcss_dict = {}
+        sil_dict = {}
         for k in range(k_min, actual_k_max + 1):
             km = KMeans(n_clusters=k, random_state=42, n_init=10)
-            km.fit(embeddings)
+            labels = km.fit_predict(embeddings)
             wcss_dict[k] = float(km.inertia_)
+            sil_dict[k] = float(silhouette_score(embeddings, labels))
 
-        optimal_k = self._elbow(wcss_dict, k_min, actual_k_max)
+        optimal_k = max(sil_dict, key=sil_dict.get)
         return optimal_k, wcss_dict
 
     def _elbow(self, wcss: dict, k_min: int, k_max: int) -> int:
@@ -171,7 +147,7 @@ class ClusteringService:
         values = [wcss[k] for k in ks]
         if len(ks) < 3:
             return k_min
-        curvatures = [values[i] - 2 * values[i+1] + values[i+2] for i in range(len(values)-2)]
+        curvatures = [values[i] - 2 * values[i+1] + values[i+2] for i in range(len(values) - 2)]
         return ks[int(np.argmax(curvatures)) + 1]
 
     def _kmeans(self, embeddings: np.ndarray, k: int) -> np.ndarray:
@@ -179,28 +155,20 @@ class ClusteringService:
         return km.fit_predict(embeddings)
 
     def _silhouette(self, embeddings: np.ndarray, labels: np.ndarray) -> float:
-        mask = labels != -1
-        if np.sum(mask) < 2 or len(set(labels[mask])) < 2:
+        if len(set(labels)) < 2:
             return 0.0
-        return float(silhouette_score(embeddings[mask], labels[mask]))
+        return float(silhouette_score(embeddings, labels))
 
     def _build_clusters(self, labels: np.ndarray, ids: List[str], descriptions: List[str]) -> List[dict]:
         clusters = []
-        unique_labels = sorted(list(set(labels)))
-
-        for lbl in unique_labels:
-            if lbl == -1:
-                continue
+        for lbl in sorted(set(labels)):
             indices = [i for i, l in enumerate(labels) if l == lbl]
             cluster_descriptions = [descriptions[i] for i in indices]
             cluster_ids = [ids[i] for i in indices]
             keywords = self._extract_keywords(cluster_descriptions)
-
-            suggested_name = ", ".join(keywords[:3]) if keywords else f"Kategori {lbl}"
-
             clusters.append({
                 "cluster_index": int(lbl),
-                "suggested_name": suggested_name,
+                "suggested_name": ", ".join(keywords[:3]) if keywords else f"Kategori {lbl}",
                 "keywords": keywords,
                 "transaction_ids": cluster_ids,
                 "size": len(cluster_ids)
@@ -212,5 +180,149 @@ class ClusteringService:
         for desc in descriptions:
             tokens = re.findall(r"\b[a-zA-Z0-9]{3,}\b", desc.lower())
             words.extend(w for w in tokens if w not in STOPWORDS)
-        counter = Counter(words)
-        return [w for w, _ in counter.most_common(top_n)]
+        return [w for w, _ in Counter(words).most_common(top_n)]
+
+
+class ClassifierService:
+    def __init__(self, model_path: str = "classifier_model.joblib"):
+        self.model_data = joblib.load(model_path)
+        self.classifier = self.model_data["classifier"]
+        self.model_name = self.model_data.get("model_name", "intfloat/multilingual-e5-large")
+        self.prefix = self.model_data.get("prefix", "query")
+        self.model = SentenceTransformer(self.model_name)
+
+    def _embed(self, descriptions: List[str]) -> np.ndarray:
+        prefix = f"{self.prefix}: "
+        cleaned = []
+        for d in descriptions:
+            text = d.lower().strip()
+            text = re.sub(r'gojek|grab|uber|shopeefood', 'transportasi_online', text)
+            text = re.sub(r'starbucks|janji jiwa|kenangan|kopiken', 'jajan_kopi', text)
+            text = re.sub(r'indomaret|alfamart|alfamidi', 'minimarket', text)
+            text = re.sub(r'shopee|tokopedia|lazada', 'ecommerce', text)
+            text = re.sub(r'qris|ovo|dana|gopay|linkaja', 'pembayaran_digital', text)
+            text = re.sub(r'\d+', '', text)
+            text = re.sub(r'[^\w\s]', ' ', text)
+            text = re.sub(r'\s+', ' ', text).strip()
+            cleaned.append(prefix + text)
+
+        return self.model.encode(cleaned, batch_size=32, show_progress_bar=False, normalize_embeddings=True)
+
+    def predict(self, transactions) -> dict:
+        if not transactions:
+            return {"predictions": [], "duration_ms": 0}
+        
+        start_time = time.time()
+        descriptions = [t.description for t in transactions]
+        ids = [t.id for t in transactions]
+
+        embeddings = self._embed(descriptions)
+        
+        probs = self.classifier.predict_proba(embeddings)
+        classes = self.classifier.classes_
+        
+        predictions = []
+        for i in range(len(transactions)):
+            best_idx = int(np.argmax(probs[i]))
+            category = str(classes[best_idx])
+            confidence = float(probs[i][best_idx])
+            
+            predictions.append({
+                "transaction_id": ids[i],
+                "description": descriptions[i],
+                "predicted_category": category,
+                "confidence": round(confidence, 4)
+            })
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        return {
+            "predictions": predictions,
+            "duration_ms": duration_ms
+        }
+
+    def train_incremental(self, corrections: list[dict], corrections_file: str = "feedback_corrections.json"):
+        """
+        Incrementally improve the classifier using user corrections.
+        corrections: [{"description": str, "correct_category": str}]
+        
+        Since GridSearchCV doesn't support partial_fit, we:
+        1. Accumulate corrections in a JSON file
+        2. Re-train the best estimator from GridSearchCV using all corrections + existing class knowledge
+        3. Save the retrained model back to disk
+        """
+        import json
+        import os
+        from sklearn.linear_model import LogisticRegression
+
+        if not corrections:
+            return
+
+        # Load or init corrections history
+        history = []
+        if os.path.exists(corrections_file):
+            try:
+                with open(corrections_file, "r") as f:
+                    history = json.load(f)
+            except Exception:
+                history = []
+
+        # Append new corrections (deduplicate by description+category)
+        existing_keys = {(item["description"], item["correct_category"]) for item in history}
+        for c in corrections:
+            key = (c["description"], c["correct_category"])
+            if key not in existing_keys:
+                history.append(c)
+                existing_keys.add(key)
+
+        # Save accumulated corrections to disk
+        with open(corrections_file, "w") as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+
+        # Need at least 2 distinct categories to retrain
+        categories_in_corrections = set(item["correct_category"] for item in history)
+        if len(categories_in_corrections) < 2:
+            print(f"[Feedback] Not enough category diversity ({len(categories_in_corrections)} categories). Skipping retrain.")
+            return
+
+        # Build training set from collected corrections
+        descriptions = [item["description"] for item in history]
+        labels = [item["correct_category"] for item in history]
+
+        # Embed using the same model
+        embeddings = self._embed(descriptions)
+
+        # Retrain a LogisticRegression on top of accumulated corrections
+        # We use the existing best estimator params as a starting point
+        existing_clf = self.classifier
+        best_estimator = existing_clf.best_estimator_ if hasattr(existing_clf, 'best_estimator_') else existing_clf
+
+        # Extract LR params from existing model
+        C = 1.0
+        max_iter = 1000
+        if hasattr(best_estimator, 'C'):
+            C = best_estimator.C
+        if hasattr(best_estimator, 'max_iter'):
+            max_iter = best_estimator.max_iter
+
+        # All known classes = original classes + any new categories from corrections
+        all_classes = sorted(set(list(self.classifier.classes_)) | categories_in_corrections)
+
+        new_clf = LogisticRegression(
+            C=C,
+            max_iter=max_iter,
+            multi_class='multinomial',
+            solver='lbfgs',
+            class_weight='balanced'
+        )
+        new_clf.fit(embeddings, labels)
+
+        # Patch the classifier service's model to include both old and new labels
+        self.classifier = new_clf
+
+        # Persist the updated model to disk
+        updated_model_data = dict(self.model_data)
+        updated_model_data["classifier"] = new_clf
+        joblib.dump(updated_model_data, "classifier_model.joblib")
+
+        print(f"[Feedback] Retrained classifier with {len(history)} corrections across {len(set(labels))} categories.")

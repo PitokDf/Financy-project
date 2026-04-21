@@ -68,7 +68,7 @@ export function useAnalysis() {
 
     const runAnalysisMutation = useMutation({
         mutationFn: async (payload: { lookbackDays?: number, kMin?: number, kMax?: number } = {}) => {
-            const res = await axiosClient.post("/analysis/run", payload);
+            const res = await axiosClient.post("/analysis/run-v2", payload);
             return res.data as AnalysisRunResult;
         },
         onSuccess: (data) => {

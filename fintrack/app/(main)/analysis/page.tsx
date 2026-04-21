@@ -61,6 +61,7 @@ export default function AnalysisDashboardPage() {
     const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
 
     const isPendingConfirmation = latestRun?.status === 'waiting_confirmation';
+    const isRunning = latestRun?.status === 'running';
 
     return (
         <div className="animate-fade-in space-y-3 text-foreground">
@@ -118,6 +119,11 @@ export default function AnalysisDashboardPage() {
                     {isPendingConfirmation && (
                         <div className="mt-3 flex items-center gap-1.5 bg-white/20 w-fit px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider animate-pulse">
                             <Loader2 className="w-3 h-3 animate-spin" /> Sedang Menunggu Review
+                        </div>
+                    )}
+                    {isRunning && (
+                        <div className="mt-3 flex items-center gap-1.5 bg-white/20 w-fit px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider animate-pulse">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Sedang Menjalankan
                         </div>
                     )}
                 </div>

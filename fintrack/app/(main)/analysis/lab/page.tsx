@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAnalysis, AnalysisRunResult, MlClusterResponse } from '@/hooks/use-analysis';
+import { useCategories } from '@/hooks/use-categories';
 import { Brain, ArrowRight, Loader2, CheckCircle2, Sparkles, Tag, ChevronDown, ChevronUp, Trash2, FolderInput, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { CLUSTER_COLORS } from './_components/constant';
@@ -13,6 +14,7 @@ type UIState = 'IDLE' | 'RUNNING' | 'REVIEWING' | 'FORECAST_REVEAL';
 
 export default function AnalysisLabPage() {
     const { runAnalysis, isRunning, confirmAnalysis, isConfirming, latestRun, isLoadingLatest } = useAnalysis();
+    const { categories } = useCategories();
 
     const [uiState, setUiState] = useState<UIState>('IDLE');
     const [analysisResult, setAnalysisResult] = useState<AnalysisRunResult | null>(null);
@@ -20,10 +22,15 @@ export default function AnalysisLabPage() {
     const [assignments, setAssignments] = useState<Record<number, MlClusterResponse['members']>>({});
     const [forecastData, setForecastData] = useState<any>(null);
 
-    // Persistence: If there's a latest run that is waiting confirmation, auto-load it
     useEffect(() => {
         if (latestRun && latestRun.status === 'waiting_confirmation') {
             loadResult(latestRun);
+        }
+    }, [latestRun]);
+
+    useEffect(() => {
+        if (latestRun && latestRun.status === 'running') {
+            setUiState('RUNNING');
         }
     }, [latestRun]);
 
@@ -34,9 +41,17 @@ export default function AnalysisLabPage() {
 
         result.clusters.forEach(c => {
             const idx = c.index !== undefined ? c.index : Number(c.id);
-            initialMappings[idx] = c.suggestedName || c.name || `Kategori ${idx + 1}`;
+            // Default name for -1 is Lain-lain
+            initialMappings[idx] = c.suggestedName || c.name || (idx === -1 ? 'Lain-lain' : `Kategori ${idx + 1}`);
             initialAssignments[idx] = c.members;
         });
+
+        // Ensure "Lain-lain" (-1) bucket exists so we have a place to drop excluded items
+        if (!initialAssignments[-1]) {
+            initialAssignments[-1] = [];
+            initialMappings[-1] = 'Lain-lain';
+        }
+
         setMappings(initialMappings);
         setAssignments(initialAssignments);
         setUiState('REVIEWING');
@@ -76,8 +91,29 @@ export default function AnalysisLabPage() {
         }
     };
 
-    const visibleClusters = analysisResult?.clusters.filter(c => c.index !== -1) ?? [];
+    // Show all clusters, but sort so that Lain-lain (-1) is always at the bottom
+    const visibleClusters = [...(analysisResult?.clusters ?? [])]
+        .filter(c => assignments[c.index]?.length > 0 || c.index === -1)
+        .sort((a, b) => {
+            if (a.index === -1) return 1;
+            if (b.index === -1) return -1;
+            return a.index - b.index;
+        });
 
+    // We must ensure -1 is in visibleClusters if we created it artificially for excluded items
+    if (!visibleClusters.find(c => c.index === -1) && assignments[-1]?.length > 0) {
+        visibleClusters.push({
+            id: 'unassigned',
+            index: -1,
+            name: 'Lain-lain',
+            suggestedName: 'Lain-lain',
+            color: '#9CA3AF',
+            size: assignments[-1].length,
+            totalAmount: assignments[-1].reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0),
+            representativeDescriptions: [],
+            members: assignments[-1]
+        });
+    }
     if (isLoadingLatest && uiState === 'IDLE') {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -190,10 +226,18 @@ export default function AnalysisLabPage() {
                                     onNameChange={v => setMappings(prev => ({ ...prev, [cluster.index]: v }))}
                                     transactions={assignments[cluster.index] || []}
                                     clusterOptions={visibleClusters.map(c => ({ index: c.index, name: mappings[c.index] || c.suggestedName || `Kategori ${c.index + 1}` }))}
+                                    existingCategories={categories.map(c => ({ id: c.id, name: c.name }))}
                                     onExcludeTransaction={(txId) => {
                                         setAssignments(prev => {
                                             const updated = { ...prev };
+                                            // Find the transaction
+                                            const tx = updated[cluster.index].find(t => t.id === txId);
+                                            if (!tx) return prev;
+
+                                            // Remove from current cluster
                                             updated[cluster.index] = updated[cluster.index].filter(t => t.id !== txId);
+                                            // Move to Lain-lain (-1)
+                                            updated[-1] = [...(updated[-1] || []), tx];
                                             return updated;
                                         });
                                     }}

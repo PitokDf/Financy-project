@@ -21,6 +21,7 @@ const analysisRouter = Router();
 
 analysisRouter.use(authMiddleware)
 analysisRouter.post("/run", controller.run);
+analysisRouter.post("/run-v2", controller.runV2);
 analysisRouter.post("/confirm", controller.confirm);
 analysisRouter.get("/latest", controller.getLatestRun);
 analysisRouter.get("/stats", controller.getStats);
