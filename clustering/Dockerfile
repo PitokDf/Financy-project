@@ -13,8 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download the SBERT model during build to avoid DNS/Internet issues at runtime
-# This makes the image larger but much more robust
+# Set environment variables for offline mode and model cache
+ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
+ENV TRANSFORMERS_OFFLINE=1
+ENV HF_HUB_OFFLINE=1
+
+# Pre-download the SBERT models during build
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-base')"
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-large')"
 
