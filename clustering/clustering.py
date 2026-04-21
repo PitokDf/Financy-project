@@ -6,10 +6,17 @@ from typing import List, Optional
 import joblib
 import numpy as np
 import umap
+import os
+import json
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.pairwise import cosine_similarity
+
+# Persistence configuration
+DATA_DIR = os.getenv("DATA_DIR", "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR, exist_ok=True)
 
 STOPWORDS = {
     "di", "ke", "dari", "yang", "dan", "atau", "dengan", "untuk", "pada",
@@ -184,7 +191,15 @@ class ClusteringService:
 
 
 class ClassifierService:
-    def __init__(self, model_path: str = "classifier_model.joblib"):
+    def __init__(self, model_name: str = "classifier_model.joblib"):
+        # Model usually lives in DATA_DIR
+        model_path = os.path.join(DATA_DIR, model_name)
+        
+        # Fallback to current directory for development/initial state
+        if not os.path.exists(model_path) and os.path.exists(model_name):
+            print(f"[Classifier] Model not found in {model_path}, falling back to {model_name}")
+            model_path = model_name
+
         self.model_data = joblib.load(model_path)
         self.classifier = self.model_data["classifier"]
         self.model_name = self.model_data.get("model_name", "intfloat/multilingual-e5-large")
@@ -241,7 +256,7 @@ class ClassifierService:
             "duration_ms": duration_ms
         }
 
-    def train_incremental(self, corrections: list[dict], corrections_file: str = "feedback_corrections.json"):
+    def train_incremental(self, corrections: list[dict], corrections_name: str = "feedback_corrections.json"):
         """
         Incrementally improve the classifier using user corrections.
         corrections: [{"description": str, "correct_category": str}]
@@ -251,9 +266,9 @@ class ClassifierService:
         2. Re-train the best estimator from GridSearchCV using all corrections + existing class knowledge
         3. Save the retrained model back to disk
         """
-        import json
-        import os
         from sklearn.linear_model import LogisticRegression
+        
+        corrections_file = os.path.join(DATA_DIR, corrections_name)
 
         if not corrections:
             return
@@ -323,6 +338,8 @@ class ClassifierService:
         # Persist the updated model to disk
         updated_model_data = dict(self.model_data)
         updated_model_data["classifier"] = new_clf
-        joblib.dump(updated_model_data, "classifier_model.joblib")
+        
+        model_save_path = os.path.join(DATA_DIR, "classifier_model.joblib")
+        joblib.dump(updated_model_data, model_save_path)
 
         print(f"[Feedback] Retrained classifier with {len(history)} corrections across {len(set(labels))} categories.")

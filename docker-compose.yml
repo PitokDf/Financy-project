@@ -36,8 +36,7 @@ services:
     container_name: financy-clustering
     restart: always
     volumes:
-      - ./clustering/classifier_model.joblib:/app/classifier_model.joblib
-      - ./clustering/feedback_corrections.json:/app/feedback_corrections.json
+      - ./clustering/data:/app/data
     ports:
       - "8000:8000"
 
