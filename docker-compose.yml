@@ -1,10 +1,5 @@
-version: '3.8'
-
 services:
   api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     image: ${BACKEND_IMAGE:-financy-backend:latest}
     container_name: financy-api
     restart: always
@@ -29,9 +24,6 @@ services:
       - clustering
 
   clustering:
-    build:
-      context: ./clustering
-      dockerfile: Dockerfile
     image: ${CLUSTERING_IMAGE:-financy-clustering:latest}
     container_name: financy-clustering
     restart: always
