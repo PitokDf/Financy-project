@@ -88,6 +88,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: DATABASE_URL,JWT_SECRET,REDIS_PASSWORD,VAPID_PUBLIC_KEY,VAPID_PRIVATE_KEY,CLIENT_URL,ALLOWED_ORIGINS,REGISTRY,IMAGE_NAME,COOKIES_DOMAIN,JWT_ISSUER
           script: |
+            cd ~/financy-project
+
             # Cleanup and setup data directory
             rm -rf ~/financy-project/clustering/classifier_model.joblib
             rm -rf ~/financy-project/clustering/feedback_corrections.json
