@@ -3,6 +3,9 @@ import { DashboardRepository } from "@/repositories/dashboard.repository";
 import { CategoryRepository } from "@/repositories/category.repository";
 import { ForecastRepository } from "@/repositories/forecast.repository";
 import { ForecastService } from "@/service/forecast.service";
+import { cacheManager } from "@/utils/cache";
+import { redisClient } from "@/config/redis";
+import frameworkLogger from "@/utils/winston.logger";
 
 export class DashboardService {
     constructor(
@@ -12,10 +15,40 @@ export class DashboardService {
         private readonly forecastService: ForecastService
     ) { }
 
-    public getSummary = async (userId: string) => {
+    public getSummary = async (userId: string): Promise<{
+        summary: {
+            totalBalance: number;
+            monthlyIncome: number;
+            monthlyExpense: number;
+            savingsRate: number;
+        };
+        topCategories: {
+            name: string;
+            amount: number;
+            percentage: number;
+            color: string;
+        }[];
+        forecast: {
+            categoryName: string;
+            predictedAmount: number;
+            targetMonth: number;
+        } | null;
+        topForecasts: {
+            rank: number;
+            categoryName: string;
+            predictedAmount: number;
+        }[];
+    }> => {
         const now = new Date();
         const start = startOfMonth(now);
         const end = endOfMonth(now);
+        const cachedKey = `dashboard:${userId}`;
+
+        const cachedData = await redisClient.get(cachedKey);
+        if (cachedData) {
+            frameworkLogger.cache('Cache hit for dashboard summary');
+            return JSON.parse(cachedData);
+        }
 
         const [allTimeStats, monthlyStats, categoryStats, latestForecast, topForecasts] = await Promise.all([
             this.dashboardRepo.getAllTimeStats(userId),
@@ -41,8 +74,8 @@ export class DashboardService {
             if (stat.type === 'EXPENSE') monthlyExpense = stat._sum.amount || 0;
         });
 
-        const savingsRate = monthlyIncome > 0 
-            ? Number((((monthlyIncome - monthlyExpense) / monthlyIncome) * 100).toFixed(1)) 
+        const savingsRate = monthlyIncome > 0
+            ? Number((((monthlyIncome - monthlyExpense) / monthlyIncome) * 100).toFixed(1))
             : 0;
 
         const categoryIds = categoryStats.map(c => c.categoryId).filter(Boolean) as string[];
@@ -62,20 +95,25 @@ export class DashboardService {
             };
         });
 
-        return {
+        const result = {
             summary: {
                 totalBalance,
                 monthlyIncome,
                 monthlyExpense,
-                savingsRate,
+                savingsRate
             },
             topCategories,
+
             forecast: latestForecast ? {
                 categoryName: latestForecast.category.name,
                 predictedAmount: Number(latestForecast.predictedAmount),
                 targetMonth: latestForecast.targetMonth
             } : null,
             topForecasts
-        };
+        }
+
+        redisClient.set(cachedKey, JSON.stringify(result), 'EX', 3600)
+
+        return result;
     }
 }

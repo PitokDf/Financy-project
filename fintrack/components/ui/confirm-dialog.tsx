@@ -149,7 +149,7 @@ export function ConfirmDialog({
 
   const alignmentClass = align === "left" ? "text-left items-start" : "text-center items-center";
 
-  const newLocal = "w-[92vw] sm:max-w-sm mx-auto z-[1000]";
+  const newLocal = "w-[92vw] max-h-[92vh] overflow-y-auto sm:max-w-sm mx-auto z-[1000]";
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent

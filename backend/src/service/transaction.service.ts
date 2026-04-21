@@ -5,6 +5,7 @@ import fs from 'fs';
 import { fileUploadService } from "@/utils/file-upload";
 import { GamificationQueue } from "@/queue/gamification.queue";
 import { ReminderBadgeQueue } from "@/queue/reminder-badge.queue";
+import { redisClient } from "@/config/redis";
 
 export class TransactionService {
     private gamificationQueue: GamificationQueue;
@@ -97,6 +98,7 @@ export class TransactionService {
     public create = async (userId: string, data: any) => {
         const transaction = await this.repo.create(userId, data);
 
+        redisClient.del(`dashboard:${userId}`);
         await this.gamificationQueue.add('update-gamification', {
             userId: userId,
             action: 'TRANSACTION_CREATED',
@@ -110,6 +112,7 @@ export class TransactionService {
 
     public delete = async (userId: string, trxId: string) => {
         const transaction = await this.repo.delete(userId, trxId);
+        redisClient.del(`dashboard:${userId}`);
         return transaction;
     }
 }

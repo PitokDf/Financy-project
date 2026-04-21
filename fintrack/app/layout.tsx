@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     'Fintech',
     'Indonesia',
   ],
-  authors: [{ name: 'FinTrack Team' }],
+  authors: [{ name: 'Pito Desri Pauzi' }],
   creator: 'FinTrack',
   publisher: 'FinTrack',
   formatDetection: {
@@ -40,8 +40,10 @@ export const metadata: Metadata = {
     siteName: 'FinTrack',
     locale: 'id_ID',
     type: 'website',
+    images: [{ url: '/og-image.png' }],
   },
   twitter: {
+    images: [{ url: '/og-image.png' }],
     card: 'summary_large_image',
     title: 'FinTrack - Kelola Keuangan dengan Mudah',
     description: 'Aplikasi manajemen keuangan pribadi cerdas dari Indonesia, memaksimalkan klasterisasi AI.',
