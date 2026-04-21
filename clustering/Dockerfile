@@ -13,14 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set environment variables for offline mode and model cache
+# Set environment variable for model cache location
 ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
-ENV TRANSFORMERS_OFFLINE=1
-ENV HF_HUB_OFFLINE=1
 
-# Pre-download the SBERT models during build
+# Pre-download the SBERT models during build (Internet is allowed here)
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-base')"
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-large')"
+
+# Now enable total offline mode for RUNTIME
+ENV TRANSFORMERS_OFFLINE=1
+ENV HF_HUB_OFFLINE=1
 
 # Copy the rest of the application code
 COPY . .
