@@ -221,6 +221,7 @@ export function MenuSection() {
                 onOpenChange={setShowPermissionDialog}
                 onConfirm={confirmPushSubscription}
             />
+
             <ExportDialog
                 isOpen={showExportDialog}
                 onClose={() => setShowExportDialog(false)}

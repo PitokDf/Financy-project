@@ -12,11 +12,14 @@ const axiosClient = axios.create({
 axiosClient.interceptors.response.use(
     (response) => response.data,
     async (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
             if (typeof window !== "undefined") {
-                const redirectUrl = window.location.pathname
-                document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                window.location.href = `/login?redirect${redirectUrl}`;
+                const currentPath = window.location.pathname;
+
+                if (!['/login', '/register'].includes(currentPath)) {
+                    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+                }
             }
         }
 

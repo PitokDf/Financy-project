@@ -144,7 +144,7 @@ export function Header({
                                 {showAvatar && !title && pathname === '/dashboard' ? (
                                     <div>
                                         <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/80 leading-tight">
-                                            {greeting} 👋,
+                                            {greeting} <span className="inline-block origin-[70%_70%] animate-wave text-lg">👋</span>,
                                         </span>
                                         <h1 className="text-sm font-bold text-foreground leading-tight truncate">
                                             {user?.name ?? 'Pengguna'}

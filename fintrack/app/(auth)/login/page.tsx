@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { TrendingUp, Shield, Zap, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/lib/zustand/auth-store';
 import { ReusableForm } from '@/components/ui/reuseable-form';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
+import { Suspense } from 'react';
 
 const loginSchema = z.object({
     email: z.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
@@ -22,16 +23,19 @@ const FEATURES = [
     { icon: Shield, label: 'Data aman & terenkripsi' },
 ] as const;
 
-export default function LoginPage() {
+function LoginContent() {
     const { setAuth } = useAuthStore();
-    const { loginMutation } = useAuth()
+    const { loginMutation } = useAuth();
+    const searchParams = useSearchParams()
+    const redirectUrl = searchParams.get('redirect');
     const router = useRouter();
 
     const onSubmit = async (data: LoginFormData) => {
         try {
             const user = await loginMutation(data);
             setAuth(user);
-            router.replace('/dashboard');
+
+            router.push(redirectUrl ?? '/dashboard');
         } catch (error) {
             throw error
         }
@@ -120,4 +124,11 @@ export default function LoginPage() {
             </div>
         </div>
     );
+}
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginContent />
+        </Suspense>
+    )
 }
