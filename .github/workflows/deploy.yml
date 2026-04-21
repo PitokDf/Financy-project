@@ -3,8 +3,10 @@ name: CI/CD Pipeline - Deploy Backend
 on:
   push:
     branches: ["main"]
-    paths-ignore:
-      - 'clustering/**'
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:

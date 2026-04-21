@@ -20,8 +20,10 @@ services:
     ports:
       - "6789:6789"
     depends_on:
-      - redis
-      - clustering
+      redis:
+        condition: service_started
+      clustering:
+        condition: service_started
 
   clustering:
     image: ${CLUSTERING_IMAGE:-financy-clustering:latest}
@@ -31,6 +33,15 @@ services:
       - ./clustering/data:/app/data
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   redis:
     image: redis:alpine
