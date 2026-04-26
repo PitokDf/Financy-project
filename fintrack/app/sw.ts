@@ -77,6 +77,27 @@ self.addEventListener("message", (event) => {
     }
 });
 
+self.addEventListener('fetch', (event: FetchEvent) => {
+    const url = new URL(event.request.url);
+
+    if (url.pathname === '/transactions' && event.request.method === 'POST') {
+        event.respondWith(
+            (async () => {
+                const formData = await event.request.formData();
+                const file = formData.get('fileCSV') as File;
+
+                if (file) {
+                    const cache = await caches.open('shared-target');
+                    await cache.put('/shared-file', new Response(file));
+
+                }
+
+                return Response.redirect('/transactions', 303)
+            })()
+        )
+    }
+})
+
 self.addEventListener("push", (event) => {
     if (!event.data) return;
 

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { cache, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTransactions } from "@/hooks/use-transactions";
 import { UploadCloud } from "lucide-react";
+import { toast } from "sonner";
 
 interface ImportCsvModalProps {
     isOpen: boolean;
@@ -18,6 +19,27 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
             setSelectedFile(e.target.files[0]);
         }
     };
+
+    useEffect(() => {
+        const fetchShared = async () => {
+            const cache = await caches.open('shared-target');
+            const resp = await cache.match('/shared-file');
+            console.log(`'[Page] cache resp:', ${resp}`); // null = tidak ketemu
+
+            if (!resp) return;
+
+            const blob = await resp.blob();
+            console.log(`'[Page] blob size:', ${blob.size}`); // 0 = file kosong
+
+            await cache.delete('/shared-file');
+
+            const file = new File([blob], 'transactions.csv', { type: 'text/csv' });
+            console.log(`'[Page] file:', file`);
+            setSelectedFile(file);
+            toast.info(`File diterima: ${file.name}`);
+        };
+        fetchShared();
+    }, []);
 
     const handleImport = async () => {
         if (!selectedFile) return;
@@ -54,8 +76,8 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isImporting}>Batal</Button>
-                    <Button type="button" onClick={handleImport} disabled={!selectedFile || isImporting}>
+                    <Button type="button" variant="outline" className="h-10 cursor-pointer" onClick={() => onOpenChange(false)} disabled={isImporting}>Batal</Button>
+                    <Button type="button" className="h-10 cursor-pointer" onClick={handleImport} disabled={!selectedFile || isImporting}>
                         {isImporting ? "Mengimpor..." : "Mulai Import"}
                     </Button>
                 </DialogFooter>

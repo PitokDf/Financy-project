@@ -1,5 +1,5 @@
 import { config } from "@/config";
-import { Response } from "express";
+import { CookieOptions, Response } from "express";
 
 export class Auth {
     /**
@@ -29,22 +29,27 @@ export class Auth {
             default: maxAge = 24 * 60 * 60 * 1000;
         }
 
-        res.cookie("token", token, {
+        const isProd = config.isProduction;
+        const cookieOptions: CookieOptions = {
             httpOnly: true,
-            secure: config.NODE_ENV === 'production',
-            sameSite: config.NODE_ENV === 'production' ? "none" : "lax",
-            domain: config.NODE_ENV === 'production' ? config.COOKIES_DOMAIN : undefined,
+            secure: isProd,
+            sameSite: isProd ? "none" : "lax" as const,
+            domain: isProd ? config.COOKIES_DOMAIN : undefined,
             maxAge,
             path: "/",
-        });
+        };
+
+        console.log('[Auth] Setting cookie with options:', { ...cookieOptions, token: '***' });
+        res.cookie("token", token, cookieOptions);
     }
 
     static clearTokenCookieHttpOnly(res: Response) {
+        const isProd = config.isProduction;
         res.clearCookie("token", {
             httpOnly: true,
-            secure: config.NODE_ENV === 'production',
-            sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-            domain: config.NODE_ENV === 'production' ? config.COOKIES_DOMAIN : undefined,
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax' as const,
+            domain: isProd ? config.COOKIES_DOMAIN : undefined,
             path: '/'
         });
     }

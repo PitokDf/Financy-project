@@ -4,6 +4,7 @@ import { ChangePassword, LoginDTO, RegisterDTO } from '@/schemas/user.schema';
 import { AuthService } from '@/service/auth.service';
 import { Auth } from '@/utils/auth';
 import { ResponseUtil } from '@/utils';
+import { config } from '@/config';
 
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
@@ -11,7 +12,7 @@ export class AuthController {
     public login = asyncHandler(async (req: Request, res: Response) => {
         const data = req.body as LoginDTO;
         const result = await this.authService.login(data);
-
+        console.log(config.COOKIES_DOMAIN)
         Auth.setTokenCookieHttpOnly(res, result.token, { duration: 3, unit: 'd' })
 
         return ResponseUtil.success(res, result.user)

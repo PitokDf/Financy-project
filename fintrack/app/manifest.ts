@@ -11,6 +11,17 @@ export default function manifest(): MetadataRoute.Manifest {
         background_color: '#ffffff',
         theme_color: '#10b981',
         lang: 'id-ID',
+        share_target: {
+            action: '/transactions?action=import',
+            method: 'POST',
+            enctype: 'multipart/form-data',
+            params: {
+                files: [{
+                    name: 'fileCSV',
+                    accept: ['text/csv', '.csv']
+                }]
+            }
+        },
         shortcuts: [
             {
                 name: 'Buka Dashboard',

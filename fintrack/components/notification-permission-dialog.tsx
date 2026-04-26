@@ -58,10 +58,10 @@ export function NotificationPermissionDialog({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="sm:flex-1">
+          <Button variant="secondary" onClick={() => onOpenChange(false)} className="sm:flex-1 h-10 cursor-pointer">
             Nanti saja
           </Button>
-          <Button onClick={onConfirm} className="sm:flex-1 font-bold">
+          <Button onClick={onConfirm} className="sm:flex-1 font-bold cursor-pointer h-10">
             Ya, Aktifkan!
           </Button>
         </DialogFooter>

@@ -13,6 +13,7 @@ import { DisplayTransaction, useTransactionsPage } from './use-transactions-page
 import { Suspense, useCallback, useRef, useMemo, useState } from 'react';
 import { TransactionsSkeleton } from './_components/skeleton';
 import { useSecureMode } from '@/hooks/use-secure';
+import { useSearchParams } from 'next/navigation';
 
 type FlatItem =
     | { type: 'header'; date: string; count: number }
@@ -21,8 +22,11 @@ type FlatItem =
 function TransactionsContent() {
     const observerRef = useRef<IntersectionObserver | null>(null);
     const parentRef = useRef<HTMLDivElement>(null);
-    const { isSecure } = useSecureMode()
-    const [showImportModal, setShowImportModal] = useState(false);
+    const searchParams = useSearchParams();
+    const action = searchParams.get('action');
+
+    const { isSecure } = useSecureMode();
+    const [showImportModal, setShowImportModal] = useState(action === 'import');
 
     const {
         search,
