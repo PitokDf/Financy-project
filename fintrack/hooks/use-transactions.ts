@@ -112,6 +112,7 @@ export function useTransactions(search?: string, type?: string) {
             } else {
                 queryClient.invalidateQueries({ queryKey: ['transactions'] });
                 queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+                queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
                 toast.success("Transaksi berhasil ditambahkan!");
             }
         },

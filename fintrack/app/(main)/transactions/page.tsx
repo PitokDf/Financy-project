@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Search, Plus, X, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
+import { Search, Plus, X, TrendingUp, TrendingDown, Trash2, Import } from 'lucide-react';
 import { cn, formatCurrencyWithSecure } from '@/lib/utils';
 import { TransactionForm } from './_components/transaction-form';
 import { TransactionCard } from '@/components/shared/transaction-card';
@@ -194,14 +194,14 @@ function TransactionsContent() {
                 <Button
                     size="icon"
                     onClick={() => setShowImportModal(true)}
-                    className="w-12 h-12 rounded-full shadow-lg bg-white border border-emerald-100 text-emerald-600 hover:bg-emerald-50 ml-auto dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-400"
+                    className="w-12 h-12 rounded-2xl bg-secondary text-foreground/70 hover:text-foreground hover:bg-secondary/80 active:scale-95 transition-all duration-200 shadow-none border-0 ml-auto"
                     aria-label="Import CSV"
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                    <Import className="w-4.5 h-4.5" strokeWidth={2} />
                 </Button>
                 <Button
                     size="icon"
-                    className="w-14 h-14 rounded-2xl shadow-lg shadow-primary/30 border-0"
+                    className="w-12 h-12 rounded-2xl shadow-lg shadow-primary/30 border-0"
                     style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
                     onClick={() => setShowAddModal(true)}
                     aria-label="Tambah transaksi"

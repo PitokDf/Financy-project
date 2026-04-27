@@ -10,6 +10,7 @@ import {
     Trophy,
     EyeOff,
     Eye,
+    Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -23,12 +24,16 @@ import { isToday } from 'date-fns';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import DashboardSkeleton from './_components/skeleton';
 import { useSecureMode } from '@/hooks/use-secure';
+import { VoiceTransactionButton } from '@/components/shared/voice-transaction-button';
+import { useState } from 'react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function DashboardPage() {
     const { stats } = useGamification();
-    const { transactions } = useTransactions();
+    const { transactions, deleteTransaction } = useTransactions();
     const { data: dashboardData, isLoading } = useDashboard();
     const { isSecure, toggle } = useSecureMode()
+    const [idToDelete, setIdToDelete] = useState<string | undefined>(undefined)
 
     if (isLoading || !dashboardData) return <DashboardSkeleton />
 
@@ -215,16 +220,18 @@ export default function DashboardPage() {
                                 date={tx.date}
                                 category={tx.category}
                                 categoryColor={tx.categoryColor}
+                                onDelete={setIdToDelete}
                             />
                         ))}
                 </div>
             </div>
 
-            <div className="fixed bottom-24 right-4 z-30">
+            <div className="fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3">
+                <VoiceTransactionButton />
                 <Link href="/transactions?action=add">
                     <Button
                         size="icon"
-                        className="w-14 h-14 rounded-2xl shadow-lg shadow-primary/30 gradient-primary border-0 hover:opacity-90 transition-opacity"
+                        className="w-12 h-12 rounded-2xl shadow-lg shadow-primary/30 gradient-primary border-0 hover:opacity-90 transition-opacity"
                         style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
                         aria-label="Tambah transaksi"
                     >
@@ -232,6 +239,18 @@ export default function DashboardPage() {
                     </Button>
                 </Link>
             </div>
+
+            {idToDelete && <ConfirmDialog
+                icon={<Trash2 className='text-red-500' />}
+                title="Hapus Transaksi"
+                description="Apakah anda yakin ingin menghapus transaksi ini?"
+                onConfirm={async () => await deleteTransaction(idToDelete)}
+                onCancel={() => { setIdToDelete(''); }}
+                open={!!idToDelete}
+                confirmVariant={'destructive'}
+                onOpenChange={() => setIdToDelete(undefined)}
+            />}
+
         </div>
     );
 }
