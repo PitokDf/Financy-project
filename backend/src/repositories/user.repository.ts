@@ -10,14 +10,7 @@ export class UserRepository {
 
     static async purgeDeleteData(userId: string) {
         await prisma.$transaction([
-            prisma.categoryFeedbackEvent.deleteMany({ where: { userId } }),
-            prisma.recommendationLog.deleteMany({ where: { userId } }),
-            prisma.csvImport.deleteMany({ where: { userId } }),
-            prisma.exportLog.deleteMany({ where: { userId } }),
-            prisma.activityLog.deleteMany({ where: { userId } }),
             prisma.notification.deleteMany({ where: { userId } }),
-
-            prisma.forecastCache.deleteMany({ where: { userId } }),
             prisma.forecast.deleteMany({ where: { userId } }),
 
             prisma.cluster.deleteMany({

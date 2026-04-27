@@ -88,14 +88,20 @@ export default function AchievementsPage() {
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                            <div className="flex items-start justify-between gap-2 mb-2 relative">
                                                 <p className="text-sm font-semibold text-foreground leading-tight">
                                                     {uc.challenge.title}
                                                 </p>
-                                                <Badge variant="secondary" className="text-[10px] font-bold text-amber-600 bg-amber-500/10 border-0 shrink-0 flex items-center gap-0.5 px-1.5">
-                                                    <Zap className="w-3 h-3 fill-amber-500" />
-                                                    {uc.challenge.xpReward}
-                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <InfoTooltip
+                                                        title={uc.challenge.title}
+                                                        content={uc.challenge.description}
+                                                    />
+                                                    <Badge variant="secondary" className="text-[10px] font-bold text-amber-600 bg-amber-500/10 border-0 shrink-0 flex items-center gap-0.5 px-1.5">
+                                                        <Zap className="w-3 h-3 fill-amber-500" />
+                                                        {uc.challenge.xpReward}
+                                                    </Badge>
+                                                </div>
                                             </div>
 
                                             <div className="space-y-1">
@@ -171,7 +177,7 @@ export default function AchievementsPage() {
                                         )}
                                     >
                                         <InfoTooltip
-                                            triggerClassName="absolute right-1 top-1"
+                                            triggerClassName="absolute right-0 top-0"
                                             content={
                                                 <div className="text-center">
                                                     <p className="font-bold text-sm text-foreground mb-1">{badge.name}</p>
@@ -185,7 +191,7 @@ export default function AchievementsPage() {
                                         >
                                             {IconComponent ? <IconComponent className="w-6 h-6" style={{ color: badge.color }} /> : <Award className="w-6 h-6" style={{ color: badge.color }} />}
                                         </div>
-                                        <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
+                                        <span className="text-[11px] font-semibold text-foreground text-center w-full block truncate leading-tight">
                                             {badge.name}
                                         </span>
                                     </div>

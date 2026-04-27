@@ -3,7 +3,7 @@ import { withSerwist } from "@serwist/turbopack";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ['10.170.26.41'],
+  allowedDevOrigins: process.env.ALLOWED_ORIGINS?.split(','),
   devIndicators: false,
 
   async headers() {
