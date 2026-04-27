@@ -18,7 +18,7 @@ import ProfileSkeleton from './_components/skeleton';
 export default function ProfilePage() {
     const { user, logout, updateUser } = useAuthStore();
     const { logoutMutation, logoutLoading, profileQuery, loadingQuery } = useAuth();
-    const { stats } = useGamification()
+    const { stats, progressToNextLevel, xpToNextLevel } = useGamification()
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const router = useRouter();
 
@@ -65,22 +65,42 @@ export default function ProfilePage() {
                     <div className="gradient-primary h-20 z-0 relative">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                     </div>
-                    <CardContent className="px-4 pb-4 z-1 -mt-12.5">
-                        <div className="flex items-center gap-3">
-                            <Avatar className="w-16 h-16 border-3 border-background shadow-lg ring-2 ring-primary/20">
-                                <AvatarFallback className="bg-primary text-primary-foreground text-lg font-black">
-                                    {initials}
-                                </AvatarFallback>
-                            </Avatar>
+                    <CardContent className="px-4 pb-4 z-1 -mt-14">
+                        <div className="flex items-end gap-3">
+                            <div className="relative">
+                                <Avatar className="w-16 h-16 border-3 border-background shadow-lg ring-2 ring-primary/20">
+                                    <AvatarFallback className="bg-primary text-primary-foreground text-lg font-black">
+                                        {initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                                {/* Level Badge Overlay */}
+                                <div className="absolute -bottom-2 -right-1 bg-amber-500 border-2 border-background text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-sm shadow-amber-500/40 transform rotate-[-5deg]">
+                                    Lv.{userLevel}
+                                </div>
+                            </div>
                             <div className="flex-1 pb-1">
                                 <h2 className="font-bold text-lg text-white leading-tight">{user?.name ?? 'Pengguna'}</h2>
                                 <p className="text-xs text-muted-foreground">{user?.email}</p>
                             </div>
                         </div>
 
-                        <p className="text-xs text-muted-foreground mt-2">
-                            Bergabung sejak {joinDate}
-                        </p>
+                        <div className="mt-4 bg-muted/30 p-3 rounded-2xl border border-border/50 shadow-inner">
+                            <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Progress ke Level {userLevel + 1}</span>
+                                <span className="text-[10px] font-black text-primary">{Math.round(progressToNextLevel)}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden border border-border/50">
+                                <div
+                                    className="h-full gradient-primary transition-all duration-1000 ease-out relative"
+                                    style={{ width: `${progressToNextLevel}%` }}
+                                >
+                                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                </div>
+                            </div>
+                            <p className="text-[9px] text-muted-foreground text-center mt-1.5 font-medium">
+                                Butuh {xpToNextLevel} XP lagi untuk naik level
+                            </p>
+                        </div>
 
                         <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
                             {STATS.map(({ label, value, icon: Icon, color, link }) =>

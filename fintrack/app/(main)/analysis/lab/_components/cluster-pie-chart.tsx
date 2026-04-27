@@ -7,7 +7,7 @@ export function ClusterPieChart({ clusters }: { clusters: AnalysisRunResult['clu
     const data = clusters
         .filter(c => c.index !== -1)
         .map((c, i) => ({
-            name: c.suggestedName || `Klaster ${c.index + 1}`,
+            name: c.suggestedName || `Kategori ${c.index + 1}`,
             value: c.totalAmount,
             color: CLUSTER_COLORS[i % CLUSTER_COLORS.length],
         }));

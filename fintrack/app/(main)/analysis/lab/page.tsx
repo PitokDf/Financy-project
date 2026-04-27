@@ -134,9 +134,9 @@ export default function AnalysisLabPage() {
                         </div>
                     </div>
                     <div className="text-center">
-                        <h2 className="text-xl font-bold tracking-tight mb-2">Mulai Clustering Pintar</h2>
+                        <h2 className="text-xl font-bold tracking-tight mb-2">Mulai Analisis Cerdas AI</h2>
                         <p className="text-xs text-muted-foreground leading-relaxed px-4 mb-8">
-                            Pindahkan transaksi tak berkategori ke dalam kelompok cerdas yang dibuat oleh AI.
+                            Menganalisis dan memprediksi kategori dari semua transaksi Anda yang belum memiliki kategori secara otomatis menggunakan model AI.
                         </p>
                         <Button
                             onClick={handleRunAnalysis}
@@ -145,7 +145,7 @@ export default function AnalysisLabPage() {
                             className="w-full h-12 rounded-xl gradient-primary shadow-lg shadow-primary/30 font-bold text-white text-sm border-0"
                         >
                             {isRunning ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Sparkles className="w-5 h-5 mr-2 text-white/90" />}
-                            Jalankan Clustering AI
+                            Jalankan Prediksi Kategori AI
                         </Button>
                     </div>
                 </div>
@@ -175,8 +175,8 @@ export default function AnalysisLabPage() {
                     <div className="grid grid-cols-3 gap-2">
                         {[
                             { label: 'Transaksi', value: analysisResult.totalTransactions },
-                            { label: 'Klaster', value: visibleClusters.length },
-                            { label: 'Skor Kualitas', value: `${(analysisResult.silhouetteScore * 100).toFixed(0)}%` },
+                            { label: 'Kategori', value: visibleClusters.length },
+                            { label: 'Keyakinan AI', value: `${(analysisResult.silhouetteScore * 100).toFixed(0)}%` },
                         ].map((stat) => (
                             <div key={stat.label} className="bg-card border border-border rounded-2xl p-3 text-center">
                                 <p className="text-base font-bold text-primary">{stat.value}</p>
@@ -206,7 +206,7 @@ export default function AnalysisLabPage() {
 
                     {/* Pie Chart */}
                     <div className="bg-card border border-border rounded-2xl p-4">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Distribusi Klaster</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Distribusi Prediksi Kategori AI</p>
                         <ClusterPieChart clusters={analysisResult.clusters} />
                     </div>
 

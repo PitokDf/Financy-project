@@ -15,6 +15,7 @@ import { CashFlowChart } from './_components/cash-flow-chart';
 import { CategoryBreakdown } from './_components/category-breakdown';
 import { storageClient } from '@/lib/local-storage';
 import { AnalysisDashboardSkeleton } from './_components/skeleton';
+import { AiLabCard } from './_components/ai-lab-card';
 
 const RANGE_OPTIONS = [
     { label: '7 Hari', value: '7d' as const },
@@ -93,8 +94,14 @@ export default function AnalysisDashboardPage() {
                 totalIncome={totalIncome}
             />
 
+            <AiLabCard
+                isPendingConfirmation={isPendingConfirmation}
+                isRunning={isRunning}
+                clusterCount={latestRun?.clusters.length}
+                transactionCount={latestRun?.totalTransactions}
+            />
             {/* AI Lab Banner */}
-            <Link href="/analysis/lab">
+            {/* <Link href="/analysis/lab">
                 <div className="relative overflow-hidden gradient-primary p-5 rounded-xl text-white mb-6 shadow-xl shadow-primary/20 group cursor-pointer border-0">
                     <div className="absolute -top-6 -right-6 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                         <Sparkles className="w-32 h-32" />
@@ -127,7 +134,7 @@ export default function AnalysisDashboardPage() {
                         </div>
                     )}
                 </div>
-            </Link>
+            </Link> */}
 
             <CashFlowChart
                 isLoading={isLoadingStats}

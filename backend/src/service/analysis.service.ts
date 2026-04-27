@@ -9,6 +9,8 @@ import { ForecastService } from "@/service/forecast.service";
 import { RunAnalysisInput, ConfirmAnalysisInput } from "@/schemas/analysis.schema";
 import prisma from "@/config/prisma";
 import logger from "@/utils/winston.logger";
+import { GamificationQueue } from "@/queue/gamification.queue";
+import { PushService } from "./push.service";
 
 function toIsoDate(date: Date) {
     return date.toISOString();
@@ -52,7 +54,7 @@ export class AnalysisService {
                 color: cluster.color,
                 size: (cluster as any).transactions?.length || 0,
                 totalAmount: (cluster as any).transactions?.reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0) || 0,
-                representativeDescriptions: [],
+                representativeDescriptions: cluster.suggestedName && cluster.suggestedName !== "Unknown" ? [cluster.suggestedName] : [],
                 members: (cluster as any).transactions?.map((t: any) => ({
                     id: t.id,
                     description: t.description,
@@ -300,6 +302,10 @@ export class AnalysisService {
                 grouped.set(p.predictedCategory, group);
             }
 
+            const avgOverallConfidence = mlResult.predictions.length > 0
+                ? mlResult.predictions.reduce((sum: number, p: any) => sum + (p.confidence || 0), 0) / mlResult.predictions.length
+                : 0;
+
             const persistedClusters: any[] = [];
             let i = 0;
 
@@ -355,7 +361,7 @@ export class AnalysisService {
             await this.analysisRepo.updateRun(run.id, {
                 status: "waiting_confirmation",
                 kOptimal: grouped.size,
-                silhouetteScore: 1.0, // placeholder since classification doesn't have silhouette
+                silhouetteScore: avgOverallConfidence,
                 wcssValues: {
                     elbowData: [],
                     clusters: [],
@@ -364,12 +370,14 @@ export class AnalysisService {
                 durationMs: mlResult.durationMs,
             });
 
+            await PushService.sendNotificationToUser(userId, 'Clustering Selesai!', 'Hasil sudah siap untuk ditinjau.', { url: '/analysis/lab' })
+
             return {
                 runId: run.id,
                 status: "waiting_confirmation",
                 totalTransactions: transactions.length,
                 kOptimal: grouped.size,
-                silhouetteScore: 1.0,
+                silhouetteScore: avgOverallConfidence,
                 durationMs: mlResult.durationMs,
                 elbowData: [],
                 clusters: persistedClusters,
@@ -469,6 +477,17 @@ export class AnalysisService {
         });
 
         cacheManager.delPattern(`dashboard:${payload.userId}`);
+
+        try {
+            const gamificationQueue = new GamificationQueue();
+            await gamificationQueue.add('update-gamification', {
+                userId: payload.userId,
+                action: 'ANALYSIS_CREATED',
+                value: 1
+            });
+        } catch (e) {
+            logger.warn("Failed to add gamification queue for analysis:", e);
+        }
 
         try {
             const txOriginalCluster = new Map<string, number>();

@@ -49,24 +49,24 @@ export default function DashboardPage() {
         <div className="animate-fade-in text-foreground">
             <div className="mb-5">
                 <div className="flex items-center justify-end gap-1 mb-4">
-                    <Link href="/achievements" className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors mr-1">
-                        <Trophy className="w-5 h-5" />
+                    <Link href="/achievements" className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all hover:scale-105 active:scale-95 mr-1 bg-amber-500/5 border border-amber-500/20 shadow-sm shadow-amber-500/10">
+                        <Trophy className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                     </Link>
                     <div className={cn(
-                        "flex items-center gap-2 rounded-2xl px-3 py-1.5 border transition-all duration-500",
+                        "flex items-center gap-2 rounded-2xl px-3.5 py-1.5 border transition-all duration-500",
                         isAtRisk
-                            ? "bg-gray-500/10 border-gray-200 dark:border-gray-900/50"
-                            : "bg-muted/50 border-border/50"
+                            ? "bg-gray-500/10 border-gray-200 dark:border-gray-800"
+                            : "bg-orange-500/10 border-orange-200/50 dark:bg-orange-500/10 dark:border-orange-500/30 shadow-sm shadow-orange-500/20"
                     )}>
                         <Flame className={cn(
-                            "w-3.5 h-3.5 transition-colors",
-                            isAtRisk ? "text-gray-500 fill-gray-500" : "text-amber-500 fill-amber-500"
+                            "w-4 h-4 transition-colors",
+                            isAtRisk ? "text-gray-500 fill-gray-500" : "text-orange-500 fill-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)] animate-pulse"
                         )} />
                         <span className={cn(
-                            "text-xs font-bold transition-colors",
-                            isAtRisk ? "text-gray-600 dark:text-gray-400" : "text-foreground"
+                            "text-sm font-black transition-colors",
+                            isAtRisk ? "text-gray-600 dark:text-gray-400" : "text-orange-600 dark:text-orange-400"
                         )}>
-                            {stats?.streak || 0} Hari
+                            {stats?.streak || 0} <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Hari</span>
                         </span>
                     </div>
                 </div>

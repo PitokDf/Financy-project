@@ -404,10 +404,10 @@ export function ReusableForm<T extends FieldValues>({
     if (dialogProps) {
       return (
         <DialogFooter className="flex-row sm:flex-row gap-3 sm:gap-2">
-          <Button className="h-12 flex-1 sm:w-auto" type="button" variant="outline" onClick={handleClose} disabled={busy}>
+          <Button className="h-11 flex-1 sm:w-auto" type="button" variant="outline" onClick={handleClose} disabled={busy}>
             {dialogProps.cancelText ?? "Batal"}
           </Button>
-          <Button className="h-12 flex-1 sm:w-auto" type="submit" disabled={busy || submitDisabled}>
+          <Button className="h-11 flex-1 sm:w-auto" type="submit" disabled={busy || submitDisabled}>
             {busy ? (
               <span className="flex items-center gap-2">
                 {LoadingIcon && <LoadingIcon className="w-4 h-4" />}
@@ -425,7 +425,7 @@ export function ReusableForm<T extends FieldValues>({
     }
 
     return (
-      <Button type="submit" disabled={busy || submitDisabled} className="h-12 w-full">
+      <Button type="submit" disabled={busy || submitDisabled} className="h-11 w-full">
         {busy ? (
           <span className="flex items-center gap-2">
             {LoadingIcon && <LoadingIcon className="w-4 h-4" />}
@@ -595,7 +595,7 @@ function FieldInputSwitch<T extends FieldValues>({
   const Icon = field.icon;
   const iconClass = Icon ? "pl-9" : "";
   const errorClass = error ? "border-destructive focus-visible:ring-destructive" : "";
-  const baseClass = `h-12 rounded-xl text-sm ${field.className ?? ""}`;
+  const baseClass = `h-11 rounded-xl text-sm ${field.className ?? ""}`;
 
   const withIcon = (input: ReactNode) =>
     Icon ? (

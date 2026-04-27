@@ -35,7 +35,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
     });
 
     return (
-        <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col h-[350px]">
+        <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col h-[350px]">
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -135,7 +135,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                 />
                                 <YAxis hide />
                                 <Tooltip
-                                    cursor={{ fill: 'var(--muted)/0.4' }}
+                                    cursor={{ fill: 'transparent' }}
 
                                     content={({ active, payload }) => {
                                         if (active && payload && payload.length) {

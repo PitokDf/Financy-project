@@ -85,7 +85,7 @@ export function ClusterCard({
                                 }}
                                 onFocus={() => setShowSuggestions(true)}
                                 className="w-full font-semibold text-sm bg-transparent text-foreground outline-none truncate border-b border-transparent focus:border-primary transition-colors pb-0.5 pr-4"
-                                placeholder={isLainLain ? 'Lain-lain' : `Klaster ${index + 1}`}
+                                placeholder={isLainLain ? 'Lain-lain' : `Kategori ${index + 1}`}
                                 readOnly={isLainLain}
                             />
                             {!isLainLain && (
@@ -142,7 +142,7 @@ export function ClusterCard({
                                 <span
                                     key={i}
                                     className="px-2 py-0.5 rounded-md text-[10px] font-medium text-foreground opacity-70"
-                                    style={{ background: color + '22', borderColor: color + '55', border: '1px solid' }}
+                                    style={{ background: color + '22', borderColor: color + '55', color: color + '99', border: '1px solid' }}
                                 >
                                     {desc}
                                 </span>

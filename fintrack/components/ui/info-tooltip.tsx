@@ -19,6 +19,7 @@ interface InfoTooltipProps {
   contentClassName?: string
   align?: "start" | "center" | "end"
   sideOffset?: number
+  children?: React.ReactNode
 }
 
 export function InfoTooltip({
@@ -29,22 +30,27 @@ export function InfoTooltip({
   contentClassName,
   align = "center",
   sideOffset = 8,
+  children,
 }: InfoTooltipProps) {
   const Icon = CustomIcon || Info
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors outline-none",
-            triggerClassName
-          )}
-          aria-label={title || "Informasi"}
-        >
-          <Icon className="h-4 w-4" />
-        </button>
+        {children ? (
+            children
+        ) : (
+            <button
+            type="button"
+            className={cn(
+                "inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors outline-none",
+                triggerClassName
+            )}
+            aria-label={title || "Informasi"}
+            >
+            <Icon className="h-4 w-4" />
+            </button>
+        )}
       </PopoverTrigger>
 
       <PopoverContent
