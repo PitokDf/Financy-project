@@ -122,7 +122,7 @@ export function Header({
                     )}>
                         {back ? (
                             <>
-                                <div className="flex min-w-[3rem] items-center">
+                                <div className="flex min-w-12 items-center">
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -143,7 +143,7 @@ export function Header({
                             <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-500">
                                 {showAvatar && !title && pathname === '/dashboard' ? (
                                     <div>
-                                        <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/80 leading-tight">
+                                        <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 leading-tight">
                                             {greeting} <span className="inline-block origin-[70%_70%] animate-wave text-lg">👋</span>,
                                         </span>
                                         <h1 className="text-sm font-bold text-foreground leading-tight truncate">
@@ -160,7 +160,7 @@ export function Header({
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center justify-end gap-1.5 min-w-[3rem]">
+                    <div className="flex items-center justify-end gap-1.5 min-w-12">
                         {showThemeToggle && (
                             <Button
                                 variant="ghost"

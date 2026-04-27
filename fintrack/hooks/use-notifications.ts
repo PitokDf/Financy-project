@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/api/client';
 
 export interface Notification {
@@ -14,74 +14,140 @@ export interface Notification {
 }
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = useCallback(async () => {
-    setIsLoading(true);
-    try {
+  const { 
+    data: notifications = [], 
+    isLoading,
+    refetch: refresh 
+  } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
       const response = await axiosClient.get('/notifications');
-      setNotifications((response as any).data);
-    } catch (error) {
-      console.error('Failed to fetch notifications', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return (response as any).data as Notification[];
+    },
+  });
 
-  const fetchUnreadCount = useCallback(async () => {
-    try {
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['notifications', 'unreadCount'],
+    queryFn: async () => {
       const response = await axiosClient.get('/notifications/unread-count');
-      setUnreadCount((response as any).data.count);
-    } catch (error) {
-      console.error('Failed to fetch unread count', error);
-    }
-  }, []);
+      return (response as any).data.count as number;
+    },
+  });
 
-  const markAsRead = async (id: string) => {
-    try {
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: string) => {
       await axiosClient.patch(`/notifications/${id}/read`);
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['notifications', 'unreadCount'] });
+
+      const previousNotifications = queryClient.getQueryData<Notification[]>(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData<number>(['notifications', 'unreadCount']);
+
+      queryClient.setQueryData<Notification[]>(['notifications'], old => 
+        old?.map(n => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Failed to mark notification as read', error);
-    }
-  };
+      
+      const notification = previousNotifications?.find(n => n.id === id);
+      if (notification && !notification.isRead) {
+        queryClient.setQueryData<number>(['notifications', 'unreadCount'], old => Math.max(0, (old || 0) - 1));
+      }
 
-  const markAllAsRead = async () => {
-    try {
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['notifications', 'unreadCount'], context.previousUnreadCount);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unreadCount'] });
+    },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
       await axiosClient.patch('/notifications/read-all');
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Failed to mark all notifications as read', error);
-    }
-  };
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['notifications', 'unreadCount'] });
 
-  const deleteNotification = async (id: string) => {
-    try {
+      const previousNotifications = queryClient.getQueryData<Notification[]>(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData<number>(['notifications', 'unreadCount']);
+
+      queryClient.setQueryData<Notification[]>(['notifications'], old => 
+        old?.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
+      );
+      queryClient.setQueryData<number>(['notifications', 'unreadCount'], 0);
+
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['notifications', 'unreadCount'], context.previousUnreadCount);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unreadCount'] });
+    },
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (id: string) => {
       await axiosClient.delete(`/notifications/${id}`);
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (error) {
-      console.error('Failed to delete notification', error);
-    }
-  };
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['notifications', 'unreadCount'] });
 
-  useEffect(() => {
-    fetchNotifications();
-    fetchUnreadCount();
-  }, [fetchNotifications, fetchUnreadCount]);
+      const previousNotifications = queryClient.getQueryData<Notification[]>(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData<number>(['notifications', 'unreadCount']);
+
+      const notificationToDelete = previousNotifications?.find(n => n.id === id);
+
+      queryClient.setQueryData<Notification[]>(['notifications'], old => 
+        old?.filter(n => n.id !== id)
+      );
+
+      if (notificationToDelete && !notificationToDelete.isRead) {
+        queryClient.setQueryData<number>(['notifications', 'unreadCount'], old => Math.max(0, (old || 0) - 1));
+      }
+
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['notifications', 'unreadCount'], context.previousUnreadCount);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unreadCount'] });
+    },
+  });
 
   return {
     notifications,
     unreadCount,
     isLoading,
-    refresh: fetchNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
+    refresh,
+    markAsRead: (id: string) => markAsReadMutation.mutate(id),
+    markAllAsRead: () => markAllAsReadMutation.mutate(),
+    deleteNotification: (id: string) => deleteNotificationMutation.mutate(id),
   };
 }

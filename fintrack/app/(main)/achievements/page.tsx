@@ -1,15 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
-    ChevronLeft,
-    Trophy,
-    Target,
-    Zap,
-    Box,
-    Flame,
-    Award,
-    CheckCircle2
+    Trophy, Target, Zap, Box, Flame, Award, CheckCircle2,
 } from "lucide-react";
 import { useGamification } from "@/hooks/use-gamification";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,204 +18,179 @@ const TYPE_ICONS: Record<string, any> = {
 export default function AchievementsPage() {
     const { stats, challenges, badges, progressToNextLevel, xpToNextLevel } = useGamification();
 
-    const activeChallenges = challenges.filter(c => !c.isCompleted);
-    const completedChallenges = challenges.filter(c => c.isCompleted);
+    const activeChallenges = challenges.filter((c) => !c.isCompleted);
+    const completedChallenges = challenges.filter((c) => c.isCompleted);
 
     return (
-        <div className="animate-fade-in space-y-4 pb-24 px-1">
-            {/* Level Centerpiece */}
-            <div className="relative pt-6 pb-2 text-center flex flex-col items-center justify-center">
-                <div className="absolute inset-0 bg-linear-to-b from-amber-500/10 via-amber-500/5 to-transparent -z-10 rounded-4xl blur-xl" />
+        <div className="animate-fade-in pb-28 space-y-8">
 
-                <div className="relative mb-3 group">
-                    <div className="absolute inset-0 bg-amber-500 rounded-full blur-lg opacity-30 animate-pulse group-hover:opacity-50 transition-opacity" />
-                    <div className="w-24 h-24 rounded-full bg-linear-to-br from-amber-300 via-amber-500 to-orange-600 p-1 shadow-xl shadow-amber-500/30 relative z-10 mx-auto transition-transform hover:scale-105 duration-300">
-                        <div className="w-full h-full bg-background rounded-full border-[3px] border-background flex items-center justify-center relative overflow-hidden">
-                            {/* Inner glow/noise */}
-                            <div className="absolute inset-0 bg-linear-to-br from-amber-500/10 to-transparent" />
-                            <span className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-br from-amber-400 to-orange-600 drop-shadow-sm">
+            {/* ── HERO: Level ── */}
+            <Card className="border-amber-500/15 bg-linear-to-br from-amber-500/10 via-orange-500/5 to-transparent shadow-none">
+                <CardContent className="p-5">
+                    <div className="flex items-center gap-4 mb-5">
+                        <div className="relative shrink-0">
+                            <div className="absolute inset-0 rounded-full bg-amber-400 blur-xl opacity-30" />
+                            <div className="w-16 h-16 rounded-full bg-linear-to-br from-amber-300 via-amber-500 to-orange-600 p-[2px] relative z-10">
+                                <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
+                                    <span className="text-2xl font-black text-transparent bg-clip-text bg-linear-to-br from-amber-400 to-orange-600">
+                                        {stats?.level || 1}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600/80 mb-0.5">Level</p>
+                            <h2 className="text-2xl font-black text-foreground tracking-tight leading-none mb-1">
                                 {stats?.level || 1}
-                            </span>
+                            </h2>
+                            <p className="text-xs text-muted-foreground">{stats?.xp || 0} XP total</p>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                            <p className="text-[10px] text-muted-foreground mb-0.5">Ke Level {(stats?.level || 1) + 1}</p>
+                            <p className="text-sm font-bold text-foreground">{xpToNextLevel} XP</p>
                         </div>
                     </div>
-                </div>
 
-                <h2 className="text-2xl font-black text-foreground mb-1.5 tracking-tight">Level {stats?.level || 1}</h2>
-                <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 border-amber-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest mb-5 shadow-sm">
-                    {stats?.xp || 0} Total XP
-                </Badge>
-
-                <div className="w-full max-w-sm mx-auto space-y-2.5">
-                    <div className="flex justify-between text-xs font-bold text-muted-foreground px-1">
-                        <span>XP Saat Ini</span>
-                        <span className="text-foreground">{xpToNextLevel} XP ke Lv {stats?.level ? stats.level + 1 : 2}</span>
-                    </div>
-                    <div className="h-3 bg-muted/60 rounded-full overflow-hidden border border-border/50 shadow-inner p-0.5">
+                    <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-1000 ease-out relative shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]"
+                            className="h-full bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-1000 ease-out"
                             style={{ width: `${progressToNextLevel}%` }}
-                        >
-                            <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_ease-in-out_infinite]" />
-                        </div>
+                        />
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
-            {/* Weekly Challenges Section */}
+            {/* ── MISI MINGGUAN ── */}
             <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                    <h3 className="font-bold text-lg flex items-center gap-1.5 tracking-tight">
-                        <Target className="w-5 h-5 text-primary" /> Misi Mingguan
-                    </h3>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary text-[10px] font-bold">
-                        {activeChallenges.length} Tersisa
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground">Misi Mingguan</h3>
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
+                        {activeChallenges.length} tersisa
                     </Badge>
                 </div>
 
-                <div className="grid gap-3">
-                    {activeChallenges.length > 0 ? activeChallenges.map((uc) => {
-                        const Icon = TYPE_ICONS[uc.challenge.type] || Trophy;
-                        const progress = Math.min((uc.current / uc.challenge.target) * 100, 100);
+                {activeChallenges.length > 0 ? (
+                    <div className="space-y-2">
+                        {activeChallenges.map((uc) => {
+                            const Icon = TYPE_ICONS[uc.challenge.type] || Trophy;
+                            const progress = Math.min((uc.current / uc.challenge.target) * 100, 100);
 
-                        return (
-                            <Card key={uc.id} className="border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-                                <CardContent className="p-3">
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20 group-hover:scale-105 transition-transform duration-300 shadow-sm shadow-primary/5">
-                                            <Icon className="w-5 h-5 text-primary" />
+                            return (
+                                <Card key={uc.id} className="shadow-none py-0 border-border/50">
+                                    <CardContent className="p-3.5 flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                            <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={2} />
                                         </div>
+
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start gap-2 mb-0.5">
-                                                <p className="text-sm font-bold text-foreground leading-tight">
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <p className="text-sm font-semibold text-foreground leading-tight">
                                                     {uc.challenge.title}
                                                 </p>
-                                                <span className="text-[10px] font-black text-amber-600 bg-amber-500/15 border border-amber-500/20 px-1.5 py-0.5 rounded-md shrink-0 flex items-center gap-1">
+                                                <Badge variant="secondary" className="text-[10px] font-bold text-amber-600 bg-amber-500/10 border-0 shrink-0 flex items-center gap-0.5 px-1.5">
                                                     <Zap className="w-3 h-3 fill-amber-500" />
-                                                    {uc.challenge.xpReward} XP
-                                                </span>
+                                                    {uc.challenge.xpReward}
+                                                </Badge>
                                             </div>
-                                            <p className="text-[11px] text-muted-foreground leading-relaxed mb-2.5">
-                                                {uc.challenge.description}
-                                            </p>
 
-                                            {/* Progress */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
-                                                    <span className="uppercase tracking-wider">Progres</span>
-                                                    <span className="text-foreground">{uc.current} / {uc.challenge.target}</span>
-                                                </div>
-                                                <div className="h-2 bg-muted rounded-full overflow-hidden border border-border/50 shadow-inner">
+                                            <div className="space-y-1">
+                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                                     <div
-                                                        className="h-full bg-primary transition-all duration-700 relative"
+                                                        className="h-full bg-primary rounded-full transition-all duration-700"
                                                         style={{ width: `${progress}%` }}
-                                                    >
-                                                        <div className="absolute inset-0 bg-white/20" />
-                                                    </div>
+                                                    />
                                                 </div>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    {uc.current} / {uc.challenge.target}
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    }) : (
-                        <div className="p-8 text-center bg-card border border-border/50 rounded-2xl shadow-sm">
-                            <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-2.5 border border-emerald-500/20">
-                                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                            </div>
-                            <p className="text-base font-black text-foreground">Semua Misi Selesai!</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">Kembali lagi minggu depan untuk misi baru.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <Card className="shadow-none border-border/50">
+                        <CardContent className="p-6 text-center">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                            <p className="text-sm font-semibold text-foreground">Semua Misi Selesai!</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Kembali minggu depan untuk misi baru.</p>
+                        </CardContent>
+                    </Card>
+                )}
 
-            {/* Completed Challenges */}
-            {completedChallenges.length > 0 && (
-                <div className="space-y-3">
-                    <h3 className="font-bold text-[11px] text-muted-foreground uppercase tracking-wider px-1">
-                        Selesai Minggu Ini
-                    </h3>
-                    <div className="grid gap-2 opacity-75 hover:opacity-100 transition-opacity">
+                {completedChallenges.length > 0 && (
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-0.5 pt-1">
+                            Selesai
+                        </p>
                         {completedChallenges.map((uc) => (
-                            <div key={uc.id} className="flex items-center gap-2.5 p-2.5 bg-card border border-border/50 rounded-xl">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-foreground line-through decoration-muted-foreground/30">
-                                        {uc.challenge.title}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                                        <Zap className="w-3 h-3 text-amber-500" /> +{uc.challenge.xpReward} XP Didapat
-                                    </p>
-                                </div>
+                            <div key={uc.id} className="flex items-center gap-3 px-1 py-2.5 opacity-50">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                                <p className="text-sm text-foreground line-through flex-1 truncate">
+                                    {uc.challenge.title}
+                                </p>
+                                <span className="text-[10px] text-muted-foreground shrink-0">
+                                    +{uc.challenge.xpReward} XP
+                                </span>
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
-            {/* Badges Section */}
+            {/* ── LENCANA ── */}
             <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                    <h3 className="font-bold text-lg flex items-center gap-1.5 tracking-tight">
-                        <Award className="w-5 h-5 text-amber-500" /> Koleksi Lencana
-                    </h3>
-                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 text-[10px] font-bold">
-                        {badges?.length || 0} Lencana
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-foreground">Koleksi Lencana</h3>
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
+                        {badges?.length || 0} lencana
                     </Badge>
                 </div>
 
-                <div className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm">
-                    <div className="grid grid-cols-4 gap-y-5 gap-x-2">
-                        {badges && badges.length > 0 ? badges.map((ub) => (
-                            <div key={ub.id} className="flex flex-col items-center gap-3 relative group">
-                                <InfoTooltip
-                                    content={
-                                        <div className="text-center p-2 max-w-[200px]">
-                                            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center border shadow-inner" style={{ backgroundColor: ub.badge.color + '15', borderColor: ub.badge.color + '40' }}>
+                <Card className="shadow-none border-border/50">
+                    <CardContent className="p-4">
+                        {badges && badges.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-3">
+                                {badges.map((ub) => (
+                                    <InfoTooltip
+                                        key={ub.id}
+                                        content={
+                                            <div className="text-center p-2 max-w-[180px]">
+                                                <p className="font-bold text-sm text-foreground mb-1">{ub.badge.name}</p>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">{ub.badge.description}</p>
+                                            </div>
+                                        }
+                                    >
+                                        <button
+                                            type="button"
+                                            className="w-full flex flex-col items-center gap-2 p-3 rounded-2xl bg-secondary/50 active:scale-95 transition-transform duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                            <div
+                                                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                                                style={{ backgroundColor: ub.badge.color + '18' }}
+                                            >
                                                 <Award className="w-6 h-6" style={{ color: ub.badge.color }} />
                                             </div>
-                                            <p className="font-black text-base mb-1 text-foreground">{ub.badge.name}</p>
-                                            <p className="text-xs text-muted-foreground leading-relaxed">{ub.badge.description}</p>
-                                        </div>
-                                    }
-                                >
-                                    <button type="button" className="w-full flex flex-col items-center cursor-pointer outline-none">
-                                        <div className="relative">
-                                            {/* Glow behind badge */}
-                                            <div
-                                                className="absolute inset-0 rounded-2xl blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-500"
-                                                style={{ backgroundColor: ub.badge.color }}
-                                            />
-                                            <div
-                                                className="w-16 h-16 rounded-[1.2rem] flex items-center justify-center border transition-all duration-300 group-hover:scale-105 active:scale-95 shadow-sm relative z-10 bg-background"
-                                                style={{
-                                                    borderColor: ub.badge.color + '40',
-                                                    boxShadow: `inset 0 0 15px ${ub.badge.color}10, 0 4px 10px -2px ${ub.badge.color}20`
-                                                }}
-                                            >
-                                                <Award className="w-8 h-8" style={{ color: ub.badge.color, filter: `drop-shadow(0 2px 4px ${ub.badge.color}60)` }} />
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] font-black text-center text-foreground leading-tight px-0.5 truncate w-full mt-2 group-hover:text-amber-500 transition-colors">
-                                            {ub.badge.name}
-                                        </span>
-                                    </button>
-                                </InfoTooltip>
+                                            <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
+                                                {ub.badge.name}
+                                            </span>
+                                        </button>
+                                    </InfoTooltip>
+                                ))}
                             </div>
-                        )) : (
-                            <div className="col-span-4 py-8 text-center text-muted-foreground">
-                                <div className="w-14 h-14 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <Award className="w-7 h-7 opacity-20" />
-                                </div>
-                                <p className="text-[13px] font-bold text-foreground">Koleksi Masih Kosong</p>
-                                <p className="text-[11px] mt-0.5">Selesaikan misi untuk mendapatkan lencana eksklusif.</p>
+                        ) : (
+                            <div className="py-6 text-center">
+                                <Award className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                                <p className="text-sm font-semibold text-foreground">Koleksi Masih Kosong</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Selesaikan misi untuk mendapatkan lencana.</p>
                             </div>
                         )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

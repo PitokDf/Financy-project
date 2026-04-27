@@ -186,7 +186,7 @@ export function useTransactions(search?: string, type?: string) {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            toast.success(`Berhasil mengimpor ${data.data?.successCount || 0} transaksi!`);
+            toast.success(`Berhasil mengimpor ${data.successCount || 0} transaksi!`);
         },
         onError: (error: AxiosError<ErrorResponse>) => {
             toast.error(error.response?.data?.message || "Gagal mengimpor CSV");

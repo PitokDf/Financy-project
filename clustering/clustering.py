@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Persistence configuration
+# Konfigurasi penyimpanan
 DATA_DIR = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -192,10 +192,9 @@ class ClusteringService:
 
 class ClassifierService:
     def __init__(self, model_name: str = "classifier_model.joblib"):
-        # Model usually lives in DATA_DIR
         model_path = os.path.join(DATA_DIR, model_name)
         
-        # Fallback to current directory for development/initial state
+        # Fallback ke direktori saat ini untuk environment development/awal
         if not os.path.exists(model_path) and os.path.exists(model_name):
             print(f"[Classifier] Model not found in {model_path}, falling back to {model_name}")
             model_path = model_name
@@ -258,13 +257,13 @@ class ClassifierService:
 
     def train_incremental(self, corrections: list[dict], corrections_name: str = "feedback_corrections.json"):
         """
-        Incrementally improve the classifier using user corrections.
+        Meningkatkan performa classifier secara bertahap menggunakan koreksi dari pengguna.
         corrections: [{"description": str, "correct_category": str}]
         
-        Since GridSearchCV doesn't support partial_fit, we:
-        1. Accumulate corrections in a JSON file
-        2. Re-train the best estimator from GridSearchCV using all corrections + existing class knowledge
-        3. Save the retrained model back to disk
+        Karena GridSearchCV tidak mendukung partial_fit, kita:
+        1. Mengumpulkan koreksi ke dalam file JSON
+        2. Melatih ulang estimator terbaik dari GridSearchCV menggunakan semua koreksi + class yang sudah ada
+        3. Menyimpan kembali model yang telah dilatih ulang ke disk
         """
         from sklearn.linear_model import LogisticRegression
         
@@ -273,7 +272,7 @@ class ClassifierService:
         if not corrections:
             return
 
-        # Load or init corrections history
+        # Memuat atau menginisialisasi riwayat koreksi
         history = []
         if os.path.exists(corrections_file):
             try:
@@ -282,7 +281,7 @@ class ClassifierService:
             except Exception:
                 history = []
 
-        # Append new corrections (deduplicate by description+category)
+        # Menambahkan koreksi baru (menghapus duplikat berdasarkan deskripsi+kategori)
         existing_keys = {(item["description"], item["correct_category"]) for item in history}
         for c in corrections:
             key = (c["description"], c["correct_category"])
@@ -290,37 +289,40 @@ class ClassifierService:
                 history.append(c)
                 existing_keys.add(key)
 
-        # Save accumulated corrections to disk
+        # Menyimpan akumulasi koreksi ke disk
         with open(corrections_file, "w") as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
 
-        # Need at least 2 distinct categories to retrain
+        # Membutuhkan setidaknya 2 kategori berbeda untuk melatih ulang
         categories_in_corrections = set(item["correct_category"] for item in history)
         if len(categories_in_corrections) < 2:
             print(f"[Feedback] Not enough category diversity ({len(categories_in_corrections)} categories). Skipping retrain.")
             return
 
-        # Build training set from collected corrections
+        # Membangun set pelatihan dari kumpulan koreksi
         descriptions = [item["description"] for item in history]
         labels = [item["correct_category"] for item in history]
 
-        # Embed using the same model
+        # Melakukan embed menggunakan model yang sama
         embeddings = self._embed(descriptions)
 
-        # Retrain a LogisticRegression on top of accumulated corrections
-        # We use the existing best estimator params as a starting point
+        # Melatih ulang LogisticRegression di atas akumulasi koreksi
+        # Kita menggunakan parameter estimator terbaik yang sudah ada sebagai titik awal
         existing_clf = self.classifier
         best_estimator = existing_clf.best_estimator_ if hasattr(existing_clf, 'best_estimator_') else existing_clf
 
-        # Extract LR params from existing model
+        # Mengekstrak parameter LR dari model yang ada
         C = 1.0
         max_iter = 1000
         if hasattr(best_estimator, 'C'):
             C = best_estimator.C
         if hasattr(best_estimator, 'max_iter'):
-            max_iter = best_estimator.max_iter
+            val = best_estimator.max_iter
+            if isinstance(val, list) or isinstance(val, tuple):
+                val = val[0]
+            max_iter = val if val > 0 else 1000
 
-        # All known classes = original classes + any new categories from corrections
+        # Semua kelas yang diketahui = kelas asli + kategori baru dari koreksi
         all_classes = sorted(set(list(self.classifier.classes_)) | categories_in_corrections)
 
         new_clf = LogisticRegression(
@@ -332,10 +334,10 @@ class ClassifierService:
         )
         new_clf.fit(embeddings, labels)
 
-        # Patch the classifier service's model to include both old and new labels
+        # Memperbarui model classifier service untuk menyertakan label lama dan baru
         self.classifier = new_clf
 
-        # Persist the updated model to disk
+        # Menyimpan model yang diperbarui ke disk
         updated_model_data = dict(self.model_data)
         updated_model_data["classifier"] = new_clf
         

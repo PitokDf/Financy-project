@@ -5,7 +5,7 @@ import { Mic, Loader2, Check } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTransactions } from '@/hooks/use-transactions';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function VoiceTransactionButton() {
@@ -108,11 +108,11 @@ export function VoiceTransactionButton() {
                         <>
                             <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
                             <div className="min-w-0">
-                                <p className="text-[11px] text-muted-foreground truncate leading-none mb-0.5">
+                                <p className="text-[11px] text-muted-foreground truncate leading-none mb-1">
                                     {parsedResult?.description}
                                 </p>
-                                <p className="text-sm font-semibold tabular-nums text-foreground leading-none">
-                                    Rp {parsedResult?.amount.toLocaleString('id-ID')}
+                                <p className="text-xs font-semibold tabular-nums text-foreground leading-none">
+                                    {formatCurrency(parsedResult?.amount ?? 0)}
                                 </p>
                             </div>
                         </>

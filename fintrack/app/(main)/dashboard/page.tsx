@@ -55,7 +55,7 @@ export default function DashboardPage() {
             <div className="mb-5">
                 <div className="flex items-center justify-end gap-1 mb-4">
                     <Link href="/achievements" className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all hover:scale-105 active:scale-95 mr-1 bg-amber-500/5 border border-amber-500/20 shadow-sm shadow-amber-500/10">
-                        <Trophy className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                        <Trophy className="w-4 h-4 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                     </Link>
                     <div className={cn(
                         "flex items-center gap-2 rounded-2xl px-3.5 py-1.5 border transition-all duration-500",
