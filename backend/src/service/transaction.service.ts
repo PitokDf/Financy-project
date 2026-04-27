@@ -42,32 +42,85 @@ export class TransactionService {
                         // Log import row count (optional)
                         // const csvImport = await this.repo.createCsvImport(userId, file.originalname, rowCount);
 
-                        const transactionsToCreate = results.map(row => {
-                            const typeRaw = (row.Tipe || row.TIPE || row.type || row.kategori || row.Kategori || row.Type || '').toUpperCase();
-                            const type = typeRaw.includes('INCOME') || typeRaw.includes('PEMASUKAN') ? 'INCOME' : 'EXPENSE';
+                        const transactionsToCreate = results.flatMap((row) => {
+                            const typeRaw = (
+                                row.Tipe ||
+                                row.TIPE ||
+                                row.type ||
+                                row.kategori ||
+                                row.Kategori ||
+                                row.Type ||
+                                ''
+                            )
+                                .toString()
+                                .toUpperCase();
 
-                            const amountRaw = String(row.Nominal || row.NOMINAL || row.amount || row.Amount || row.Jumlah || row.jumlah || row.JUMLAH || '0');
-                            const amount = parseInt(amountRaw.replace(/\D/g, '')) || 0;
+                            const rawAmount =
+                                row.Nominal ||
+                                row.NOMINAL ||
+                                row.amount ||
+                                row.Amount ||
+                                row.Jumlah ||
+                                row.jumlah ||
+                                row.JUMLAH;
 
-                            const desc = row.Catatan || row.CATATAN || row.deskripsi || row.Deskripsi || row.description || row.Description || 'Imported via CSV';
+                            const desc =
+                                row.Catatan ||
+                                row.CATATAN ||
+                                row.deskripsi ||
+                                row.Deskripsi ||
+                                row.description ||
+                                row.Description;
 
-                            const dateRaw = row.Tanggal || row.TANGGAL || row.tanggal || row.date || row.Date;
+                            if (!desc || rawAmount == null) {
+                                console.log('skipping invalid row...');
+                                return [];
+                            }
+
+                            const amount = Number(
+                                String(rawAmount).replace(/[^\d.-]/g, '')
+                            );
+
+                            if (isNaN(amount) || amount <= 0) {
+                                console.log('invalid amount...');
+                                return [];
+                            }
+
+                            const type: 'INCOME' | 'EXPENSE' =
+                                typeRaw.includes('INCOME') || typeRaw.includes('PEMASUKAN')
+                                    ? 'INCOME'
+                                    : typeRaw.includes('EXPENSE') || typeRaw.includes('PENGELUARAN')
+                                        ? 'EXPENSE'
+                                        : 'EXPENSE';
+
+                            const dateRaw =
+                                row.Tanggal ||
+                                row.TANGGAL ||
+                                row.tanggal ||
+                                row.date ||
+                                row.Date;
+
                             let date = new Date().toISOString();
+
                             if (dateRaw) {
                                 const parsedDate = new Date(dateRaw);
                                 if (!isNaN(parsedDate.getTime())) {
                                     date = parsedDate.toISOString();
                                 }
                             }
-                            return {
-                                userId,
-                                description: desc,
-                                amount: amount,
-                                type: type as "INCOME" | "EXPENSE",
-                                date: date,
-                                source: 'CSV_IMPORT' as any,
-                            };
+
+                            return [
+                                {
+                                    userId,
+                                    description: String(desc).trim(),
+                                    amount,
+                                    type,
+                                    date,
+                                    source: 'CSV_IMPORT',
+                                },
+                            ];
                         });
+
                         await this.repo.createMany(transactionsToCreate);
 
                         await fileUploadService.deleteFile(file.path);

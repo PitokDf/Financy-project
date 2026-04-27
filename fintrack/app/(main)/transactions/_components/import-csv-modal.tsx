@@ -65,7 +65,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[400px] rounded-3xl p-0 gap-0 overflow-hidden border-border/60">
+            <DialogContent className="sm:max-w-[400px] p-0 gap-0 overflow-hidden border-border/60">
 
                 {/* Header */}
                 <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/40">
@@ -167,7 +167,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                     <Button
                         type="button"
                         variant="ghost"
-                        className="flex-1 h-11 rounded-xl font-semibold text-sm text-muted-foreground"
+                        className="flex-1 h-11 font-semibold text-sm text-muted-foreground"
                         onClick={() => onOpenChange(false)}
                         disabled={isImporting}
                     >
@@ -175,7 +175,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                     </Button>
                     <Button
                         type="button"
-                        className="flex-1 h-11 rounded-xl gradient-primary font-semibold text-white text-sm border-0 shadow-md shadow-primary/20 disabled:opacity-50"
+                        className="flex-1 h-11 gradient-primary font-semibold text-white text-sm border-0 shadow-md shadow-primary/20 disabled:opacity-50"
                         onClick={handleImport}
                         disabled={!selectedFile || isImporting}
                     >
