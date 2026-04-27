@@ -30,13 +30,10 @@ model User {
   budgetGoals       BudgetGoal[]
   notifications     Notification[]
   userStats         UserStats?
-  activityLogs      ActivityLog[]
   userBadges        UserBadge[]
   userChallenges    UserChallenge[]
-  exportLogs        ExportLog[]
   forecasts         Forecast[]
   userSetting       UserSetting?
-  reminderConfig    ReminderConfig?
   pushSubscriptions PushSubscription[]
 
   @@map("users")
@@ -311,93 +308,6 @@ enum NotificationType {
   CHALLENGE_COMPLETE // Weekly challenge completed
 }
 
-model ActivityLog {
-  id      String       @id @default(uuid())
-  userId  String       @map("user_id")
-  action  String // e.g., "TRANSACTION_CREATED", "ANALYSIS_RUN"
-  details String // Human-readable description
-  type    ActivityType
-
-  // Related entity IDs
-  metadata Json? // { transactionId, categoryId, etc. }
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([userId, type])
-  @@map("activity_logs")
-}
-
-enum ActivityType {
-  TRANSACTION
-  ANALYSIS
-  BUDGET
-  ACHIEVEMENT
-  CATEGORY
-  EXPORT
-  IMPORT
-  SETTINGS
-}
-
-model CsvImport {
-  id           String @id @default(uuid())
-  userId       String @map("user_id")
-  filename     String
-  rowCount     Int    @map("row_count")
-  successCount Int    @default(0) @map("success_count")
-  errorCount   Int    @default(0) @map("error_count")
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("csv_imports")
-}
-
-model ExportLog {
-  id       String  @id @default(uuid())
-  userId   String  @map("user_id")
-  format   String // 'csv' | 'pdf' | 'xlsx'
-  status   String  @default("pending") // 'pending' | 'processing' | 'completed' | 'failed'
-  month    Int? // Filter month (1-12)
-  year     Int? // Filter year
-  fileUrl  String? @map("file_url") // URL to exported file
-  fileSize Int?    @map("file_size") // File size in bytes
-
-  // Timestamps
-  createdAt   DateTime  @default(now()) @map("created_at")
-  completedAt DateTime? @map("completed_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@map("export_logs")
-}
-
-model ForecastCache {
-  id         String  @id @default(uuid())
-  userId     String  @map("user_id")
-  categoryId String? @map("category_id") // null for overall forecast
-
-  // Forecast data
-  method   String @default("SMA") // Simple Moving Average
-  period   Int    @default(3) // Number of periods
-  forecast Json // { month: string, value: number }[]
-
-  // Cache control
-  expiresAt DateTime @map("expires_at")
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([userId, categoryId])
-  @@map("forecast_cache")
-}
 
 model Forecast {
   id              String  @id @default(uuid())
@@ -405,7 +315,7 @@ model Forecast {
   categoryId      String  @map("category_id")
   targetMonth     Int     @map("target_month") // 1-12
   targetYear      Int     @map("target_year")
-  predictedAmount Decimal @map("predicted_amount") // Predicted amount in IDR
+  predictedAmount Decimal @map("predicted_amount")
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -416,34 +326,6 @@ model Forecast {
 
   @@unique([userId, categoryId, targetMonth, targetYear])
   @@map("forecasts")
-}
-
-model RecommendationLog {
-  id             String  @id @default(uuid())
-  userId         String  @map("user_id")
-  modelVariant   String  @default("A") @map("model_variant") // "A" or "B"
-  top1Correct    Boolean @default(false) @map("top1_correct")
-  inTop3         Boolean @default(false) @map("in_top3")
-  inputLatencyMs Int     @map("input_latency_ms") // Response time in milliseconds
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([userId, createdAt])
-  @@map("recommendation_logs")
-}
-
-model CategoryFeedbackEvent {
-  id         String @id @default(uuid())
-  userId     String @map("user_id")
-  categoryId String @map("category_id")
-  action     String // "accepted" | "rejected" | "modified"
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([userId, createdAt])
-  @@map("category_feedback_events")
 }
 
 model AnalysisRun {
@@ -477,6 +359,8 @@ model UserSetting {
   budgetAlerts      Boolean @default(true) @map("budget_alerts")
   dailyReminder     Boolean @default(true) @map("daily_reminder")
   reminderTime      String  @default("20:00") @map("reminder_time") // HH:MM format
+  reminderDays      String[] @default(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) @map("reminder_days")
+  lastReminderAt    DateTime? @map("last_reminder_at")
 
   // Display preferences
   currency String @default("IDR")
@@ -494,25 +378,6 @@ model UserSetting {
 
   @@map("user_settings")
 }
-
-model ReminderConfig {
-  id             String    @id @default(uuid())
-  userId         String    @unique @map("user_id")
-  isEnabled      Boolean   @default(true) @map("is_enabled")
-  reminderTime   String    @default("20:00") @map("reminder_time") // HH:MM format
-  reminderDays   String[]  @default(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) @map("reminder_days")
-  lastReminderAt DateTime? @map("last_reminder_at")
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("reminder_configs")
-}
-
 model PushSubscription {
   id       String @id @default(uuid())
   userId   String @map("user_id")

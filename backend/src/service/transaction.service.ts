@@ -39,7 +39,8 @@ export class TransactionService {
                 .on('end', async () => {
                     try {
                         const rowCount = results.length;
-                        const csvImport = await this.repo.createCsvImport(userId, file.originalname, rowCount);
+                        // Log import row count (optional)
+                        // const csvImport = await this.repo.createCsvImport(userId, file.originalname, rowCount);
 
                         const transactionsToCreate = results.map(row => {
                             const typeRaw = (row.Tipe || row.TIPE || row.type || row.kategori || row.Kategori || row.Type || '').toUpperCase();
@@ -65,11 +66,9 @@ export class TransactionService {
                                 type: type as "INCOME" | "EXPENSE",
                                 date: date,
                                 source: 'CSV_IMPORT' as any,
-                                csvImportId: csvImport.id
                             };
                         });
                         await this.repo.createMany(transactionsToCreate);
-                        await this.repo.updateCsvImportSuccessCount(csvImport.id, transactionsToCreate.length);
 
                         await fileUploadService.deleteFile(file.path);
                         await this.gamificationQueue.add('update-gamification', {
@@ -81,7 +80,6 @@ export class TransactionService {
                         await this.reminderBudgetQueue.add('cek-budget', { userId });
 
                         resolve({
-                            importId: csvImport.id,
                             successCount: transactionsToCreate.length
                         });
                     } catch (error) {
@@ -102,7 +100,7 @@ export class TransactionService {
                 where: { userId, type: 'INCOME' }
             });
             const descLower = (data.description || '').toLowerCase();
-            
+
             let matchedCategory = null;
             for (const cat of categories) {
                 if (descLower.includes(cat.name.toLowerCase())) {
@@ -115,7 +113,7 @@ export class TransactionService {
                     break;
                 }
             }
-            
+
             if (matchedCategory) {
                 data.categoryId = matchedCategory.id;
             } else {
@@ -123,7 +121,7 @@ export class TransactionService {
                 if (descLower.includes('gaji')) newCatName = 'Gaji';
                 else if (descLower.includes('bonus')) newCatName = 'Bonus';
                 else if (descLower.includes('hadiah') || descLower.includes('dikasih')) newCatName = 'Hadiah';
-                
+
                 const newCat = await prisma.category.upsert({
                     where: {
                         userId_name: {

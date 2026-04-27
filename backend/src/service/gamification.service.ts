@@ -37,6 +37,9 @@ export class GamificationService {
                     metadata: { level: newLevel, action }
                 }
             });
+
+            // Check for level badges (level_5, level_10, etc)
+            await this.checkAndAwardBadge(userId, `level_${newLevel}`);
         }
 
         return updatedStats;
@@ -58,14 +61,25 @@ export class GamificationService {
         return stats;
     }
 
-    public updateStreak = async (userId: string) => {
+    public updateStreak = async (userId: string, amount: number = 1) => {
         const stats = await this.gamificationRepo.getStats(userId);
-        if (!stats) return this.awardXP(userId, this.XP_TRANSACTION, "FIRST_TRANSACTION");
-
-        const lastTx = stats.lastTransactionAt;
         const now = new Date();
 
+        if (!stats) {
+            await this.gamificationRepo.upsertStats(userId, {
+                streak: 1,
+                longestStreak: 1,
+                totalTransactions: 1,
+                lastTransactionAt: now
+            });
+            await this.awardXP(userId, this.XP_TRANSACTION, "FIRST_TRANSACTION");
+            await this.checkAndAwardBadge(userId, "transaction_1");
+            return { streak: 1 };
+        }
+
+        const lastTx = stats.lastTransactionAt;
         let newStreak = stats.streak;
+        const newTotal = (stats.totalTransactions || 0) + amount;
 
         if (!lastTx) {
             newStreak = 1;
@@ -84,39 +98,80 @@ export class GamificationService {
         await this.gamificationRepo.upsertStats(userId, {
             streak: newStreak,
             longestStreak,
+            totalTransactions: newTotal,
             lastTransactionAt: now
         });
 
         await this.awardXP(userId, this.XP_TRANSACTION, "TRANSACTION_CREATED");
 
-        if (newStreak === 3) await this.checkAndAwardBadge(userId, "streak_3");
-        if (newStreak === 7) await this.checkAndAwardBadge(userId, "streak_7");
-        if (newStreak === 30) await this.checkAndAwardBadge(userId, "streak_30");
+        // Transaction count badges
+        if (newTotal >= 1) {
+            await this.checkAndAwardBadge(userId, "transaction_1");
+        }
+        if (newTotal >= 10) await this.checkAndAwardBadge(userId, "transactions_10");
+        if (newTotal >= 50) await this.checkAndAwardBadge(userId, "transactions_50");
+
+        // Streak badges
+        if (newStreak >= 3) await this.checkAndAwardBadge(userId, "streak_3");
+        if (newStreak >= 7) {
+            await this.checkAndAwardBadge(userId, "streak_7");
+            await this.checkAndAwardBadge(userId, "streak_7");
+        }
+        if (newStreak >= 30) await this.checkAndAwardBadge(userId, "streak_30");
 
         return { streak: newStreak };
     }
 
+    public handleAction = async (userId: string, action: string) => {
+        const stats = await this.gamificationRepo.getStats(userId);
+        if (!stats) return;
+
+        if (action === 'ANALYSIS_CREATED') {
+            await this.awardXP(userId, this.XP_ANALYSIS, action);
+            if (!stats.hasAnalyzed) {
+                await this.checkAndAwardBadge(userId, "first_analysis");
+                await this.gamificationRepo.upsertStats(userId, { hasAnalyzed: true });
+            }
+        } else if (action === 'EXPORT_CREATED') {
+            await this.awardXP(userId, this.XP_EXPORT, action);
+            if (!stats.hasExported) {
+                await this.checkAndAwardBadge(userId, "first_export");
+                await this.gamificationRepo.upsertStats(userId, { hasExported: true });
+            }
+        } else if (action === 'CATEGORY_CREATED') {
+            const count = await prisma.category.count({ where: { userId } });
+            if (count >= 5) await this.checkAndAwardBadge(userId, "categories_5");
+        } else if (action === 'BUDGET_CREATED') {
+            const count = await prisma.budgetGoal.count({ where: { userId } });
+            if (count >= 3) await this.checkAndAwardBadge(userId, "budget_3");
+        }
+    }
+
     public checkAndAwardBadge = async (userId: string, condition: string) => {
         const badges = await this.gamificationRepo.getAllBadges();
-        const badge = badges.find(b => b.condition === condition);
+        const matchingBadges = badges.filter(b => b.condition === condition);
 
-        if (!badge) return;
+        if (matchingBadges.length === 0) return;
 
         const userBadges = await this.gamificationRepo.getUserBadges(userId);
-        if (userBadges.some(ub => ub.badgeId === badge.id)) return;
+        const ownedBadgeIds = new Set(userBadges.map(ub => ub.badgeId));
 
-        await this.gamificationRepo.unlockBadge(userId, badge.id);
-        await this.awardXP(userId, badge.xpReward, `BADGE_UNLOCKED_${badge.name}`);
+        for (const badge of matchingBadges) {
+            if (ownedBadgeIds.has(badge.id)) continue;
 
-        await prisma.notification.create({
-            data: {
-                userId,
-                title: "Badge Baru Terbuka!",
-                message: `Anda mendapatkan badge: ${badge.name}`,
-                type: "ACHIEVEMENT",
-                metadata: { badgeId: badge.id, badgeName: badge.name }
-            }
-        });
+            await this.gamificationRepo.unlockBadge(userId, badge.id);
+            await this.awardXP(userId, badge.xpReward, `BADGE_UNLOCKED_${badge.name}`);
+
+            await prisma.notification.create({
+                data: {
+                    userId,
+                    title: "Badge Baru Terbuka!",
+                    message: `Anda mendapatkan badge: ${badge.name}`,
+                    type: "ACHIEVEMENT",
+                    metadata: { badgeId: badge.id, badgeName: badge.name }
+                }
+            });
+        }
     }
 
     public ensureWeeklyChallenges = async (userId: string) => {

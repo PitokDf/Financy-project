@@ -54,28 +54,9 @@ export class TransactionRepository {
         });
     }
 
-    public createCsvImport = async (userId: string, filename: string, rowCount: number) => {
-        return prisma.csvImport.create({
-            data: {
-                userId,
-                filename,
-                rowCount,
-                successCount: 0,
-                errorCount: 0
-            }
-        });
-    }
-
     public createMany = async (data: any[]) => {
         return prisma.transaction.createMany({
             data
-        });
-    }
-
-    public updateCsvImportSuccessCount = async (id: string, successCount: number) => {
-        return prisma.csvImport.update({
-            where: { id },
-            data: { successCount }
         });
     }
 

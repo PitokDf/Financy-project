@@ -2,6 +2,7 @@ import { BudgetRepository } from "@/repositories/budget.repository";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { AppError } from "@/errors/app-error";
 import { HttpStatus } from "@/constants/http-status";
+import { GamificationQueue } from "@/queue/gamification.queue";
 
 export class BudgetService {
     constructor(private readonly budgetRepo: BudgetRepository) { }
@@ -32,7 +33,15 @@ export class BudgetService {
             throw new AppError("Anggaran untuk kategori ini sudah ada", HttpStatus.CONFLICT);
         }
 
-        return this.budgetRepo.create(userId, data);
+        const budget = await this.budgetRepo.create(userId, data);
+
+        const gamificationQueue = new GamificationQueue();
+        await gamificationQueue.add('budget-created', {
+            userId,
+            action: 'BUDGET_CREATED'
+        });
+
+        return budget;
     }
 
     public updateBudget = async (userId: string, id: string, data: any) => {

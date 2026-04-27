@@ -39,7 +39,26 @@ export interface UserChallenge {
     };
 }
 
+export interface Badges {
+    id: string
+    name: string
+    description: string
+    icon: string
+    condition: string
+    xpReward: number
+    color: string
+    createdAt: string
+}
+
 export function useGamification() {
+    const getAllBadges = useQuery({
+        queryKey: ['all-badges'],
+        queryFn: async () => {
+            const res = await axiosClient.get("/gamification/badges/all");
+            return (res.data as Badges[]) || null;
+        },
+    });
+
     const statsQuery = useQuery({
         queryKey: ['user-stats'],
         queryFn: async () => {
@@ -79,10 +98,11 @@ export function useGamification() {
     const progressToNextLevel = statsQuery.data ? (statsQuery.data.xp / xpToNextLevel) * 100 : 0;
 
     return {
+        allBadges: getAllBadges.data,
         stats: statsQuery.data,
         badges: badgesQuery.data,
         challenges: challengesQuery.data,
-        isLoading: statsQuery.isLoading || badgesQuery.isLoading || challengesQuery.isLoading,
+        isLoading: statsQuery.isLoading || badgesQuery.isLoading || challengesQuery.isLoading || getAllBadges.isPending,
         xpToNextLevel,
         progressToNextLevel
     };

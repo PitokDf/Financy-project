@@ -20,11 +20,13 @@ export class GamificationWorker extends BaseWorker<GamificationJobData> {
 
         try {
             if (action === 'TRANSACTION_CREATED') {
-                await this.gamificationService.updateStreak(userId);
+                await this.gamificationService.updateStreak(userId, value || 1);
                 await this.gamificationService.updateChallengeProgress(userId, 'WEEKLY_TRANSACTIONS', value || 1);
-            } else if (action === 'ANALYSIS_CREATED') {
-                await this.gamificationService.awardXP(userId, 50, "ANALYSIS_COMPLETED");
-                await this.gamificationService.updateChallengeProgress(userId, 'ANALYSIS_COUNT', value || 1);
+            } else {
+                await this.gamificationService.handleAction(userId, action);
+                if (action === 'ANALYSIS_CREATED') {
+                    await this.gamificationService.updateChallengeProgress(userId, 'ANALYSIS_COUNT', value || 1);
+                }
             }
             frameworkLogger.info(`[GamificationWorker] Successfully processed job for user: ${userId}`);
         } catch (error) {

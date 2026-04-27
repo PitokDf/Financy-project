@@ -7,6 +7,8 @@ import { useGamification } from "@/hooks/use-gamification";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { cn } from "@/lib/utils";
+import * as LucideIcon from 'lucide-react'
 
 const TYPE_ICONS: Record<string, any> = {
     WEEKLY_TRANSACTIONS: Box,
@@ -16,13 +18,14 @@ const TYPE_ICONS: Record<string, any> = {
 };
 
 export default function AchievementsPage() {
-    const { stats, challenges, badges, progressToNextLevel, xpToNextLevel } = useGamification();
+    const { stats, challenges, badges, allBadges, progressToNextLevel, xpToNextLevel } = useGamification();
 
     const activeChallenges = challenges.filter((c) => !c.isCompleted);
     const completedChallenges = challenges.filter((c) => c.isCompleted);
+    const userBadgeIds = new Set(badges.map(ub => ub.badge.id))
 
     return (
-        <div className="animate-fade-in pb-28 space-y-8">
+        <div className="animate-fade-in space-y-6">
 
             {/* ── HERO: Level ── */}
             <Card className="border-amber-500/15 bg-linear-to-br from-amber-500/10 via-orange-500/5 to-transparent shadow-none">
@@ -151,36 +154,43 @@ export default function AchievementsPage() {
                     </Badge>
                 </div>
 
-                <Card className="shadow-none border-border/50">
+                <Card className="shadow-none py-0 border-border/50">
                     <CardContent className="p-4">
-                        {badges && badges.length > 0 ? (
+                        {allBadges && allBadges.length > 0 ? (
                             <div className="grid grid-cols-3 gap-3">
-                                {badges.map((ub) => (
-                                    <InfoTooltip
-                                        key={ub.id}
-                                        content={
-                                            <div className="text-center p-2 max-w-[180px]">
-                                                <p className="font-bold text-sm text-foreground mb-1">{ub.badge.name}</p>
-                                                <p className="text-xs text-muted-foreground leading-relaxed">{ub.badge.description}</p>
-                                            </div>
-                                        }
+                                {allBadges.map((badge) => {
+                                    const isUserBadge = userBadgeIds.has(badge.id);
+                                    const IconName = badge.icon as keyof typeof LucideIcon;
+                                    const IconComponent = (IconName && LucideIcon[IconName]) ? (LucideIcon[IconName] as LucideIcon.LucideIcon) : null;
+
+                                    return (<div
+                                        key={badge.id}
+                                        className={cn(
+                                            "w-full relative flex flex-col items-center gap-2 p-3 rounded-2xl bg-secondary/50 transition-transform duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                            !isUserBadge && "grayscale"
+                                        )}
                                     >
-                                        <button
-                                            type="button"
-                                            className="w-full flex flex-col items-center gap-2 p-3 rounded-2xl bg-secondary/50 active:scale-95 transition-transform duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        <InfoTooltip
+                                            triggerClassName="absolute right-1 top-1"
+                                            content={
+                                                <div className="text-center">
+                                                    <p className="font-bold text-sm text-foreground mb-1">{badge.name}</p>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">{badge.description}</p>
+                                                </div>
+                                            }
+                                        />
+                                        <div
+                                            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                                            style={{ backgroundColor: badge.color + '18' }}
                                         >
-                                            <div
-                                                className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                                                style={{ backgroundColor: ub.badge.color + '18' }}
-                                            >
-                                                <Award className="w-6 h-6" style={{ color: ub.badge.color }} />
-                                            </div>
-                                            <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
-                                                {ub.badge.name}
-                                            </span>
-                                        </button>
-                                    </InfoTooltip>
-                                ))}
+                                            {IconComponent ? <IconComponent className="w-6 h-6" style={{ color: badge.color }} /> : <Award className="w-6 h-6" style={{ color: badge.color }} />}
+                                        </div>
+                                        <span className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
+                                            {badge.name}
+                                        </span>
+                                    </div>
+                                    )
+                                })}
                             </div>
                         ) : (
                             <div className="py-6 text-center">

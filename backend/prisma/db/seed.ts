@@ -9,27 +9,39 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    const email = 'admin@example.com';
+    // const email = 'admin@example.com';
 
-    // Seed User
-    const existingUser = await prisma.user.findUnique({
-        where: { email },
-    });
+    // // Seed User
+    // const existingUser = await prisma.user.findUnique({
+    //     where: { email },
+    // });
 
-    if (!existingUser) {
-        const hashedPassword = (await BcryptUtil.hash('admin123'))!;
-        await prisma.user.create({
-            data: {
-                name: 'Admin',
-                email,
-                password: hashedPassword,
-            },
-        });
-        console.log('✅ User seeded:', email);
-    }
+    // if (!existingUser) {
+    //     const hashedPassword = (await BcryptUtil.hash('admin123'))!;
+    //     await prisma.user.create({
+    //         data: {
+    //             name: 'Admin',
+    //             email,
+    //             password: hashedPassword,
+    //         },
+    //     });
+    //     console.log('✅ User seeded:', email);
+    // }
 
     // Seed Badges
     const badges = [
+        // Legacy/Initial Badges
+        { name: "Konsisten", description: "7 hari streak pencatatan", icon: "Flame", condition: "streak_7", xpReward: 50, color: "#FF6B35" },
+        { name: "Master Streak", description: "30 hari streak pencatatan", icon: "Fire", condition: "streak_30", xpReward: 200, color: "#FF4500" },
+        { name: "Analis", description: "Lakukan analisis K-Means pertama", icon: "Brain", condition: "first_analysis", xpReward: 30, color: "#8B5CF6" },
+        { name: "Pencatat Aktif", description: "Catat 50 transaksi", icon: "List", condition: "transactions_50", xpReward: 100, color: "#3B82F6" },
+        { name: "Penabung", description: "Pemasukan > Pengeluaran selama 1 bulan", icon: "TrendingUp", condition: "saver_month", xpReward: 75, color: "#10B981" },
+        { name: "Organized", description: "Buat 5 kategori", icon: "Tag", condition: "categories_5", xpReward: 50, color: "#F59E0B" },
+        { name: "Budget Master", description: "Tetapkan 3 target anggaran", icon: "Target", condition: "budget_3", xpReward: 45, color: "#EC4899" },
+        { name: "Reporter", description: "Ekspor laporan pertama", icon: "FileText", condition: "first_export", xpReward: 20, color: "#6366F1" },
+        { name: "Level 5", description: "Capai level 5", icon: "Trophy", condition: "level_5", xpReward: 100, color: "#FBBF24" },
+        { name: "Level 10", description: "Capai level 10", icon: "Crown", condition: "level_10", xpReward: 250, color: "#A855F7" },
+        { name: "Cerdas Finansial", description: "Saldo positif 3 bulan berturut-turut", icon: "Wallet", condition: "positive_3months", xpReward: 150, color: "#14B8A6" },
         { name: "Pemula Fintrack", description: "Mencatat transaksi pertama", icon: "Star", condition: "transaction_1", xpReward: 10, color: "#10b981" },
         { name: "Pengamat Setia", description: "Streak 3 hari berturut-turut", icon: "Zap", condition: "streak_3", xpReward: 30, color: "#f59e0b" },
         { name: "Ahli Anggaran", description: "Streak 7 hari berturut-turut", icon: "Trophy", condition: "streak_7", xpReward: 100, color: "#3b82f6" },
@@ -39,7 +51,13 @@ async function main() {
     for (const badge of badges) {
         await prisma.badge.upsert({
             where: { name: badge.name },
-            update: {},
+            update: {
+                description: badge.description,
+                icon: badge.icon,
+                condition: badge.condition,
+                xpReward: badge.xpReward,
+                color: badge.color
+            },
             create: badge,
         });
     }

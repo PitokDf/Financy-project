@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '@/middleware/error.middleware';
 import { ExportService, ExportFormat } from '@/service/export.service';
 import { TransactionRepository } from '@/repositories/transaction.repository';
+import { GamificationQueue } from '@/queue/gamification.queue';
 
 const exportService = new ExportService(new TransactionRepository());
 
@@ -22,6 +23,14 @@ export class ExportController {
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Cache-Control', 'no-cache');
+        
+        // Trigger gamification
+        const gamificationQueue = new GamificationQueue();
+        await gamificationQueue.add('export-created', {
+            userId,
+            action: 'EXPORT_CREATED'
+        });
+
         res.send(content);
     });
 }
