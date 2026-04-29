@@ -7,7 +7,7 @@
     "@": "src"
   },
   "scripts": {
-    "dev": "tsx watch -r dotenv/config src/index.ts",
+    "dev": "bun --watch src/index.ts",
     "lint": "NODE_NO_WARNINGS=1 eslint --config eslint.config.cjs 'src/**/*.{ts,js}' --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "NODE_NO_WARNINGS=1 eslint --config eslint.config.cjs 'src/**/*.{ts,js}' --fix",
     "build": "tsc && tsc-alias",

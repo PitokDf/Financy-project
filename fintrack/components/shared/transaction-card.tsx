@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionType } from "@/types";
 import { useSecureMode } from "@/hooks/use-secure";
+import * as LucideIcon from 'lucide-react'
 
 interface TransactionCardProps {
     id: string;
@@ -14,6 +15,7 @@ interface TransactionCardProps {
     type: TransactionType;
     date: string;
     category: string;
+    categoryIcon?: string;
     categoryColor: string;
     onDelete?: (id: string) => void;
     ref?: Ref<HTMLDivElement>;
@@ -29,10 +31,14 @@ export const TransactionCard = memo(
         date,
         category,
         categoryColor,
+        categoryIcon,
         onDelete
     }: TransactionCardProps) {
         const [translateX, setTranslateX] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
+
+        const IconName = categoryIcon as keyof typeof LucideIcon;
+        const IconComponent = (IconName && LucideIcon[IconName]) ? (LucideIcon[IconName] as LucideIcon.LucideIcon) : null;
 
         const { isSecure } = useSecureMode()
 
@@ -106,7 +112,7 @@ export const TransactionCard = memo(
                                     {type === 'INCOME' ? (
                                         <ArrowUpRight className="w-4 h-4" style={{ color: categoryColor }} />
                                     ) : (
-                                        <ArrowDownRight className="w-4 h-4" style={{ color: categoryColor }} />
+                                        IconComponent ? <IconComponent className="w-4 h-4" style={{ color: categoryColor }} /> : <ArrowDownRight className="w-4 h-4" style={{ color: categoryColor }} />
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0 pointer-events-none">

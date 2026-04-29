@@ -14,7 +14,7 @@ export function ClusterPieChart({ clusters, mappings = {} }: ClusterPieChartProp
         .map((c, i) => ({
             name: mappings[c.index] || c.suggestedName || `Kategori ${c.index + 1}`,
             value: c.totalAmount,
-            color: CLUSTER_COLORS[i % CLUSTER_COLORS.length],
+            color: c.color || CLUSTER_COLORS[i % CLUSTER_COLORS.length],
             index: c.index,
         }));
 

@@ -14,7 +14,7 @@ import { AddBudgetDialog } from './_components/add-budget-dialog';
 import { useSearchParams } from 'next/navigation';
 
 function BudgetContent() {
-    const { budgets, isLoading } = useBudgets();
+    const { budgets, isLoading, updateBudget } = useBudgets();
     const [showAddForm, setShowAddForm] = useState(false);
     const searchParams = useSearchParams();
     const budgetAlertId = searchParams.get('budgetAlert')
@@ -98,13 +98,13 @@ function BudgetContent() {
                     budgets?.map((budget) => <div id={budget.id} key={budget.id} className={cn({
                         'animate-border-glow': budget.id === budgetAlertId, 'rounded-xl bg-red-500 border-2 border-red-500': budget.id === budgetAlertId
                     })}>
-                        <BudgetCard budget={budget} />
+                        <BudgetCard budget={budget} onUpdate={async (values) => await updateBudget.mutateAsync({ id: budget.id, data: { amount: values.amount } })} />
                     </div>
                     )
                 )}
             </div>
 
-            <Card className="border-dashed border-2 py-0 border-border/50 shadow-none bg-transparent">
+            <Card className="border-dashed border-2 py-0 bg-transparent">
                 <CardContent className="p-4 flex items-center justify-center">
                     <button
                         onClick={() => setShowAddForm(true)}

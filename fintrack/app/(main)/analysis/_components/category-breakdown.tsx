@@ -2,7 +2,7 @@
 
 import { Tag, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { formatCurrency, formatCurrencyWithSecure } from '@/lib/utils';
+import { formatCurrencyWithSecure } from '@/lib/utils';
 import { CHART_COLORS } from './constants';
 import { CategoryBreakdown as CategoryBreakdownType } from '@/hooks/use-analysis';
 import { useSecureMode } from '@/hooks/use-secure';
@@ -53,7 +53,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                                     strokeWidth={0}
                                 >
                                     {categories?.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
                             </PieChart>
@@ -69,7 +69,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                     {categories?.slice(0, 5).map((cat, i) => (
                         <div key={cat.id} className="flex items-center justify-between group">
                             <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: cat.color }} />
                                 <span className="text-sm font-medium text-foreground/80">{cat.name}</span>
                             </div>
                             <div className="text-right">

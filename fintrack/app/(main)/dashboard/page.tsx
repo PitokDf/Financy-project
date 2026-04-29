@@ -220,6 +220,7 @@ export default function DashboardPage() {
                                 date={tx.date}
                                 category={tx.category}
                                 categoryColor={tx.categoryColor}
+                                categoryIcon={tx.categoryIcon}
                                 onDelete={setIdToDelete}
                             />
                         ))}

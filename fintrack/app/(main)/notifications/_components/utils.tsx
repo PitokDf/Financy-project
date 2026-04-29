@@ -1,43 +1,71 @@
-import { Notification } from "@/hooks/use-notifications";
-import { Bell, Calendar, CheckCheck, Flame, TrendingUp, Trophy, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Bell,
+  Brain,
+  Calendar,
+  CheckCheck,
+  Flame,
+  TrendingUp,
+  Trophy,
+  Wallet,
+} from "lucide-react";
 
-export const getIcon = (type: Notification['type']) => {
-  switch (type) {
-    case 'BUDGET_ALERT': return <Wallet className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'ACHIEVEMENT': return <Trophy className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'LEVEL_UP': return <TrendingUp className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'PATTERN_FOUND': return <Brain className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'STREAK_WARNING': return <Flame className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'REMINDER': return <Calendar className={`w-5 h-5 text-${getColor(type)}`} />;
-    case 'CHALLENGE_COMPLETE': return <CheckCheck className={`w-5 h-5 text-${getColor(type)}`} />;
-    default: return <Bell className={`w-5 h-5 text-${getColor(type)}`} />;
-  }
+import type { Notification } from "@/hooks/use-notifications";
+
+export type NotificationType = Notification["type"];
+
+type NotificationConfig = {
+  icon: LucideIcon;
+  textColor: string;
+  bgColor: string;
 };
 
-export const getColor = (type: Notification['type']) => {
-  switch (type) {
-    case 'BUDGET_ALERT': return 'orange-500';
-    case 'ACHIEVEMENT': return 'yellow-500';
-    case 'LEVEL_UP': return 'green-500';
-    case 'PATTERN_FOUND': return 'purple-500';
-    case 'STREAK_WARNING': return 'red-500';
-    case 'REMINDER': return 'blue-500';
-    case 'CHALLENGE_COMPLETE': return 'emerald-500';
-    default: return 'gray-500';
-  }
+const notificationConfig: Partial<Record<NotificationType, NotificationConfig>> = {
+  BUDGET_ALERT: {
+    icon: Wallet,
+    textColor: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+  },
+  ACHIEVEMENT: {
+    icon: Trophy,
+    textColor: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+  },
+  LEVEL_UP: {
+    icon: TrendingUp,
+    textColor: "text-green-500",
+    bgColor: "bg-green-500/10",
+  },
+  PATTERN_FOUND: {
+    icon: Brain,
+    textColor: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+  },
+  STREAK_WARNING: {
+    icon: Flame,
+    textColor: "text-red-500",
+    bgColor: "bg-red-500/10",
+  },
+  REMINDER: {
+    icon: Calendar,
+    textColor: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+  },
+  CHALLENGE_COMPLETE: {
+    icon: CheckCheck,
+    textColor: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+  },
 };
 
-export const Brain = ({ className }: { className?: string }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .52 8.105 4 4 0 0 0 6.003 0 4 4 0 0 0 .5-8.105 4 4 0 0 0-2.5-5.77A3 3 0 0 0 12 5Z" />
-    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.52 8.105 4 4 0 0 1-6.003 0 4 4 0 0 1-.5-8.105 4 4 0 0 1 2.5-5.77A3 3 0 0 1 12 5Z" />
-  </svg>
-);
+const defaultConfig: NotificationConfig = {
+  icon: Bell,
+  textColor: "text-gray-500",
+  bgColor: "bg-gray-500/10",
+};
+
+export const getNotificationConfig = (
+  type: NotificationType
+): NotificationConfig => {
+  return notificationConfig[type] ?? defaultConfig;
+};

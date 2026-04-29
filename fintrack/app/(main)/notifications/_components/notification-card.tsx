@@ -18,8 +18,8 @@ export function NotificationCard({ notification, className, icon: Icon, bg }: { 
     return (
         <Card key={notification.id} className={`animate-fade-in border-0 py-0 shadow-sm ${!notification.read ? 'ring-1 ring-primary/20' : ''}`}>
             <CardContent className="flex items-start gap-3 p-4">
-                <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${bg}`}>
-                    <Icon className={`h-5 w-5 ${className}`} />
+                <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${bg}`}>
+                    <Icon className={`h-4 w-4 ${className}`} />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">

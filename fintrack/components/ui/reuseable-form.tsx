@@ -256,6 +256,7 @@ interface SharedFormProps<T extends FieldValues> {
   hideSubmitButton?: boolean;
   id?: string;
   className?: string;
+  onSuccess?: () => void
 }
 
 interface WithFormDataProps<T extends FieldValues> extends SharedFormProps<T> {
@@ -290,6 +291,7 @@ export function ReusableForm<T extends FieldValues>({
   onValuesChange,
   hideSubmitButton = false,
   id,
+  onSuccess,
   className,
   ...rest
 }: ReusableFormProps<T>) {
@@ -358,6 +360,7 @@ export function ReusableForm<T extends FieldValues>({
       } else {
         await (onSubmit as (v: T) => void | Promise<void>)(values);
       }
+      onSuccess?.();
     } catch (error) {
       const handled = applyApiErrors(error, form);
       console.log(handled)
