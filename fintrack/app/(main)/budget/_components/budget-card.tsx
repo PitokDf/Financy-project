@@ -94,14 +94,16 @@ export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: Budget
                                         name: 'amount',
                                         type: 'currency',
                                         autoFocus: true,
-                                        className: `
-                                        text-sm p-0 font-bold p-0 text-right
-                                        border-0 outline-none ring-0
-                                        focus:outline-none focus:ring-0 focus:border-0
-                                        focus-visible:outline-none focus-visible:ring-0 focus-visible:border-0
-                                        shadow-none
-                                        bg-transparent
-                                        text-emerald-600 dark:text-emerald-400
+                                        className: `!p-0 !px-0 !py-0 !m-0 h-auto min-h-0 leading-none border-0 outline-none ring-0 shadow-none
+                                                bg-transparent text-sm font-bold text-right text-emerald-600
+                                                dark:text-emerald-400
+                                                focus:outline-none
+                                                focus:ring-0
+                                                focus:border-0
+                                                focus-visible:outline-none
+                                                focus-visible:ring-0
+                                                focus-visible:border-0
+                                                dark:bg-transparent
                                         `
                                     }]}
                                     hideSubmitButton
