@@ -174,8 +174,7 @@ export default function NotificationsPage() {
                     <div
                       onClick={() => !n.isRead && markAsRead(n.id)}
                       className={cn(
-                        "relative flex items-center gap-4 p-4 transition-all duration-200 border-b border-border/30 active:bg-accent/5 select-none",
-                        !n.isRead ? "bg-primary/5" : "bg-transparent"
+                        "relative flex items-center gap-4 py-4 transition-all duration-200 border-b border-border/30 active:bg-accent/5 select-none",
                       )}
                     >
                       <div className="shrink-0">
@@ -223,10 +222,6 @@ export default function NotificationsPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-
-                      {!n.isRead && (
-                        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-3 bg-primary rounded-full" />
-                      )}
                     </div>
                   </div>
                 );
