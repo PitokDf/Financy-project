@@ -13,6 +13,7 @@ import { format, subDays } from 'date-fns';
 import { SummaryCards } from './_components/summary-cards';
 import { CashFlowChart } from './_components/cash-flow-chart';
 import { CategoryBreakdown } from './_components/category-breakdown';
+import { SpendingDayChart } from './_components/spending-day-chart';
 import { storageClient } from '@/lib/local-storage';
 import { AnalysisDashboardSkeleton } from './_components/skeleton';
 import { AiLabCard } from './_components/ai-lab-card';
@@ -137,6 +138,12 @@ export default function AnalysisDashboardPage() {
             </Link> */}
 
             <CashFlowChart
+                isLoading={isLoadingStats}
+                stats={stats || []}
+            />
+
+            {/* Pola Pengeluaran per Hari */}
+            <SpendingDayChart
                 isLoading={isLoadingStats}
                 stats={stats || []}
             />

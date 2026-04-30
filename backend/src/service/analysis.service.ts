@@ -292,8 +292,12 @@ export class AnalysisService {
                 transactions.map((transaction) => ({
                     id: transaction.id,
                     description: transaction.description,
-                }))
+                })),
+                3,    // top_k: ambil 3 kandidat kategori
+                0.5,  // confidence_threshold: < 50% → perlu review
             );
+
+            logger.info(`[V2] Model: ${mlResult.modelVersion} | Predictions: ${mlResult.predictions.length} | Low-confidence: ${mlResult.reviewCount}`);
 
             // Group predictions into pseudo-clusters by predictedCategory
             const grouped = new Map<string, typeof mlResult.predictions>();
@@ -318,6 +322,9 @@ export class AnalysisService {
                     ? members.reduce((sum: number, m: any) => sum + (m.confidence || 0), 0) / members.length
                     : 0;
 
+                // Berapa banyak transaksi di cluster ini yang confidence-nya rendah
+                const reviewCount = members.filter((m: any) => m.reviewRequired).length;
+
                 const createdCluster = await this.analysisRepo.createCluster({
                     userId,
                     analysisRunId: run.id,
@@ -332,13 +339,19 @@ export class AnalysisService {
                 const transactionIds = members.map((m: any) => m.transactionId);
                 await this.transactionRepo.updateCluster(transactionIds, createdCluster.id);
 
+                // Buat lookup: transactionId → reviewRequired (confidence rendah)
+                const reviewFlagMap = new Map(
+                    members.map((m: any) => [m.transactionId, m.reviewRequired as boolean])
+                );
+
                 const detailedMembers = transactionIds.map((id: any) => {
                     const t = transactionMap.get(id);
                     return {
                         id: t?.id ?? id,
                         description: t?.description ?? "Unknown",
                         amount: Number(t?.amount ?? 0),
-                        date: t?.date ? toIsoDate(t.date) : ""
+                        date: t?.date ? toIsoDate(t.date) : "",
+                        reviewRequired: reviewFlagMap.get(id) ?? false,
                     };
                 });
 
@@ -383,7 +396,8 @@ export class AnalysisService {
                 elbowData: [],
                 clusters: persistedClusters,
                 preAssignedSummary: {
-                    count: 0,
+                    // Untuk v2: count = jumlah transaksi confidence rendah yang perlu direview
+                    count: mlResult.reviewCount,
                     byCategory: {},
                 },
             };

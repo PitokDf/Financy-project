@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
 import time
@@ -13,7 +13,7 @@ classifier_service: ClassifierService = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global clustering_service, classifier_service
-    print("Loading SBERT model...")
+    print("[ML Service] Loading Clustering model (Multilingual-E5-Large)...")
     clustering_service = ClusteringService()
     print("Loading Classifier model...")
     classifier_service = ClassifierService()
@@ -88,6 +88,13 @@ def analyze(request: AnalyzeRequest):
 
 class V2AnalyzeRequest(BaseModel):
     transactions: List[TransactionInput]
+    top_k: int = 3                          # Jumlah kandidat kategori yang dikembalikan
+    confidence_threshold: float = 0.50      # Di bawah ini → ditandai perlu review
+
+
+class AlternativePrediction(BaseModel):
+    category: str
+    confidence: float
 
 
 class PredictionResult(BaseModel):
@@ -95,19 +102,31 @@ class PredictionResult(BaseModel):
     description: str
     predicted_category: str
     confidence: float
+    review_required: bool                   # True jika confidence < threshold
+    alternatives: List[AlternativePrediction]  # Top-k kandidat lainnya
 
 
 class V2AnalyzeResponse(BaseModel):
     predictions: List[PredictionResult]
     duration_ms: int
+    review_count: int                       # Jumlah transaksi yang perlu review
+    model_version: str
 
 
 @app.post("/v2/analyze", response_model=V2AnalyzeResponse)
 def analyze_v2(request: V2AnalyzeRequest):
-    if len(request.transactions) < 1:
+    if not request.transactions:
         raise HTTPException(status_code=400, detail="Minimal 1 transaksi diperlukan.")
+    if not (1 <= request.top_k <= 10):
+        raise HTTPException(status_code=400, detail="top_k harus antara 1 dan 10.")
+    if not (0.0 <= request.confidence_threshold <= 1.0):
+        raise HTTPException(status_code=400, detail="confidence_threshold harus antara 0.0 dan 1.0.")
 
-    result = classifier_service.predict(request.transactions)
+    result = classifier_service.predict(
+        request.transactions,
+        top_k=request.top_k,
+        confidence_threshold=request.confidence_threshold
+    )
     return result
 
 
@@ -126,19 +145,20 @@ class FeedbackResponse(BaseModel):
 
 
 @app.post("/v2/feedback", response_model=FeedbackResponse)
-async def feedback_v2(request: FeedbackRequest):
+async def feedback_v2(request: FeedbackRequest, background_tasks: BackgroundTasks):
     """
-    Receives user corrections and triggers incremental model retraining in the background.
-    This is fire-and-forget from the caller's perspective.
+    Menerima koreksi dari user dan memicu incremental retraining di background.
+    Response langsung dikembalikan (fire-and-forget).
     """
     if not request.corrections:
         return {"received": 0, "status": "skipped"}
 
-    corrections = [{"description": item.description, "correct_category": item.correct_category} for item in request.corrections]
+    corrections = [
+        {"description": item.description, "correct_category": item.correct_category}
+        for item in request.corrections
+    ]
 
-    # Run in background thread so we don't block the response
-    import asyncio
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, classifier_service.train_incremental, corrections)
+    # FastAPI BackgroundTasks — proper way, tidak blocking
+    background_tasks.add_task(classifier_service.train_incremental, corrections)
 
     return {"received": len(corrections), "status": "queued"}

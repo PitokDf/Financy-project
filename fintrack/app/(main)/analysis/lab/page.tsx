@@ -186,19 +186,34 @@ export default function AnalysisLabPage() {
                         ))}
                     </div>
 
-                    {/* Pre-assigned banner */}
+                    {/* Pre-assigned banner (v1) / Review banner (v2) */}
                     {(analysisResult.preAssignedSummary?.count ?? 0) > 0 && (
-                        <div className="flex items-center gap-3 p-3.5 bg-emerald-500/8 border border-emerald-500/20 rounded-2xl">
-                            <div className="w-7 h-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        analysisResult.elbowData && analysisResult.elbowData.length > 0 ? (
+                            // V1: transaksi cocok kategori yang ada → hijau
+                            <div className="flex items-center gap-3 p-3.5 bg-emerald-500/8 border border-emerald-500/20 rounded-2xl">
+                                <div className="w-7 h-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {analysisResult.preAssignedSummary?.count} transaksi dikategorikan otomatis
+                                    </p>
+                                    <p className="text-[10px] text-emerald-500/70 mt-0.5">Berdasarkan kategori yang sudah ada</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {analysisResult.preAssignedSummary?.count} transaksi dikategorikan otomatis
-                                </p>
-                                <p className="text-[10px] text-emerald-500/70 mt-0.5">Berdasarkan kategori yang sudah ada</p>
+                        ) : (
+                            <div className="flex items-center gap-3 p-3.5 bg-amber-500/8 border border-amber-500/20 rounded-2xl">
+                                <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                        {analysisResult.preAssignedSummary?.count} prediksi confidence rendah
+                                    </p>
+                                    <p className="text-[10px] text-amber-500/70 mt-0.5">Harap periksa dan koreksi jika perlu</p>
+                                </div>
                             </div>
-                        </div>
+                        )
                     )}
 
                     {/* Pie chart section */}

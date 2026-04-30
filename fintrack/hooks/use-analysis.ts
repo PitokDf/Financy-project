@@ -16,6 +16,7 @@ export interface MlClusterResponse {
         description: string;
         amount: number;
         date: string;
+        reviewRequired?: boolean;   // true jika confidence AI rendah (< threshold)
     }>;
 }
 
@@ -27,6 +28,7 @@ export interface AnalysisRunResult {
     silhouetteScore: number;
     durationMs: number;
     clusters: MlClusterResponse[];
+    elbowData?: Array<{ k: number, wcss: number }>;
     preAssignedSummary?: {
         count: number;
         byCategory: Record<string, number>;

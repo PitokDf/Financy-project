@@ -2,7 +2,7 @@
 
 import { MlClusterResponse } from "@/hooks/use-analysis";
 import { cn, formatCurrency } from "@/lib/utils";
-import { ChevronDown, ChevronUp, FolderInput, Trash2, Check, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, FolderInput, Trash2, Check, AlertCircle, AlertTriangle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface ExistingCategory { id: string; name: string; }
@@ -171,12 +171,30 @@ export function ClusterCard({
                         {transactions.map(t => (
                             <div
                                 key={t.id}
-                                className="flex items-center gap-3 py-2.5 px-3 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors"
+                                className={cn(
+                                    "flex items-center gap-3 py-2.5 px-3 rounded-xl transition-colors",
+                                    t.reviewRequired
+                                        ? "bg-amber-500/6 border border-amber-500/15 hover:bg-amber-500/10"
+                                        : "bg-muted/50 hover:bg-muted/80"
+                                )}
                             >
+                                {/* Confidence indicator dot */}
+                                {t.reviewRequired && (
+                                    <div className="shrink-0" title="Confidence AI rendah">
+                                        <AlertTriangle className="w-3 h-3 text-amber-500" />
+                                    </div>
+                                )}
+
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-medium truncate text-foreground">{t.description}</p>
-                                    <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
-                                        {formatCurrency(Math.abs(t.amount))}
+                                    <p className="text-[10px] text-muted-foreground mt-0.5 font-medium flex items-center gap-1.5">
+                                        <span>{formatCurrency(Math.abs(t.amount))}</span>
+                                        {t.reviewRequired && (
+                                            <>
+                                                <span className="opacity-40">·</span>
+                                                <span className="text-amber-500 font-semibold">Perlu dicek</span>
+                                            </>
+                                        )}
                                     </p>
                                 </div>
 

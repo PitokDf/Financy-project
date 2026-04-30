@@ -124,13 +124,17 @@ export class AnalysisMLService {
     }
 
     static async runPipelineV2(
-        transactions: Array<{ id: string; description: string }>
+        transactions: Array<{ id: string; description: string }>,
+        topK: number = 3,
+        confidenceThreshold: number = 0.5,
     ) {
         const response = await fetch(`${config.ML_SERVICE_URL}/v2/analyze`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 transactions: transactions.map((t) => ({ id: t.id, description: t.description })),
+                top_k: topK,
+                confidence_threshold: confidenceThreshold,
             }),
         });
 
@@ -147,8 +151,15 @@ export class AnalysisMLService {
                 description: p.description,
                 predictedCategory: p.predicted_category,
                 confidence: p.confidence,
+                reviewRequired: (p.review_required as boolean) ?? false,
+                alternatives: (p.alternatives ?? []).map((a: any) => ({
+                    category: a.category as string,
+                    confidence: a.confidence as number,
+                })),
             })),
-            durationMs: data.duration_ms,
+            durationMs: data.duration_ms as number,
+            reviewCount: (data.review_count as number) ?? 0,
+            modelVersion: (data.model_version as string) ?? "unknown",
         };
     }
 
