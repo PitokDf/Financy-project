@@ -14,6 +14,7 @@ import { Suspense, useCallback, useRef, useMemo, useState } from 'react';
 import { TransactionsSkeleton } from './_components/skeleton';
 import { useSecureMode } from '@/hooks/use-secure';
 import { useSearchParams } from 'next/navigation';
+import { Transaction } from '@/hooks/use-transactions';
 
 type FlatItem =
     | { type: 'header'; date: string; count: number }
@@ -26,7 +27,14 @@ function TransactionsContent() {
     const action = searchParams.get('action');
 
     const { isSecure } = useSecureMode();
-    const [showImportModal, setShowImportModal] = useState(action === 'import');
+    const [showImportModal, setShowImportModal] = useState(() => {
+        if (typeof window === 'undefined') return false;
+
+        return action === 'import';
+    });
+
+    const [editData, setEditData] = useState<Transaction | null>(null);
+    console.log(editData)
 
     const {
         search,
@@ -175,10 +183,16 @@ function TransactionsContent() {
                                     ) : (
                                         <TransactionCard
                                             {...item.transaction}
-                                            categoryColor={item.transaction.categoryColor ?? '#6b7280'}
+                                            categoryColor={(item.transaction as any).categoryColor ?? '#6b7280'}
+                                            categoryIcon={(item.transaction as any).categoryIcon}
+                                            categoryId={(item.transaction as any).categoryId}
                                             onDelete={(trxID) => {
                                                 setShowDeleteModal(true);
                                                 setIdToDelete(trxID);
+                                            }}
+                                            onEdit={(data) => {
+                                                setEditData(data)
+                                                setShowAddModal(true);
                                             }}
                                         />
                                     )}
@@ -223,8 +237,18 @@ function TransactionsContent() {
 
             <TransactionForm
                 isOpen={showAddModal}
-                onOpenChange={setShowAddModal}
-                onSubmit={handleCreateTransaction}
+                onOpenChange={(open) => {
+                    setShowAddModal(open);
+                    if (!open) setEditData(null);
+                }}
+                onSubmit={(values) => handleCreateTransaction(values, editData?.id)}
+                defaultValues={editData ? {
+                    description: editData.description,
+                    jumlah: editData.amount,
+                    type: editData.type,
+                    date: editData.date,
+                    category: editData.categoryId || ''
+                } : undefined}
             />
 
             <ImportCsvModal

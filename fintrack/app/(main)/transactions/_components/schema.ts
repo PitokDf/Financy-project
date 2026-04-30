@@ -12,12 +12,12 @@ export const transactionSchema = z.object({
     date: z.string()
 })
 
-export type TrasactionValues = z.infer<typeof transactionSchema>
+export type TransactionValues = z.infer<typeof transactionSchema>
 
 export const getTransactionFormFields = (
     categories: Category[],
     onAddCategory: () => void
-): FormFieldConfig<TrasactionValues>[] => {
+): FormFieldConfig<TransactionValues>[] => {
     const expenseOptions = categories.filter(c => c.type === 'EXPENSE').map(c => ({
         label: c.name,
         value: c.id

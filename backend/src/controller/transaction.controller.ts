@@ -30,6 +30,12 @@ export class TransactionController {
         return ResponseUtil.success(res, result);
     })
 
+    public update = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const result = await this.service.update(userId, req.params.trxId as string, req.body);
+        return ResponseUtil.success(res, result);
+    })
+
     public importCsv = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.auth_user!.user_id;
         if (!req.file) {

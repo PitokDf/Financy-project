@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import {
     Serwist,
+    StaleWhileRevalidate,
     CacheFirst,
     NetworkFirst,
     ExpirationPlugin,
@@ -22,10 +23,12 @@ const serwist = new Serwist({
     runtimeCaching: [
         {
             matcher: ({ request }) => request.destination === "document",
-            handler: new NetworkFirst({
+            handler: new StaleWhileRevalidate({
                 cacheName: "pages-cache",
-                networkTimeoutSeconds: 4,
-                plugins: [new ExpirationPlugin({ maxEntries: 50 })],
+                plugins: [
+                    new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 }),
+                    new CacheableResponsePlugin({ statuses: [0, 200] }),
+                ],
             }),
         },
         {
@@ -56,6 +59,7 @@ const serwist = new Serwist({
     ],
     fallbacks: {
         entries: [
+            // Hanya tampilkan halaman offline jika halaman tersebut benar-benar belum pernah dikunjungi (tidak ada di cache)
             {
                 url: "/offline",
                 matcher({ request }) {

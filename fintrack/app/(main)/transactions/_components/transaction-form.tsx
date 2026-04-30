@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { ReusableForm } from "@/components/ui/reuseable-form";
-import { getTransactionFormFields, transactionSchema, TrasactionValues } from "./schema";
+import { getTransactionFormFields, transactionSchema, TransactionValues } from "./schema";
 import { useCategories } from "@/hooks/use-categories";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,26 +9,31 @@ import { Input } from "@/components/ui/input";
 interface TransactionFormProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    onSubmit: (values: TrasactionValues) => void
+    onSubmit: (values: TransactionValues) => void;
+    defaultValues?: Partial<TransactionValues>
 }
 
 export function TransactionForm({
     isOpen,
     onOpenChange,
-    onSubmit
+    onSubmit,
+    defaultValues: initialValues
+
 }: TransactionFormProps) {
     const { categories, createCategoryAsync, isCreating } = useCategories();
     const [showCategoryDialog, setShowCategoryDialog] = useState(false);
     const [newCatName, setNewCatName] = useState("");
     const [formType, setFormType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
+    initialValues && console.log("Form Initial Values:", initialValues)
+
     const defaultValues = useMemo(() => ({
-        description: '',
-        jumlah: 0,
-        type: 'EXPENSE' as const,
-        category: '',
-        date: new Date().toISOString()
-    }), []);
+        description: initialValues?.description || '',
+        jumlah: initialValues?.jumlah || 0,
+        type: initialValues?.type || 'EXPENSE' as const,
+        category: initialValues?.category || '',
+        date: initialValues?.date || new Date().toISOString()
+    }), [initialValues]);
 
     const formFields = useMemo(() => getTransactionFormFields(categories, () => setShowCategoryDialog(true)), [categories]);
 
@@ -46,7 +51,7 @@ export function TransactionForm({
 
     return (
         <>
-            <ReusableForm<TrasactionValues>
+            <ReusableForm<TransactionValues>
                 defaultValues={defaultValues}
                 dialogTitle="Tambah Transaksi"
                 submitText="Simpan Transaksi"

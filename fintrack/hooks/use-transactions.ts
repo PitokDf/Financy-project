@@ -174,6 +174,22 @@ export function useTransactions(search?: string, type?: string) {
         }
     });
 
+    const updateMutation = useMutation({
+        mutationFn: async ({ id, data }: { id: string, data: Omit<Transaction, 'id' | 'category'> }) => {
+            const res = await axiosClient.patch(`/transactions/${id}`, data);
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+            toast.success("Transaksi berhasil diperbarui!");
+        },
+        onError: (error: AxiosError<ErrorResponse>) => {
+            toast.error(error.response?.data?.message || "Gagal memperbarui transaksi");
+        }
+    });
+
     const importCsvMutation = useMutation({
         mutationFn: async (file: File) => {
             const formData = new FormData();
@@ -205,6 +221,8 @@ export function useTransactions(search?: string, type?: string) {
         isCreating: createMutation.isPending,
         deleteTransaction: deleteMutation.mutateAsync,
         isDeleting: deleteMutation.isPending,
+        updateTransaction: updateMutation.mutateAsync,
+        isUpdating: updateMutation.isPending,
         importCsvAsync: importCsvMutation.mutateAsync,
         isImporting: importCsvMutation.isPending
     };

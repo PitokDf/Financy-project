@@ -1,3 +1,4 @@
+import { redisClient } from "@/config/redis";
 import { HttpStatus } from "@/constants/http-status";
 import { Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
@@ -156,6 +157,8 @@ export class UserService {
 
         // 2. Delete all user data in a single atomic transaction
         this.userRepo.purgeDeleteData(userId)
+        const cachedKey = `dashboard:${userId}`;
+        redisClient.del(cachedKey)
 
         logger.info(`[UserDataService] Successfully purged all data for user ${userId}`);
     }

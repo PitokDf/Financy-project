@@ -19,6 +19,7 @@ transactionRouter.use(authMiddleware)
 transactionRouter.get('/', controller.getAll)
 transactionRouter.post('/', controller.create)
 transactionRouter.post('/import-csv', fileUploadService.csvUpload('file'), controller.importCsv)
+transactionRouter.patch('/:trxId', controller.update)
 transactionRouter.delete('/:trxId', controller.delete)
 
 export default transactionRouter;

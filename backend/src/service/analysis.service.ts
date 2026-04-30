@@ -293,8 +293,8 @@ export class AnalysisService {
                     id: transaction.id,
                     description: transaction.description,
                 })),
-                3,    // top_k: ambil 3 kandidat kategori
-                0.5,  // confidence_threshold: < 50% → perlu review
+                3,
+                0.5,
             );
 
             logger.info(`[V2] Model: ${mlResult.modelVersion} | Predictions: ${mlResult.predictions.length} | Low-confidence: ${mlResult.reviewCount}`);

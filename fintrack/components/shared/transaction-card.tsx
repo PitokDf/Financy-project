@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, memo, Ref } from "react";
-import { ArrowDownRight, ArrowUpRight, Trash2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionType } from "@/types";
 import { useSecureMode } from "@/hooks/use-secure";
 import * as LucideIcon from 'lucide-react'
+import { Transaction } from "@/hooks/use-transactions";
 
 interface TransactionCardProps {
     id: string;
@@ -17,7 +18,9 @@ interface TransactionCardProps {
     category: string;
     categoryIcon?: string;
     categoryColor: string;
+    categoryId?: string;
     onDelete?: (id: string) => void;
+    onEdit?: (data: Transaction) => void;
     ref?: Ref<HTMLDivElement>;
 }
 
@@ -32,7 +35,9 @@ export const TransactionCard = memo(
         category,
         categoryColor,
         categoryIcon,
-        onDelete
+        categoryId,
+        onDelete,
+        onEdit
     }: TransactionCardProps) {
         const [translateX, setTranslateX] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
@@ -43,7 +48,7 @@ export const TransactionCard = memo(
         const { isSecure } = useSecureMode()
 
         const startXRef = useRef(0);
-        const ACTION_WIDTH = 80;
+        const ACTION_WIDTH = onEdit ? 140 : 70;
 
         const handleDragStart = (clientX: number) => {
             startXRef.current = clientX;
@@ -75,12 +80,27 @@ export const TransactionCard = memo(
             setTranslateX(0);
         };
 
+        const handleEdit = () => {
+            if (onEdit) onEdit({ id, amount, date, description, type, categoryId: categoryId });
+            setTranslateX(0);
+        };
+
         return (
-            <div ref={ref} className="relative overflow-hidden rounded-xl bg-destructive">
-                <div className="absolute inset-y-0 right-0 flex items-center justify-center" style={{ width: ACTION_WIDTH }}>
+            <div ref={ref} className="relative overflow-hidden rounded-xl bg-muted">
+                <div className="absolute inset-y-0 right-0 flex items-center" style={{ width: ACTION_WIDTH }}>
+                    {onEdit && (
+                        <button
+                            onClick={handleEdit}
+                            className="h-full flex-1 flex flex-col items-center justify-center bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                            aria-label="Edit transaksi"
+                        >
+                            <Pencil className="w-5 h-5 mb-1" />
+                            <span className="text-[10px] font-medium">Edit</span>
+                        </button>
+                    )}
                     <button
                         onClick={handleDelete}
-                        className="w-full h-full flex flex-col items-center justify-center text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                        className="h-full flex-1 flex flex-col items-center justify-center bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
                         aria-label="Hapus transaksi"
                     >
                         <Trash2 className="w-5 h-5 mb-1" />

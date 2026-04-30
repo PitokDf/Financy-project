@@ -216,4 +216,11 @@ export class TransactionService {
         redisClient.del(`dashboard:${userId}`);
         return transaction;
     }
+
+    public update = async (userId: string, trxId: string, data: any) => {
+        const transaction = await this.repo.update(userId, trxId, data);
+        redisClient.del(`dashboard:${userId}`);
+        await this.reminderBudgetQueue.add('cek-budget', { userId });
+        return transaction;
+    }
 }

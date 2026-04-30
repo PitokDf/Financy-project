@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTransactions } from '@/hooks/use-transactions';
 import type { TransactionType } from '@/types';
-import { TrasactionValues } from './_components/schema';
+import { TransactionValues } from './_components/schema';
 
 export type FilterType = 'ALL' | 'INCOME' | 'EXPENSE';
 
@@ -45,6 +45,7 @@ export function useTransactionsPage() {
         totalIncome,
         totalExpense,
         createTransaction,
+        updateTransaction,
         deleteTransaction,
         hasNextPage,
         fetchNextPage,
@@ -55,7 +56,7 @@ export function useTransactionsPage() {
     const hasMore = hasNextPage;
     const loadMore = () => fetchNextPage();
 
-    const handleCreateTransaction = (values: TrasactionValues) => {
+    const handleCreateTransaction = (values: TransactionValues, id?: string) => {
         const mappedData = {
             description: values.description,
             amount: Number(values.jumlah),
@@ -64,11 +65,19 @@ export function useTransactionsPage() {
             categoryId: values.category || undefined,
         };
 
-        createTransaction(mappedData, {
-            onSuccess: () => {
-                setShowAddModal(false);
-            }
-        });
+        if (id) {
+            updateTransaction({ id, data: mappedData }, {
+                onSuccess: () => {
+                    setShowAddModal(false);
+                }
+            });
+        } else {
+            createTransaction(mappedData, {
+                onSuccess: () => {
+                    setShowAddModal(false);
+                }
+            });
+        }
     };
 
     const handleDeleteTransaction = async () => {

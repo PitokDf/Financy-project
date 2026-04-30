@@ -69,6 +69,16 @@ export class TransactionRepository {
         });
     }
 
+    public update = async (userId: string, trxId: string, data: any) => {
+        return prisma.transaction.update({
+            where: {
+                userId,
+                id: trxId,
+            },
+            data,
+        });
+    }
+
     public findForAnalysis = async (userId: string, startDate: Date, endDate: Date = new Date()) => {
         return prisma.transaction.findMany({
             where: {

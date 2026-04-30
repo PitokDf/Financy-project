@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
 
     const lastTx = stats?.lastTransactionAt ? new Date(stats.lastTransactionAt) : null;
-    const isAtRisk = (stats?.streak || 0) > 0 && (!lastTx || !isToday(lastTx));
+    const isAtRisk = (stats?.streak || 0) >= 0 && (!lastTx || !isToday(lastTx));
 
     const summary = dashboardData?.summary || {
         totalBalance: 0,
