@@ -27,11 +27,7 @@ function TransactionsContent() {
     const action = searchParams.get('action');
 
     const { isSecure } = useSecureMode();
-    const [showImportModal, setShowImportModal] = useState(() => {
-        if (typeof window === 'undefined') return false;
-
-        return action === 'import';
-    });
+    const [showImportModal, setShowImportModal] = useState(action === 'import');
 
     const [editData, setEditData] = useState<Transaction | null>(null);
     console.log(editData)

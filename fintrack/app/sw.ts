@@ -96,7 +96,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
                 }
 
-                return Response.redirect('/transactions', 303)
+                return Response.redirect('/transactions?action=import', 303)
             })()
         )
     }
