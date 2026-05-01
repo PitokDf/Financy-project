@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 import { useNotifications } from '@/hooks/use-notifications';
 import { cn } from '@/lib/utils';
+import { NotificationPromptModal } from '@/components/notification-prompt-modal';
 
 const HEADER_HIDDEN_ROUTE = ['/profile']
 const HEADER_HIDDEN_PREFIX = ['/transactions/create']
@@ -40,6 +41,9 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
                 {children}
             </main>
             {!HEADER_WITH_BACK_ROUTE.includes(pathname) && <BottomNav />}
+
+            {/* Prompt notifikasi — muncul di halaman manapun jika belum aktif */}
+            <NotificationPromptModal dismissCooldownMs={3 * 24 * 60 * 60 * 1000} />
         </div>
     );
 }

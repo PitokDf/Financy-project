@@ -153,7 +153,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                     {/* Format hint */}
                     <div className="mt-3 flex items-start gap-2">
                         <div className="flex gap-1.5 flex-wrap">
-                            {['Tanggal', 'Deskripsi', 'Nominal'].map(col => (
+                            {['Tanggal', 'Deskripsi', 'Nominal', 'Tipe'].map(col => (
                                 <span key={col} className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-medium text-muted-foreground border border-border/50">
                                     {col}
                                 </span>
