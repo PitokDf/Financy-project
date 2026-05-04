@@ -59,3 +59,34 @@ export type CategoryType = (typeof Categories)[number]["name"]
 export const CategoryMap = Object.fromEntries(
     Categories.map((item) => [item.name, item])
 );
+
+export const HEADER_SYNONYMS = {
+    TYPE: [
+        'tipe', 'type', 'kategori', 'category', 'kind', 'status',
+        'transaction type', 'jenis', 'jenis transaksi', 'flow'
+    ],
+    AMOUNT: [
+        'nominal', 'amount', 'jumlah', 'value', 'harga', 'total',
+        'credit', 'debit', 'mutasi', 'saldo', 'pembayaran', 'price'
+    ],
+    DESCRIPTION: [
+        'catatan', 'deskripsi', 'description', 'keterangan', 'memo',
+        'note', 'narasi', 'detail', 'transaksi', 'remarks'
+    ],
+    DATE: [
+        'tanggal', 'date', 'waktu', 'datetime', 'timestamp',
+        'tgl', 'transaction date', 'tanggal transaksi'
+    ]
+};
+
+export const INCOME_KEYWORDS = [
+    'INCOME', 'PEMASUKAN', 'PENDAPATAN', 'MASUK', 'GAJI',
+    'EARNING', 'DEPOSIT', 'CREDIT', 'SALDO MASUK', 'UNFOLD'
+];
+
+export const getHeaderSynonimVal = (row: any, synonyms: string[]) => {
+    const targetKey = Object.keys(row).find(k =>
+        synonyms.includes(k.toLowerCase().trim())
+    );
+    return targetKey ? row[targetKey] : null;
+};

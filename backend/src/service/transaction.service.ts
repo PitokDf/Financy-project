@@ -6,6 +6,7 @@ import { fileUploadService } from "@/utils/file-upload";
 import { GamificationQueue } from "@/queue/gamification.queue";
 import { ReminderBadgeQueue } from "@/queue/reminder-badge.queue";
 import { redisClient } from "@/config/redis";
+import { getHeaderSynonimVal, HEADER_SYNONYMS, INCOME_KEYWORDS } from "@/constants/app";
 
 export class TransactionService {
     private gamificationQueue: GamificationQueue;
@@ -38,72 +39,40 @@ export class TransactionService {
                 .on('data', (data) => results.push(data))
                 .on('end', async () => {
                     try {
-                        const rowCount = results.length;
-                        // Log import row count (optional)
-                        // const csvImport = await this.repo.createCsvImport(userId, file.originalname, rowCount);
-
                         const transactionsToCreate = results.flatMap((row) => {
-                            const typeRaw = (
-                                row.Tipe ||
-                                row.TIPE ||
-                                row.type ||
-                                row.kategori ||
-                                row.Kategori ||
-                                row.Type ||
-                                ''
-                            )
-                                .toString()
-                                .toUpperCase();
+                            const rawType = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE)).toUpperCase()
+                            const rawAmount = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
+                            const rawDesc = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
+                            const rawDate = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
 
-                            const rawAmount =
-                                row.Nominal ||
-                                row.NOMINAL ||
-                                row.amount ||
-                                row.Amount ||
-                                row.Jumlah ||
-                                row.jumlah ||
-                                row.JUMLAH;
+                            if (!rawDesc || rawAmount == null || rawAmount === '') {
+                                console.warn('Baris dilewati: Deskripsi atau Nominal kosong.');
+                                return []
+                            }
 
-                            const desc =
-                                row.Catatan ||
-                                row.CATATAN ||
-                                row.deskripsi ||
-                                row.Deskripsi ||
-                                row.description ||
-                                row.Description;
+                            let amountString = String(rawAmount)
+                                .replace(/(Rp|\$|\s)/g, '')
+                                .trim();
 
-                            if (!desc || rawAmount == null) {
-                                console.log('skipping invalid row...');
+                            if (amountString.includes('.') && amountString.includes(',')) {
+                                amountString = amountString.replace(/\./g, '').replace(',', '.');
+                            } else if (amountString.includes(',') && amountString.indexOf(',') > amountString.length - 3) {
+                                amountString = amountString.replace(',', '.');
+                            }
+
+                            const amount = Math.abs(Number(amountString.replace(/[^\d.-]/g, '')));
+
+                            if (isNaN(amount) || amount === 0) {
+                                console.warn('Baris dilewati: Angka tidak valid', rawAmount);
                                 return [];
                             }
 
-                            const amount = Number(
-                                String(rawAmount).replace(/[^\d.-]/g, '')
-                            );
-
-                            if (isNaN(amount) || amount <= 0) {
-                                console.log('invalid amount...');
-                                return [];
-                            }
-
-                            const type: 'INCOME' | 'EXPENSE' =
-                                typeRaw.includes('INCOME') || typeRaw.includes('PEMASUKAN')
-                                    ? 'INCOME'
-                                    : typeRaw.includes('EXPENSE') || typeRaw.includes('PENGELUARAN')
-                                        ? 'EXPENSE'
-                                        : 'EXPENSE';
-
-                            const dateRaw =
-                                row.Tanggal ||
-                                row.TANGGAL ||
-                                row.tanggal ||
-                                row.date ||
-                                row.Date;
+                            const isIncome = INCOME_KEYWORDS.some(keyword => rawType.includes(keyword));
+                            const type: 'INCOME' | 'EXPENSE' = isIncome ? 'INCOME' : 'EXPENSE';
 
                             let date = new Date().toISOString();
-
-                            if (dateRaw) {
-                                const parsedDate = new Date(dateRaw);
+                            if (rawDate) {
+                                const parsedDate = new Date(rawDate);
                                 if (!isNaN(parsedDate.getTime())) {
                                     date = parsedDate.toISOString();
                                 }
@@ -112,7 +81,7 @@ export class TransactionService {
                             return [
                                 {
                                     userId,
-                                    description: String(desc).trim(),
+                                    description: String(rawDesc).trim(),
                                     amount,
                                     type,
                                     date,
