@@ -41,9 +41,9 @@ export class TransactionService {
                     try {
                         const transactionsToCreate = results.flatMap((row) => {
                             const rawType = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE)).toUpperCase()
-                            const rawAmount = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
-                            const rawDesc = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
-                            const rawDate = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.TYPE))
+                            const rawAmount = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.AMOUNT))
+                            const rawDesc = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.DESCRIPTION))
+                            const rawDate = String(getHeaderSynonimVal(row, HEADER_SYNONYMS.DATE))
 
                             if (!rawDesc || rawAmount == null || rawAmount === '') {
                                 console.warn('Baris dilewati: Deskripsi atau Nominal kosong.');
