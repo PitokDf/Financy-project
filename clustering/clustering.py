@@ -395,11 +395,15 @@ class ClassifierService:
             "model_version": self.model_name,
         }
 
-    def train_incremental(self, corrections: list, corrections_name: str = "feedback_corrections.json"):
+    def train_incremental(self, corrections: list, corrections_name: str = "feedback_corrections.json", base_data_name: str = "base_dataset.json"):
         from sklearn.linear_model import LogisticRegression
         corrections_file = os.path.join(DATA_DIR, corrections_name)
-        if not corrections:
+        base_data_file = os.path.join(DATA_DIR, base_data_name)
+        
+        if not corrections and not os.path.exists(corrections_file):
             return
+
+        # 1. Load Feedback History
         history = []
         if os.path.exists(corrections_file):
             try:
@@ -407,32 +411,73 @@ class ClassifierService:
                     history = json.load(f)
             except Exception:
                 history = []
+
+        # Update history with new corrections
         existing_keys = {(item["description"], item["correct_category"]) for item in history}
+        new_items_count = 0
         for c in corrections:
             key = (c["description"], c["correct_category"])
             if key not in existing_keys:
                 history.append(c)
                 existing_keys.add(key)
-        with open(corrections_file, "w") as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
-        categories_in_corrections = set(item["correct_category"] for item in history)
-        if len(categories_in_corrections) < 2:
-            print(f"[Feedback] Not enough category diversity. Skipping retrain.")
+                new_items_count += 1
+        
+        if new_items_count > 0:
+            with open(corrections_file, "w") as f:
+                json.dump(history, f, ensure_ascii=False, indent=2)
+
+        # 2. Load Anchor Data (Data asli/dasar untuk mencegah lupa)
+        anchor_data = []
+        if os.path.exists(base_data_file):
+            try:
+                with open(base_data_file, "r") as f:
+                    anchor_data = json.load(f)
+                print(f"[Feedback] Loaded {len(anchor_data)} anchor samples from base dataset.")
+            except Exception as e:
+                print(f"[Feedback] Error loading base dataset: {e}")
+
+        # 3. Combine Data
+        combined_data = anchor_data + history
+        
+        categories_in_data = set(item["correct_category"] for item in combined_data)
+        if len(categories_in_data) < 2:
+            print(f"[Feedback] Not enough category diversity ({len(categories_in_data)}). Skipping retrain.")
             return
-        descriptions = [item["description"] for item in history]
-        labels = [item["correct_category"] for item in history]
+
+        descriptions = [item["description"] for item in combined_data]
+        labels = [item["correct_category"] for item in combined_data]
+        
+        # 4. Feature Extraction
         embeddings = self._embed(descriptions)
+        
+        # 5. Sample Weighting
+        weights = np.ones(len(combined_data))
+        weights[len(anchor_data):] = 2.0 
+
+        # 6. Retraining
         existing_clf = self.classifier
-        best_estimator = existing_clf.best_estimator_ if hasattr(existing_clf, 'best_estimator_') else existing_clf
-        C = getattr(best_estimator, 'C', 1.0)
-        max_iter = getattr(best_estimator, 'max_iter', 1000)
-        if isinstance(max_iter, (list, tuple)):
-            max_iter = max_iter[0]
-        max_iter = max_iter if max_iter > 0 else 1000
-        new_clf = LogisticRegression(C=C, max_iter=max_iter, multi_class='multinomial', solver='lbfgs', class_weight='balanced')
-        new_clf.fit(embeddings, labels)
+        best_params = {}
+        if hasattr(existing_clf, 'get_params'):
+            best_params = existing_clf.get_params()
+        
+        # Ambil parameter C dan max_iter dari model lama jika ada
+        C = best_params.get('C', 1.0)
+        max_iter = best_params.get('max_iter', 1000)
+        
+        new_clf = LogisticRegression(
+            C=C, 
+            max_iter=max_iter, 
+            multi_class='multinomial', 
+            solver='lbfgs', 
+            class_weight='balanced'
+        )
+        
+        new_clf.fit(embeddings, labels, sample_weight=weights)
+        
+        # 7. Save Model
         self.classifier = new_clf
         updated_model_data = dict(self.model_data)
         updated_model_data["classifier"] = new_clf
         joblib.dump(updated_model_data, os.path.join(DATA_DIR, "classifier_model.joblib"))
-        print(f"[Feedback] Retrained with {len(history)} corrections across {len(set(labels))} categories.")
+        
+        print(f"[Feedback] Retrained with {len(combined_data)} total samples ({len(history)} from history, {len(anchor_data)} from anchor).")
