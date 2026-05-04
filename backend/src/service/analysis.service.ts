@@ -445,8 +445,8 @@ export class AnalysisService {
             const clusterMeta = analysisMeta.find((cluster: any) => cluster.index === mapping.index);
             const cluster = run.clusters.find((cluster: any) => cluster.index === mapping.index);
 
-            if (!cluster && mapping.index !== -1) {
-                throw new AppError(`Cluster index ${mapping.index} tidak ditemukan`, HttpStatus.NOT_FOUND);
+            if (!cluster && mapping.index !== -1 && (!mapping.transactionIds || mapping.transactionIds.length === 0)) {
+                throw new AppError(`Cluster index ${mapping.index} tidak valid (bukan hasil AI dan kosong)`, HttpStatus.NOT_FOUND);
             }
 
             const transactionIds = mapping.transactionIds || (cluster?.transactions.map((transaction: { id: string }) => transaction.id) || []);
@@ -514,56 +514,7 @@ export class AnalysisService {
             logger.warn("Failed to add gamification queue for analysis:", e);
         }
 
-        try {
-            const txOriginalCluster = new Map<string, number>();
-            for (const cluster of run.clusters as any[]) {
-                for (const tx of cluster.transactions ?? []) {
-                    txOriginalCluster.set(tx.id, cluster.index);
-                }
-            }
 
-            const feedbackCorrections: Array<{ description: string; correctCategory: string }> = [];
-            const seen = new Set<string>(); // deduplicate by txId
-
-            for (const mapping of payload.clusterMappings) {
-                const originalCluster = run.clusters.find((c: any) => c.index === mapping.index);
-                const aiSuggestedName: string | null = (originalCluster as any)?.suggestedName ?? null;
-
-                const clusterWasRenamed = aiSuggestedName
-                    ? mapping.name.trim().toLowerCase() !== aiSuggestedName.trim().toLowerCase()
-                    : false;
-
-                const txIds = mapping.transactionIds ?? [];
-                for (const txId of txIds) {
-                    if (seen.has(txId)) continue;
-
-                    const tx = transactionMap.get(txId);
-                    if (!tx?.description || !mapping.name) continue;
-
-                    // Was this transaction MOVED from a different cluster?
-                    const originalIndex = txOriginalCluster.get(txId);
-                    const wasMoved = originalIndex !== undefined && originalIndex !== mapping.index;
-
-                    // Send feedback if: transaction was moved OR its destination cluster was renamed
-                    if (wasMoved || clusterWasRenamed) {
-                        feedbackCorrections.push({
-                            description: tx.description,
-                            correctCategory: mapping.name,
-                        });
-                        seen.add(txId);
-                    }
-                }
-            }
-
-            if (feedbackCorrections.length > 0) {
-                logger.info(`[AI Feedback] Sending ${feedbackCorrections.length} corrections (renames + moved transactions) to ML service.`);
-                AnalysisMLService.sendFeedback(feedbackCorrections);
-            } else {
-                logger.info("[AI Feedback] No corrections to send — user accepted all AI suggestions.");
-            }
-        } catch (fbErr) {
-            logger.warn("[AI Feedback] Failed to build feedback payload:", fbErr);
-        }
 
         return {
             runId: run.id,

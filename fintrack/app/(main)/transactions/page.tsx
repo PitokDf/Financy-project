@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { Virtuoso } from 'react-virtuoso';
 import { Search, Plus, X, TrendingUp, TrendingDown, Trash2, Import } from 'lucide-react';
 import { cn, formatCurrencyWithSecure } from '@/lib/utils';
 import { TransactionForm } from './_components/transaction-form';
@@ -10,7 +10,7 @@ import { TransactionCard } from '@/components/shared/transaction-card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ImportCsvModal } from './_components/import-csv-modal';
 import { DisplayTransaction, useTransactionsPage } from './use-transactions-page';
-import { Suspense, useCallback, useRef, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { TransactionsSkeleton } from './_components/skeleton';
 import { useSecureMode } from '@/hooks/use-secure';
 import { useSearchParams } from 'next/navigation';
@@ -21,8 +21,6 @@ type FlatItem =
     | { type: 'item'; transaction: DisplayTransaction };
 
 function TransactionsContent() {
-    const observerRef = useRef<IntersectionObserver | null>(null);
-    const parentRef = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
     const action = searchParams.get('action');
 
@@ -58,26 +56,6 @@ function TransactionsContent() {
             ...transactions.map((transaction) => ({ type: 'item' as const, transaction })),
         ]);
     }, [grouped]);
-
-    const virtualizer = useVirtualizer({
-        count: flatItems.length,
-        getScrollElement: () => parentRef.current,
-        estimateSize: (i) => (flatItems[i].type === 'header' ? 36 : 72),
-        overscan: 5,
-    });
-
-    const lastItemRef = useCallback(
-        (node: HTMLDivElement | null) => {
-            if (observerRef.current) observerRef.current.disconnect();
-
-            observerRef.current = new IntersectionObserver(([entry]) => {
-                if (entry.isIntersecting && hasMore) loadMore();
-            });
-
-            if (node) observerRef.current.observe(node);
-        },
-        [hasMore, loadMore]
-    );
     if (isLoading) return <TransactionsSkeleton />;
 
     return (
@@ -151,23 +129,16 @@ function TransactionsContent() {
                     <p className="text-sm text-muted-foreground mt-1">Coba ubah kata kunci pencarian</p>
                 </div>
             ) : (
-                <div ref={parentRef} className="overflow-auto flex-1">
-                    <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-                        {virtualizer.getVirtualItems().map((virtualItem) => {
-                            const item = flatItems[virtualItem.index];
-                            const isLast = virtualItem.index === flatItems.length - 1;
-
+                <div className="flex-1 min-h-0">
+                    <Virtuoso
+                        data={flatItems}
+                        endReached={() => {
+                            if (hasMore) loadMore();
+                        }}
+                        style={{ height: '100%' }}
+                        itemContent={(index, item) => {
                             return (
-                                <div
-                                    key={virtualItem.key}
-                                    ref={isLast ? lastItemRef : null}
-                                    style={{
-                                        position: 'absolute',
-                                        top: virtualItem.start,
-                                        width: '100%',
-                                        padding: '2px 0',
-                                    }}
-                                >
+                                <div className="py-[2px]">
                                     {item.type === 'header' ? (
                                         <div className="flex items-center gap-2 py-1">
                                             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
@@ -194,8 +165,8 @@ function TransactionsContent() {
                                     )}
                                 </div>
                             );
-                        })}
-                    </div>
+                        }}
+                    />
                 </div>
             )}
 

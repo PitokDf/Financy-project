@@ -5,7 +5,7 @@ import z from "zod"
 import { Category } from "@/hooks/use-categories"
 
 export const transactionSchema = z.object({
-    description: z.string().min(12, 'Deskripsi minimal 12 karakter'),
+    description: z.string().min(5, 'Deskripsi minimal 5 karakter'),
     jumlah: z.number().min(1, 'Nominal minimal Rp 1'),
     type: z.enum(['EXPENSE', 'INCOME']),
     category: z.string().optional(),

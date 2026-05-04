@@ -163,28 +163,4 @@ export class AnalysisMLService {
         };
     }
 
-    /**
-     * Fire-and-forget: send user corrections to the Python ML service for incremental retraining.
-     * Each correction is: { description, aiPrediction (what AI said), correctCategory (what user chose) }
-     * We only send items where the user changed the AI's suggestion.
-     */
-    static sendFeedback(corrections: Array<{ description: string; correctCategory: string }>): void {
-        if (corrections.length === 0) return;
-
-        const payload = {
-            corrections: corrections.map(c => ({
-                description: c.description,
-                correct_category: c.correctCategory,
-            })),
-        };
-
-        fetch(`${config.ML_SERVICE_URL}/v2/feedback`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        }).catch((err) => {
-            // Non-critical: log warning only, don't break anything
-            console.warn("[AI Feedback] Failed to send feedback to ML service:", err?.message);
-        });
-    }
 }

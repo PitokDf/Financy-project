@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAnalysis, AnalysisRunResult, MlClusterResponse } from '@/hooks/use-analysis';
 import { useCategories } from '@/hooks/use-categories';
-import { Brain, ArrowRight, Loader2, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react';
+import { Brain, ArrowRight, Loader2, CheckCircle2, Sparkles, TrendingUp, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { CLUSTER_COLORS } from './_components/constant';
 import { ClusterPieChart } from './_components/cluster-pie-chart';
@@ -67,8 +68,35 @@ export default function AnalysisLabPage() {
         } catch { }
     };
 
+    const handleAddCustomCluster = () => {
+        if (!analysisResult) return;
+
+        const existingIndices = analysisResult.clusters.map(c => c.index).filter(idx => idx !== undefined);
+        const newIndex = existingIndices.length > 0 ? Math.max(...existingIndices) + 1 : 1;
+
+        const newCluster: MlClusterResponse = {
+            id: `custom-${newIndex}`,
+            index: newIndex,
+            name: '',
+            suggestedName: '',
+            color: CLUSTER_COLORS[newIndex % CLUSTER_COLORS.length],
+            size: 0,
+            totalAmount: 0,
+            representativeDescriptions: [],
+            members: []
+        };
+
+        setAnalysisResult({
+            ...analysisResult,
+            clusters: [newCluster, ...analysisResult.clusters]
+        });
+
+        setMappings(prev => ({ ...prev, [newIndex]: '' }));
+        setAssignments(prev => ({ ...prev, [newIndex]: [] }));
+    };
+
     const visibleClusters = [...(analysisResult?.clusters ?? [])]
-        .filter(c => assignments[c.index]?.length > 0 || c.index === -1)
+        .filter(c => assignments[c.index]?.length > 0 || c.index === -1 || c.id.toString().startsWith('custom-'))
         .sort((a, b) => a.index === -1 ? 1 : b.index === -1 ? -1 : a.index - b.index);
 
     if (!visibleClusters.find(c => c.index === -1) && assignments[-1]?.length > 0) {
@@ -230,7 +258,18 @@ export default function AnalysisLabPage() {
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 Beri Nama Kategori
                             </p>
-                            <p className="text-[10px] text-muted-foreground">{visibleClusters.length} grup</p>
+                            <div className="flex items-center gap-3">
+                                <p className="text-[10px] text-muted-foreground">{visibleClusters.length} grup</p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleAddCustomCluster}
+                                    className="h-7 text-[10px] px-2.5 rounded-xl border-dashed hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-colors"
+                                >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Grup Baru
+                                </Button>
+                            </div>
                         </div>
                         {visibleClusters.map((cluster, i) => (
                             <ClusterCard
@@ -243,25 +282,28 @@ export default function AnalysisLabPage() {
                                 transactions={assignments[cluster.index] || []}
                                 clusterOptions={visibleClusters.map(c => ({ index: c.index, name: mappings[c.index] || c.suggestedName || `Kategori ${c.index + 1}` }))}
                                 existingCategories={categories.map(c => ({ id: c.id, name: c.name }))}
-                                onExcludeTransaction={(txId) => {
+                                onExcludeTransactions={(txIds) => {
                                     setAssignments(prev => {
                                         const updated = { ...prev };
-                                        const tx = updated[cluster.index].find(t => t.id === txId);
-                                        if (!tx) return prev;
-                                        updated[cluster.index] = updated[cluster.index].filter(t => t.id !== txId);
-                                        updated[-1] = [...(updated[-1] || []), tx];
+                                        const txs = updated[cluster.index].filter(t => txIds.includes(t.id));
+                                        if (txs.length === 0) return prev;
+                                        updated[cluster.index] = updated[cluster.index].filter(t => !txIds.includes(t.id));
+                                        updated[-1] = [...(updated[-1] || []), ...txs];
                                         return updated;
                                     });
+                                    toast.success(`${txIds.length} transaksi dikeluarkan ke Lain-lain`);
                                 }}
-                                onMoveTransaction={(txId, targetIndex) => {
+                                onMoveTransactions={(txIds, targetIndex) => {
                                     setAssignments(prev => {
                                         const updated = { ...prev };
-                                        const tx = updated[cluster.index].find(t => t.id === txId);
-                                        if (!tx) return prev;
-                                        updated[cluster.index] = updated[cluster.index].filter(t => t.id !== txId);
-                                        updated[targetIndex] = [...(updated[targetIndex] || []), tx];
+                                        const txs = updated[cluster.index].filter(t => txIds.includes(t.id));
+                                        if (txs.length === 0) return prev;
+                                        updated[cluster.index] = updated[cluster.index].filter(t => !txIds.includes(t.id));
+                                        updated[targetIndex] = [...(updated[targetIndex] || []), ...txs];
                                         return updated;
                                     });
+                                    const targetName = mappings[targetIndex] || visibleClusters.find(c => c.index === targetIndex)?.suggestedName || `Grup baru`;
+                                    toast.success(`${txIds.length} transaksi dipindahkan ke ${targetName}`);
                                 }}
                             />
                         ))}
