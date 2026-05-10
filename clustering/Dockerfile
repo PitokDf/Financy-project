@@ -24,6 +24,8 @@ ENV HF_HUB_OFFLINE=1
 COPY . .
 RUN mkdir -p /app/data
 ENV DATA_DIR=/app/data
+# Incremental memory dipersist di /app/data (mount volume di sini buat persistensi)
+VOLUME ["/app/data"]
 
 # Port and execution
 EXPOSE 8000
