@@ -12,7 +12,7 @@ export class GamificationQueue extends BaseQueue<GamificationJobData> {
         super('gamification-queue');
     }
 
-    async add(name: string, data: GamificationJobData, options?: JobsOptions): Promise<Job<GamificationJobData, any, string>> {
+    async add(name: string, data: GamificationJobData, options?: JobsOptions): Promise<Job<GamificationJobData, any, string> | void> {
         return super.add(name, data, options);
     }
 }

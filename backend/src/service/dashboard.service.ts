@@ -44,7 +44,7 @@ export class DashboardService {
         const end = endOfMonth(now);
         const cachedKey = `dashboard:${userId}`;
 
-        const cachedData = await redisClient.get(cachedKey);
+        const cachedData = await redisClient?.get(cachedKey);
         if (cachedData) {
             frameworkLogger.cache('Cache hit for dashboard summary');
             return JSON.parse(cachedData);
@@ -112,7 +112,7 @@ export class DashboardService {
             topForecasts
         }
 
-        redisClient.set(cachedKey, JSON.stringify(result), 'EX', 3600)
+        redisClient?.set(cachedKey, JSON.stringify(result), 'EX', 3600)
 
         return result;
     }

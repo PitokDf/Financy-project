@@ -142,19 +142,20 @@ export class UserService {
         return { ...user, password: '[REDACTED]' }
     }
 
-    public purgeAllData = async (userId: string, password: string): Promise<void> => {
+    public purgeAllData = async (userId: string, password?: string): Promise<void> => {
         const user = await this.userRepo.findById(userId);
         if (!user) {
             throw new AppError("User tidak ditemukan", HttpStatus.NOT_FOUND);
         }
 
-        if (!user.password) {
-            throw new AppError("Akun Google SSO tidak bisa dihapus melalui metode ini", HttpStatus.BAD_REQUEST);
-        }
-
-        const isPasswordValid = await BcryptUtil.compare(password, user.password);
-        if (!isPasswordValid) {
-            throw new AppError("Password salah. Periksa kembali password Anda.", HttpStatus.BAD_REQUEST);
+        if (user.password) {
+            if (!password) {
+                throw new AppError("Password diperlukan untuk menghapus data", HttpStatus.BAD_REQUEST);
+            }
+            const isPasswordValid = await BcryptUtil.compare(password, user.password);
+            if (!isPasswordValid) {
+                throw new AppError("Password salah. Periksa kembali password Anda.", HttpStatus.BAD_REQUEST);
+            }
         }
 
         logger.warn(`[UserDataService] Purging ALL data for user ${userId} (${user.email})`);
@@ -162,7 +163,7 @@ export class UserService {
         // 2. Delete all user data in a single atomic transaction
         this.userRepo.purgeDeleteData(userId)
         const cachedKey = `dashboard:${userId}`;
-        redisClient.del(cachedKey)
+        redisClient?.del(cachedKey)
 
         logger.info(`[UserDataService] Successfully purged all data for user ${userId}`);
     }

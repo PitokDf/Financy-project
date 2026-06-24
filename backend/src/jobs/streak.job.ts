@@ -9,10 +9,16 @@ export class StreakJob {
     }
 
     async register() {
-        const repeatables = await this.streakQueue['queue'].getRepeatableJobs();
+        const queue = this.streakQueue['queue'];
+        if (!queue) {
+            frameworkLogger.warn("[StreakJob] Redis not configured. Skipping streak job registration.");
+            return;
+        }
+
+        const repeatables = await queue.getRepeatableJobs();
 
         for (const job of repeatables) {
-            await this.streakQueue['queue'].removeRepeatableByKey(job.key)
+            await queue.removeRepeatableByKey(job.key)
         }
 
         await this.streakQueue.add('streak-job', {}, {
