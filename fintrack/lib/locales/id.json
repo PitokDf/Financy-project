@@ -106,7 +106,18 @@
     "deleteTxTitle": "Hapus Transaksi",
     "deleteTxDesc": "Apakah anda yakin ingin menghapus transaksi ini?",
     "importCsv": "Impor CSV",
-    "addTx": "Tambah transaksi"
+    "addTx": "Tambah transaksi",
+    "scheduledExpense": "Terjadwal",
+    "scheduledNew": "Baru",
+    "scheduledEmpty": "Belum ada pengeluaran terjadwal",
+    "scheduledEmptyDesc": "Atur pengeluaran rutin bulananmu di sini",
+    "scheduledPastDue": "Terlewat",
+    "scheduledUpcoming": "Akan Datang",
+    "scheduledCompleted": "Selesai",
+    "scheduledDeleteTitle": "Hapus Pengeluaran Terjadwal?",
+    "scheduledDeleteDesc": "Pengeluaran ini tidak akan muncul lagi bulan depan.",
+    "scheduledActive": "aktif",
+    "scheduledDay": "Tgl"
   },
   "help": {
     "title": "Pusat Bantuan FinTrack",
@@ -375,6 +386,16 @@
     "addCategory": "+ Tambah Kategori",
     "createCategory": "+ Buat Kategori Baru",
     "notes": "Catatan",
-    "notesPlaceholder": "Tuliskan catatan transaksi kamu (minimal 5 karakter)..."
+    "notesPlaceholder": "Tuliskan catatan transaksi kamu (minimal 5 karakter)...",
+    "scheduledFormTitle": "Tambah Pengeluaran Terjadwal",
+    "scheduledFormEditTitle": "Edit Pengeluaran Terjadwal",
+    "scheduledFormDesc": "Pengeluaran ini akan muncul setiap tanggal {day} setiap bulan",
+    "scheduledFormDay": "Tanggal Setiap Bulan",
+    "scheduledFormAmount": "Jumlah (Rp)",
+    "scheduledFormNotes": "Mis: Bayar Listrik",
+    "scheduledFormAddCategory": "+ Buat Kategori Baru",
+    "scheduledCategoryDialogTitle": "Buat Kategori Baru",
+    "scheduledCategoryDialogLabel": "Nama Kategori",
+    "scheduledCategoryDialogPlaceholder": "Mis: Listrik"
   }
 }

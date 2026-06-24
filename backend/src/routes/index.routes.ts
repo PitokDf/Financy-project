@@ -12,6 +12,7 @@ import pushRouter from "./push.route";
 import budgetRouter from "./budget.route";
 import forecastRouter from "./forecast.route";
 import exportRouter from "./export.route";
+import scheduledExpenseRouter from "./scheduled-expense.routes";
 
 const apiRouter = Router()
 
@@ -28,5 +29,6 @@ apiRouter.use('/push', pushRouter)
 apiRouter.use('/budgets', budgetRouter)
 apiRouter.use('/forecast', forecastRouter)
 apiRouter.use('/export', exportRouter)
+apiRouter.use('/scheduled-expenses', scheduledExpenseRouter)
 
 export default apiRouter

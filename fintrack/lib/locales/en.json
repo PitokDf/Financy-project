@@ -106,7 +106,18 @@
     "deleteTxTitle": "Delete Transaction",
     "deleteTxDesc": "Are you sure you want to delete this transaction?",
     "importCsv": "Import CSV",
-    "addTx": "Add transaction"
+    "addTx": "Add transaction",
+    "scheduledExpense": "Scheduled",
+    "scheduledNew": "New",
+    "scheduledEmpty": "No scheduled expenses",
+    "scheduledEmptyDesc": "Set up your monthly recurring expenses here",
+    "scheduledPastDue": "Past Due",
+    "scheduledUpcoming": "Upcoming",
+    "scheduledCompleted": "Completed",
+    "scheduledDeleteTitle": "Delete Scheduled Expense?",
+    "scheduledDeleteDesc": "This expense won't appear next month.",
+    "scheduledActive": "active",
+    "scheduledDay": "Day"
   },
   "help": {
     "title": "FinTrack Help Center",
@@ -375,6 +386,16 @@
     "addCategory": "+ Add Category",
     "createCategory": "+ Create New Category",
     "notes": "Notes",
-    "notesPlaceholder": "Write transaction notes (minimum 5 characters)..."
+    "notesPlaceholder": "Write transaction notes (minimum 5 characters)...",
+    "scheduledFormTitle": "Add Scheduled Expense",
+    "scheduledFormEditTitle": "Edit Scheduled Expense",
+    "scheduledFormDesc": "This expense will appear every {day} of the month",
+    "scheduledFormDay": "Day of Month",
+    "scheduledFormAmount": "Amount (Rp)",
+    "scheduledFormNotes": "E.g.: Pay Electricity",
+    "scheduledFormAddCategory": "+ Create New Category",
+    "scheduledCategoryDialogTitle": "Create New Category",
+    "scheduledCategoryDialogLabel": "Category Name",
+    "scheduledCategoryDialogPlaceholder": "E.g.: Electricity"
   }
 }

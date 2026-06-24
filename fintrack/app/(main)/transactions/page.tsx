@@ -27,6 +27,8 @@ import { TransactionsSkeleton } from "./_components/skeleton";
 import { useSecureMode } from "@/hooks/use-secure";
 import { useSearchParams } from "next/navigation";
 import { Transaction } from "@/hooks/use-transactions";
+import { ScheduledExpenseTab } from "./_components/scheduled-expense-tab";
+import { Calendar } from "lucide-react";
 
 type FlatItem =
   | { type: "header"; date: string; count: number }
@@ -40,7 +42,7 @@ function TransactionsContent() {
   const [showImportModal, setShowImportModal] = useState(action === "import");
 
   const [editData, setEditData] = useState<Transaction | null>(null);
-  console.log(editData);
+  const [showScheduled, setShowScheduled] = useState(false);
   const t = useTranslations("transactions");
 
   const {
@@ -78,48 +80,52 @@ function TransactionsContent() {
     <div className="animate-fade-in flex flex-col h-screen">
       {/* Header stats & filter */}
       <div className="pb-2 shrink-0">
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                {t("income")}
-              </span>
+        {!showScheduled && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                  {t("income")}
+                </span>
+              </div>
+              <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
+                {formatCurrencyWithSecure(totalIncome, isSecure)}
+              </p>
             </div>
-            <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
-              {formatCurrencyWithSecure(totalIncome, isSecure)}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <TrendingDown className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
-              <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                {t("expense")}
-              </span>
+            <div className="rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingDown className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                  {t("expense")}
+                </span>
+              </div>
+              <p className="text-base font-bold text-red-600 dark:text-red-400">
+                {formatCurrencyWithSecure(totalExpense, isSecure)}
+              </p>
             </div>
-            <p className="text-base font-bold text-red-600 dark:text-red-400">
-              {formatCurrencyWithSecure(totalExpense, isSecure)}
-            </p>
           </div>
-        </div>
+        )}
 
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder={t("search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-11 rounded-xl pr-9"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        {!showScheduled && (
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t("search")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-11 rounded-xl pr-9"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2">
           {(["ALL", "INCOME", "EXPENSE"] as const).map((f) => (
@@ -144,11 +150,30 @@ function TransactionsContent() {
                   : t("expense")}
             </button>
           ))}
+          <button
+            onClick={() => setShowScheduled(!showScheduled)}
+            className={cn(
+              "px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5",
+              showScheduled
+                ? "bg-violet-500 text-white shadow-sm shadow-violet-200 dark:shadow-violet-900"
+                : "bg-muted text-muted-foreground hover:bg-muted/80",
+            )}
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            {t("scheduledExpense")}
+          </button>
         </div>
       </div>
 
+      {/* Scheduled Tab */}
+      {showScheduled && (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <ScheduledExpenseTab />
+        </div>
+      )}
+
       {/* List */}
-      {flatItems.length === 0 ? (
+      {!showScheduled && (flatItems.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
             <Search className="w-7 h-7 text-muted-foreground" />
@@ -202,9 +227,10 @@ function TransactionsContent() {
             }}
           />
         </div>
-      )}
+      ))}
 
       {/* FAB */}
+      {!showScheduled && (
       <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
         <Button
           size="icon"
@@ -226,6 +252,7 @@ function TransactionsContent() {
           <Plus className="w-6 h-6 text-white" />
         </Button>
       </div>
+      )}
 
       <ConfirmDialog
         icon={<Trash2 className="text-red-500" />}

@@ -177,6 +177,20 @@ export interface UserResponse {
     updatedAt: Date;
 }
 
+export interface ScheduledExpense {
+    id: string;
+    userId: string;
+    description: string;
+    amount: number;
+    dayOfMonth: number;
+    isActive: boolean;
+    lastProcessedAt: string | null;
+    categoryId: string | null;
+    category?: Category | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface ErrorResponse {
     message: string;
     success: boolean;

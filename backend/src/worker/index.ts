@@ -1,12 +1,14 @@
 import { ReminderBudgetWorker } from "./reminder-budget.worker";
 import { GamificationWorker } from "./gamification.worker";
 import { StreakWorker } from "./streak.worker";
+import { ScheduledExpenseWorker } from "./scheduled-expense.worker";
 import frameworkLogger from "@/utils/winston.logger";
 
 const workers = [
     new ReminderBudgetWorker(),
     new GamificationWorker(),
     new StreakWorker(),
+    new ScheduledExpenseWorker(),
 ];
 
 export const initWorkers = () => {
