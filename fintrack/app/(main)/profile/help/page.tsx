@@ -34,8 +34,12 @@ const FAQ_DATA: FaqItem[] = [
         answer: 'Buka menu Anggaran dari navigasi bawah. Anda bisa membuat anggaran baru per kategori untuk setiap bulan. Sistem akan memantau dan mengirim notifikasi jika pengeluaran mendekati batas.'
     },
     {
+        question: 'Bagaimana cara kerja kategorisasi otomatis AI?',
+        answer: 'Secara default, FinTrack menggunakan model machine learning (Sentence-BERT) untuk menganalisis deskripsi transaksi pengeluaran dan mengkategorikannya secara instan saat disimpan. Fitur ini dapat dinyalakan atau dimatikan kapan saja lewat menu Profil > Preferensi > Kategorisasi Otomatis.'
+    },
+    {
         question: 'Apa itu fitur AI Lab?',
-        answer: 'AI Lab adalah fitur analisis cerdas yang menggunakan machine learning untuk mengelompokkan dan mengkategorikan transaksi Anda secara otomatis. Akses melalui halaman Analisis > AI Lab.'
+        answer: 'AI Lab adalah fitur analisis cerdas tempat Anda dapat mengelompokkan transaksi serupa (Smart Clustering) atau melakukan kategorisasi massal (Batch Categorization) untuk seluruh transaksi yang belum memiliki kategori (misalnya ketika Anda mematikan fitur kategorisasi otomatis real-time).'
     },
     {
         question: 'Bagaimana cara mengekspor data?',
@@ -61,7 +65,7 @@ const FEATURES: FeatureInfo[] = [
     {
         icon: PiggyBank,
         title: 'Manajemen Transaksi',
-        description: 'Catat pemasukan dan pengeluaran harian secara mudah dengan kategorisasi otomatis.'
+        description: 'Catat pemasukan dan pengeluaran harian secara mudah dengan kategorisasi AI otomatis (dapat diaktifkan/dinonaktifkan lewat Profil).'
     },
     {
         icon: BarChart3,
