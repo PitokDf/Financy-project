@@ -1,49 +1,72 @@
-'use client'
+"use client";
 
-import { BottomNav } from '@/components/layout/bottom-nav';
-import { Header } from '@/components/layout/header';
-import { usePathname } from 'next/navigation';
-import React from 'react';
-import { useNotifications } from '@/hooks/use-notifications';
-import { cn } from '@/lib/utils';
-import { NotificationPromptModal } from '@/components/notification-prompt-modal';
+import { BottomNav } from "@/components/layout/bottom-nav";
+import { Header } from "@/components/layout/header";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { useNotifications } from "@/hooks/use-notifications";
+import { cn } from "@/lib/utils";
+import { NotificationPromptModal } from "@/components/notification-prompt-modal";
 
-const HEADER_HIDDEN_ROUTE = ['/profile']
-const HEADER_HIDDEN_PREFIX = ['/transactions/create']
+const HEADER_HIDDEN_ROUTE = ["/profile"];
+const HEADER_HIDDEN_PREFIX = ["/transactions/create"];
 
-const HEADER_WITH_AVATAR_ROUTE = ['/dashboard'];
-const HEADER_WITH_BACK_ROUTE = ['/notifications', '/analysis/lab', '/achievements', '/profile/change-password', '/profile/edit-profile', '/profile/help'];
+const HEADER_WITH_AVATAR_ROUTE = ["/dashboard"];
+const HEADER_WITH_BACK_ROUTE = [
+  "/notifications",
+  "/analysis/lab",
+  "/achievements",
+  "/profile/change-password",
+  "/profile/edit-profile",
+  "/profile/help",
+];
 
-const isHiddenByRules = (pathname: string, exactRoutes: string[], prefixRoutes: string[]) => {
-    return exactRoutes.includes(pathname) || prefixRoutes.some((prefix) => pathname.startsWith(prefix));
+const isHiddenByRules = (
+  pathname: string,
+  exactRoutes: string[],
+  prefixRoutes: string[],
+) => {
+  return (
+    exactRoutes.includes(pathname) ||
+    prefixRoutes.some((prefix) => pathname.startsWith(prefix))
+  );
 };
 
 export function MainLayoutClient({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    const showAvatar = HEADER_WITH_AVATAR_ROUTE.includes(pathname);
-    const showNotification = pathname !== '/notifications';
-    const showBack = HEADER_WITH_BACK_ROUTE.includes(pathname);
-    const hideHeader = isHiddenByRules(pathname, HEADER_HIDDEN_ROUTE, HEADER_HIDDEN_PREFIX);
-    const { unreadCount } = useNotifications();
+  const showAvatar = HEADER_WITH_AVATAR_ROUTE.includes(pathname);
+  const showNotification = pathname !== "/notifications";
+  const showBack = HEADER_WITH_BACK_ROUTE.includes(pathname);
+  const hideHeader = isHiddenByRules(
+    pathname,
+    HEADER_HIDDEN_ROUTE,
+    HEADER_HIDDEN_PREFIX,
+  );
+  const { unreadCount } = useNotifications();
 
-    return (
-        <div className="min-h-dvh flex flex-col bg-background">
-            {!hideHeader && (
-                <Header
-                    back={showBack}
-                    showAvatar={showAvatar}
-                    notificationCount={unreadCount}
-                    showNotification={showNotification}
-                />
-            )}
-            <main className={cn({ "flex-1 px-4 animate-in fade-in duration-500 pt-4 pb-5": true, "pb-20": !HEADER_WITH_BACK_ROUTE.includes(pathname) })}>
-                {children}
-            </main>
-            {!HEADER_WITH_BACK_ROUTE.includes(pathname) && <BottomNav />}
+  return (
+    <div className="min-h-dvh bg-background">
+      {!hideHeader && (
+        <Header
+          back={showBack}
+          showAvatar={showAvatar}
+          notificationCount={unreadCount}
+          showNotification={showNotification}
+        />
+      )}
+      <main
+        className={cn({
+          "flex-1 px-4 max-w-2xl md:mx-auto animate-in fade-in duration-500 pt-4 pb-5": true,
+          "pb-20": !HEADER_WITH_BACK_ROUTE.includes(pathname),
+        })}
+      >
+        {children}
+      </main>
+      {!HEADER_WITH_BACK_ROUTE.includes(pathname) && <BottomNav />}
 
-            {/* Prompt notifikasi — muncul di halaman manapun jika belum aktif */}
-            <NotificationPromptModal dismissCooldownMs={3 * 24 * 60 * 60 * 1000} />
-        </div>
-    );
+      {/* Prompt notifikasi — muncul di halaman manapun jika belum aktif */}
+      <NotificationPromptModal dismissCooldownMs={3 * 24 * 60 * 60 * 1000} />
+    </div>
+  );
 }

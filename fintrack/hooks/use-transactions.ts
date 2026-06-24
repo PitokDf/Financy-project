@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -6,224 +10,269 @@ import { ErrorResponse } from "@/types";
 import { addPendingMutation } from "@/lib/offline/db";
 
 export interface Transaction {
-    id: string;
-    description: string;
-    amount: number;
-    type: 'INCOME' | 'EXPENSE';
-    date: string;
-    categoryId?: string;
-    category?: {
-        name: string;
-        color: string;
-        icon: string;
-    };
+  id: string;
+  description: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE";
+  date: string;
+  categoryId?: string;
+  category?: {
+    name: string;
+    color: string;
+    icon: string;
+  };
 }
 
 interface TransactionWithPagination {
-    data: Transaction[]
-    nextCursor?: string
-    totalIncome?: number
-    totalExpense?: number
+  data: Transaction[];
+  nextCursor?: string;
+  totalIncome?: number;
+  totalExpense?: number;
 }
 
 export function useTransactions(search?: string, type?: string) {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-    const transactionsQuery = useInfiniteQuery({
-        queryKey: ['transactions', search, type],
-        queryFn: async ({ pageParam }) => {
-            const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-            const typeParam = type && type !== 'ALL' ? `&type=${type}` : '';
-            const url = pageParam
-                ? `/transactions?cursor=${pageParam}&limit=10${searchParam}${typeParam}`
-                : `/transactions?limit=10${searchParam}${typeParam}`;
+  const transactionsQuery = useInfiniteQuery({
+    queryKey: ["transactions", search, type],
+    queryFn: async ({ pageParam }) => {
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+      const typeParam = type && type !== "ALL" ? `&type=${type}` : "";
+      const url = pageParam
+        ? `/transactions?cursor=${pageParam}&limit=10${searchParam}${typeParam}`
+        : `/transactions?limit=10${searchParam}${typeParam}`;
 
-            const res = await axiosClient.get(url);
-            const payload = res as TransactionWithPagination;
+      const res = await axiosClient.get(url);
+      const payload = res as TransactionWithPagination;
 
-            return {
-                data: payload.data.map((tx) => ({
-                    ...tx,
-                    categoryColor: tx.category?.color ?? (tx.type === 'EXPENSE' ? '#b92910' : '#059669'),
-                    category: tx.category?.name || 'Belum dikategorikan',
-                    categoryIcon: tx.category?.icon || ''
-                })),
-                nextCursor: payload.nextCursor,
-                totalIncome: payload.totalIncome || 0,
-                totalExpense: payload.totalExpense || 0
-            };
-        },
-        initialPageParam: undefined as string | undefined,
-        getNextPageParam: (lastPage) => lastPage.nextCursor
-    });
+      return {
+        data: payload.data.map((tx) => ({
+          ...tx,
+          categoryColor:
+            tx.category?.color ??
+            (tx.type === "EXPENSE" ? "#b92910" : "#059669"),
+          category: tx.category?.name || "Belum dikategorikan",
+          categoryIcon: tx.category?.icon || "",
+        })),
+        nextCursor: payload.nextCursor,
+        totalIncome: payload.totalIncome || 0,
+        totalExpense: payload.totalExpense || 0,
+      };
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
 
-    const createMutation = useMutation({
-        mutationFn: async (data: Omit<Transaction, 'id' | 'category'>) => {
-            if (!navigator.onLine) {
-                const offlineId = `offline_${Date.now()}`;
-                await addPendingMutation({
-                    id: offlineId,
-                    action: 'CREATE',
-                    data: data
-                });
-                return { ...data, id: offlineId, isOffline: true };
+  const createMutation = useMutation({
+    mutationFn: async (data: Omit<Transaction, "id" | "category">) => {
+      if (!navigator.onLine) {
+        const offlineId = `offline_${Date.now()}`;
+        await addPendingMutation({
+          id: offlineId,
+          action: "CREATE",
+          data: data,
+        });
+        return { ...data, id: offlineId, isOffline: true };
+      }
+      const res = await axiosClient.post("/transactions", data);
+      return res.data;
+    },
+    onMutate: async (newTx) => {
+      await queryClient.cancelQueries({
+        queryKey: ["transactions", search, type],
+      });
+      const previousTransactions = queryClient.getQueryData([
+        "transactions",
+        search,
+        type,
+      ]);
+
+      const tempId = `temp_${Date.now()}`;
+      const optimisticTx = {
+        id: tempId,
+        description: newTx.description,
+        amount: newTx.amount,
+        type: newTx.type,
+        date: newTx.date,
+        categoryId: newTx.categoryId,
+        categoryColor: newTx.type === "EXPENSE" ? "#b92910" : "#059669",
+        category: newTx.categoryId
+          ? "Memuat..."
+          : !navigator.onLine
+            ? "Pending sync"
+            : "Menganalisis Kategori (AI)...",
+        categoryIcon: "",
+        isOptimistic: true,
+        isOffline: !navigator.onLine,
+      };
+
+      queryClient.setQueryData(["transactions", search, type], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any, index: number) => {
+            if (index === 0) {
+              return {
+                ...page,
+                data: [optimisticTx, ...page.data],
+                totalIncome:
+                  newTx.type === "INCOME"
+                    ? page.totalIncome + newTx.amount
+                    : page.totalIncome,
+                totalExpense:
+                  newTx.type === "EXPENSE"
+                    ? page.totalExpense + newTx.amount
+                    : page.totalExpense,
+              };
             }
-            const res = await axiosClient.post("/transactions", data);
-            return res.data;
-        },
-        onMutate: async (newTx) => {
-            await queryClient.cancelQueries({ queryKey: ['transactions', search, type] });
-            const previousTransactions = queryClient.getQueryData(['transactions', search, type]);
+            return page;
+          }),
+        };
+      });
 
-            if (!navigator.onLine) {
-                const offlineTx = {
-                    ...newTx,
-                    id: `offline_${Date.now()}`,
-                    categoryColor: newTx.type === 'EXPENSE' ? '#b92910' : '#059669',
-                    category: 'Pending Sync...',
-                    categoryIcon: '',
-                    isOffline: true
-                };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                queryClient.setQueryData(['transactions', search, type], (old: any) => {
-                    if (!old) return old;
-                    return {
-                        ...old,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        pages: old.pages.map((page: any, index: number) => {
-                            if (index === 0) {
-                                return {
-                                    ...page,
-                                    data: [offlineTx, ...page.data]
-                                };
-                            }
-                            return page;
-                        })
-                    };
-                });
-            }
+      return { previousTransactions };
+    },
+    onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (data && (data as any).isOffline) {
+        toast.success("Transaksi disimpan secara offline!");
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        toast.success("Transaksi berhasil ditambahkan!");
+      }
+    },
+    onError: (error: AxiosError<ErrorResponse>, _, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          ["transactions", search, type],
+          context.previousTransactions,
+        );
+      }
+      toast.error(
+        error.response?.data?.message || "Gagal menambahkan transaksi",
+      );
+    },
+  });
 
-            return { previousTransactions };
-        },
-        onSuccess: (data) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (data && (data as any).isOffline) {
-                toast.success("Transaksi disimpan secara offline!");
-            } else {
-                queryClient.invalidateQueries({ queryKey: ['transactions'] });
-                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-                queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-                toast.success("Transaksi berhasil ditambahkan!");
-            }
-        },
-        onError: (error: AxiosError<ErrorResponse>, _, context) => {
-            if (context?.previousTransactions) {
-                queryClient.setQueryData(['transactions', search, type], context.previousTransactions);
-            }
-            toast.error(error.response?.data?.message || "Gagal menambahkan transaksi");
-        }
-    });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!navigator.onLine) {
+        await addPendingMutation({
+          id: `del_${id}`,
+          action: "DELETE",
+          data: { id },
+        });
+        return { id, isOffline: true };
+      }
+      const res = await axiosClient.delete(`/transactions/${id}`);
+      return res.data;
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({
+        queryKey: ["transactions", search, type],
+      });
+      const previousTransactions = queryClient.getQueryData([
+        "transactions",
+        search,
+        type,
+      ]);
 
-    const deleteMutation = useMutation({
-        mutationFn: async (id: string) => {
-            if (!navigator.onLine) {
-                await addPendingMutation({
-                    id: `del_${id}`,
-                    action: 'DELETE',
-                    data: { id }
-                });
-                return { id, isOffline: true };
-            }
-            const res = await axiosClient.delete(`/transactions/${id}`);
-            return res.data;
-        },
-        onMutate: async (id) => {
-            await queryClient.cancelQueries({ queryKey: ['transactions', search, type] });
-            const previousTransactions = queryClient.getQueryData(['transactions', search, type]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      queryClient.setQueryData(["transactions", search, type], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            data: page.data.filter((tx: Transaction) => tx.id !== id),
+          })),
+        };
+      });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            queryClient.setQueryData(['transactions', search, type], (old: any) => {
-                if (!old) return old;
-                return {
-                    ...old,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    pages: old.pages.map((page: any) => ({
-                        ...page,
-                        data: page.data.filter((tx: Transaction) => tx.id !== id)
-                    }))
-                };
-            });
+      return { previousTransactions };
+    },
+    onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (data && (data as any).isOffline) {
+        toast.success("Transaksi dihapus secara offline!");
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+        toast.success("Transaksi berhasil dihapus!");
+      }
+    },
+    onError: (error: AxiosError<ErrorResponse>, _, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          ["transactions", search, type],
+          context.previousTransactions,
+        );
+      }
+      toast.error(error.response?.data?.message || "Gagal menghapus transaksi");
+    },
+  });
 
-            return { previousTransactions };
-        },
-        onSuccess: (data) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (data && (data as any).isOffline) {
-                toast.success("Transaksi dihapus secara offline!");
-            } else {
-                queryClient.invalidateQueries({ queryKey: ['transactions'] });
-                queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-                toast.success("Transaksi berhasil dihapus!");
-            }
-        },
-        onError: (error: AxiosError<ErrorResponse>, _, context) => {
-            if (context?.previousTransactions) {
-                queryClient.setQueryData(['transactions', search, type], context.previousTransactions);
-            }
-            toast.error(error.response?.data?.message || "Gagal menghapus transaksi");
-        }
-    });
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Omit<Transaction, "id" | "category">;
+    }) => {
+      const res = await axiosClient.patch(`/transactions/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Transaksi berhasil diperbarui!");
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
+      toast.error(
+        error.response?.data?.message || "Gagal memperbarui transaksi",
+      );
+    },
+  });
 
-    const updateMutation = useMutation({
-        mutationFn: async ({ id, data }: { id: string, data: Omit<Transaction, 'id' | 'category'> }) => {
-            const res = await axiosClient.patch(`/transactions/${id}`, data);
-            return res.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-            toast.success("Transaksi berhasil diperbarui!");
-        },
-        onError: (error: AxiosError<ErrorResponse>) => {
-            toast.error(error.response?.data?.message || "Gagal memperbarui transaksi");
-        }
-    });
+  const importCsvMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await axiosClient.post("/transactions/import-csv", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+      toast.success(`Berhasil mengimpor ${data.successCount || 0} transaksi!`);
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
+      toast.error(error.response?.data?.message || "Gagal mengimpor CSV");
+    },
+  });
 
-    const importCsvMutation = useMutation({
-        mutationFn: async (file: File) => {
-            const formData = new FormData();
-            formData.append("file", file);
-            const res = await axiosClient.post("/transactions/import-csv", formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            return res.data;
-        },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-            toast.success(`Berhasil mengimpor ${data.successCount || 0} transaksi!`);
-        },
-        onError: (error: AxiosError<ErrorResponse>) => {
-            toast.error(error.response?.data?.message || "Gagal mengimpor CSV");
-        }
-    });
-
-    return {
-        transactions: transactionsQuery.data?.pages.flatMap(p => p.data) || [],
-        totalIncome: transactionsQuery.data?.pages[0]?.totalIncome || 0,
-        totalExpense: transactionsQuery.data?.pages[0]?.totalExpense || 0,
-        isLoading: transactionsQuery.isLoading,
-        hasNextPage: transactionsQuery.hasNextPage,
-        fetchNextPage: transactionsQuery.fetchNextPage,
-        isFetchingNextPage: transactionsQuery.isFetchingNextPage,
-        createTransaction: createMutation.mutateAsync,
-        isCreating: createMutation.isPending,
-        deleteTransaction: deleteMutation.mutateAsync,
-        isDeleting: deleteMutation.isPending,
-        updateTransaction: updateMutation.mutateAsync,
-        isUpdating: updateMutation.isPending,
-        importCsvAsync: importCsvMutation.mutateAsync,
-        isImporting: importCsvMutation.isPending
-    };
+  return {
+    transactions: transactionsQuery.data?.pages.flatMap((p) => p.data) || [],
+    totalIncome: transactionsQuery.data?.pages[0]?.totalIncome || 0,
+    totalExpense: transactionsQuery.data?.pages[0]?.totalExpense || 0,
+    isLoading: transactionsQuery.isLoading,
+    hasNextPage: transactionsQuery.hasNextPage,
+    fetchNextPage: transactionsQuery.fetchNextPage,
+    isFetchingNextPage: transactionsQuery.isFetchingNextPage,
+    createTransaction: createMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    deleteTransaction: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
+    updateTransaction: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    importCsvAsync: importCsvMutation.mutateAsync,
+    isImporting: importCsvMutation.isPending,
+  };
 }
