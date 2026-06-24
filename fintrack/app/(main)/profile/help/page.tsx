@@ -47,7 +47,7 @@ const FAQ_DATA: FaqItem[] = [
     },
     {
         question: 'Apakah data saya aman?',
-        answer: 'Ya, data Anda dienkripsi dan disimpan dengan aman di server kami. Kami menggunakan autentikasi berbasis token dan tidak pernah menyimpan kata sandi dalam bentuk asli.'
+        answer: 'Ya, data Anda disimpan dengan aman di server kami. Kami menggunakan autentikasi berbasis token dan tidak pernah menyimpan kata sandi dalam bentuk asli.'
     },
     {
         question: 'Bagaimana cara mengaktifkan notifikasi?',
