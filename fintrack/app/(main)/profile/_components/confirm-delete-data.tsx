@@ -3,6 +3,7 @@
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ReusableForm } from "@/components/ui/reuseable-form";
 import { useUserSettings } from "@/hooks/use-user-settings";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 import { Trash2 } from "lucide-react";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
@@ -14,13 +15,15 @@ type ConfirmDeleteDataProps = {
 
 export function ConfirmDeleteData({ open, onOpenChange }: ConfirmDeleteDataProps) {
     const { purgeDeleteData } = useUserSettings();
+    const user = useAuthStore((s) => s.user);
     const t = useTranslations('profileEdit');
+    const hasPassword = user?.hasPassword ?? true;
 
     const confirmKeyword = t('typePlaceholder');
 
     const confimToDeleteSchema = z.object({
         confirmText: z.literal([confirmKeyword, ''], { error: t('confirmTextValidation') }),
-        deletePassword: z.string().min(1, t('passwordValidation')),
+        deletePassword: hasPassword ? z.string().min(1, t('passwordValidation')) : z.string().optional(),
     });
 
     type ConfimToDeleteValues = z.infer<typeof confimToDeleteSchema>;
@@ -79,13 +82,15 @@ export function ConfirmDeleteData({ open, onOpenChange }: ConfirmDeleteDataProps
                             autoComplete: 'off',
                             autoFocus: true
                         },
-                        {
-                            name: 'deletePassword',
-                            type: 'password',
-                            label: t('passwordLabel'),
-                            placeholder: t('passwordPlaceholder'),
-                            autoComplete: 'current-password',
-                        },
+                        ...(hasPassword
+                            ? [{
+                                name: 'deletePassword' as const,
+                                type: 'password' as const,
+                                label: t('passwordLabel'),
+                                placeholder: t('passwordPlaceholder'),
+                                autoComplete: 'current-password' as const,
+                            }]
+                            : []),
                     ]}
                     defaultValues={{
                         confirmText: '',

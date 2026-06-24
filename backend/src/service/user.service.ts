@@ -88,7 +88,8 @@ export class UserService {
             updatedAt: user.updatedAt,
             level: user.userStats?.level ?? 1,
             streak: user.userStats?.streak ?? 0,
-            badgeCount: user._count?.userBadges ?? 0
+            badgeCount: user._count?.userBadges ?? 0,
+            hasPassword: !!user.password,
         };
     }
 

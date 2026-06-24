@@ -66,7 +66,7 @@ export function useUserSettings() {
     };
 
     const purgeDeleteData = useMutation({
-        mutationFn: async (password: string) => await axiosClient.delete('/users/me/data', { data: { password }, }),
+        mutationFn: async (password?: string) => await axiosClient.delete('/users/me/data', { data: { password }, }),
         onSuccess: () => {
             toast.success("Data berhasil dihapus");
             queryClient.invalidateQueries();
