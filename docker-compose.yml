@@ -3,22 +3,20 @@ services:
     image: ${BACKEND_IMAGE:-financy-backend:latest}
     container_name: financy-api
     restart: always
-    env_file:
-      - .env
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - ML_SERVICE_URL=http://clustering:8000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - NODE_ENV=production
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - CLIENT_URL=${CLIENT_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - COOKIES_DOMAIN=${COOKIES_DOMAIN}
       - JWT_ISSUER=${JWT_ISSUER}
-      - ML_SERVICE_URL=http://clustering:8000
     ports:
       - "6789:6789"
     depends_on:
