@@ -524,23 +524,6 @@ export class AnalysisService {
     const createdCategories: any[] = [];
     let topCategoryId: string | null = null;
     let topCategoryAmount = -1;
-    // Kumpulkan pasangan (description -> category name) untuk incremental learning
-    const feedbackItems: Array<{ description: string; category: string }> = [];
-
-    // Pre-assigned juga dianggap feedback yang diterima user (tidak di-overrule)
-    if (preAssigned.length > 0) {
-      for (const pa of preAssigned) {
-        const t = transactionMap.get(pa.transactionId);
-        const desc = (t as any)?.description;
-        if (
-          typeof desc === "string" &&
-          desc.trim().length > 0 &&
-          pa.categoryName
-        ) {
-          feedbackItems.push({ description: desc, category: pa.categoryName });
-        }
-      }
-    }
 
     for (const mapping of payload.clusterMappings) {
       const clusterMeta = analysisMeta.find(
@@ -595,14 +578,6 @@ export class AnalysisService {
         category.id,
       );
 
-      // Kumpulkan feedback (description -> kategori final) utk incremental learning
-      for (const id of transactionIds) {
-        const t = transactionMap.get(id);
-        const desc = (t as any)?.description;
-        if (typeof desc === "string" && desc.trim().length > 0) {
-          feedbackItems.push({ description: desc, category: category.name });
-        }
-      }
 
       const totalAmount = transactionIds.reduce((sum: number, id: string) => {
         const t = transactionMap.get(id);
@@ -632,21 +607,6 @@ export class AnalysisService {
 
     cacheManager.delPattern(`dashboard:${payload.userId}`);
 
-    // Kirim feedback ke ML service untuk incremental learning.
-    // Fire-and-forget: jangan blok response user kalau ML service sedang lambat/down.
-    if (feedbackItems.length > 0) {
-      void AnalysisMLService.submitFeedback(feedbackItems, "analysis-confirm")
-        .then((r) => {
-          if (r) {
-            logger.info(
-              `ML feedback ingested: added=${r.added} updated=${r.updated} skipped=${r.skipped} total=${r.total}`,
-            );
-          }
-        })
-        .catch((err) => {
-          logger.warn("Failed to submit ML feedback (non-fatal):", err);
-        });
-    }
 
     try {
       const gamificationQueue = new GamificationQueue();

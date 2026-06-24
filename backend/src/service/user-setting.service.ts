@@ -16,7 +16,8 @@ export class UserSettingService {
                 currency: "IDR",
                 language: "id",
                 theme: "light",
-                showGamification: true
+                showGamification: true,
+                autoCategorize: true
             }
         }
         

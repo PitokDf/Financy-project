@@ -32,8 +32,7 @@ class TransactionInput(BaseModel):
 
 @app.get("/health")
 def health():
-    mem_stats = classifier_service.memory_stats() if classifier_service else {}
-    return {"status": "ok", "memory": mem_stats}
+    return {"status": "ok"}
 
 
 class V2AnalyzeRequest(BaseModel):
@@ -59,6 +58,8 @@ class PredictionResult(BaseModel):
 
 
 class V2AnalyzeResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     predictions: List[PredictionResult]
     duration_ms: int
     review_count: int
@@ -89,55 +90,3 @@ def analyze_v2(request: V2AnalyzeRequest):
         f"memory_hits={result.get('memory_hits', 0)}/{len(request.transactions)}"
     )
     return result
-
-
-# ---------- Incremental learning endpoints ----------
-
-
-class FeedbackItem(BaseModel):
-    description: str = Field(..., min_length=1, max_length=1000)
-    category: str = Field(..., min_length=1, max_length=200)
-
-
-class FeedbackRequest(BaseModel):
-    items: List[FeedbackItem]
-    source: str = Field("user", max_length=64)
-
-
-class FeedbackResponse(BaseModel):
-    added: int
-    updated: int
-    skipped: int
-    total: int
-
-
-@app.post("/v2/feedback", response_model=FeedbackResponse)
-def submit_feedback(request: FeedbackRequest):
-    """
-    Kirim koreksi user (description -> kategori benar) untuk dipelajari secara
-    inkremental. Tidak men-retrain classifier dasar; hanya menambah exemplar
-    memory yang di-blend saat inferensi.
-    """
-    if not request.items:
-        raise HTTPException(status_code=400, detail="Minimal 1 feedback diperlukan.")
-    if len(request.items) > 5000:
-        raise HTTPException(status_code=400, detail="Batch feedback maksimum 5000 item.")
-
-    descs = [it.description for it in request.items]
-    labels = [it.category for it in request.items]
-
-    try:
-        result = classifier_service.learn_feedback(descs, labels, source=request.source)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    logger.info(
-        f"Feedback ingested: added={result['added']} updated={result['updated']} "
-        f"skipped={result['skipped']} total={result['total']} source={request.source}"
-    )
-    return result
-
-
-@app.get("/v2/memory/stats")
-def memory_stats():
-    return classifier_service.memory_stats()

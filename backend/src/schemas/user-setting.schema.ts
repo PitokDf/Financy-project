@@ -11,6 +11,7 @@ export const updateUserSettingSchema = z.object({
   language: z.string().optional(),
   theme: z.string().optional(),
   showGamification: z.boolean().optional(),
+  autoCategorize: z.boolean().optional(),
 })
 
 export type UpdateUserSettingDTO = z.infer<typeof updateUserSettingSchema>

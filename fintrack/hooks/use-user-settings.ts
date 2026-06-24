@@ -12,6 +12,7 @@ export interface UserSettings {
     language: string;
     theme: string;
     showGamification: boolean;
+    autoCategorize: boolean;
 }
 
 export function useUserSettings() {
@@ -33,6 +34,7 @@ export function useUserSettings() {
             language: "id",
             theme: "light",
             showGamification: true,
+            autoCategorize: true,
         },
         staleTime: 1000 * 60 * 5, // 5 minutes
     });

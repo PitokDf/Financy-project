@@ -1,4 +1,5 @@
 import { config } from "@/config";
+import { AppError } from "@/errors/app-error";
 
 interface PyCluster {
   cluster_index: number;
@@ -53,6 +54,31 @@ export interface ExistingCategory {
   id: string;
   name: string;
   keywords?: string[];
+}
+
+export interface PyAlternativePrediction {
+  category: string;
+  confidence: number;
+}
+
+export interface PyPredictionResult {
+  transaction_id: string;
+  description: string;
+  predicted_category: string;
+  confidence: number;
+  review_required: boolean;
+  alternatives: PyAlternativePrediction[];
+  memory_hit?: boolean;
+  memory_similarity?: number;
+}
+
+export interface PyV2AnalyzeResponse {
+  predictions: PyPredictionResult[];
+  duration_ms: number;
+  review_count: number;
+  model_version: string;
+  memory_size?: number;
+  memory_hits?: number;
 }
 
 export class AnalysisMLService {
@@ -133,80 +159,50 @@ export class AnalysisMLService {
     };
   }
 
-  /**
-   * Kirim koreksi user ke ML service untuk pembelajaran inkremental.
-   * Fire-and-forget dari sisi UX: kalau gagal cukup log, jangan blok response.
-   */
-  static async submitFeedback(
-    items: Array<{ description: string; category: string }>,
-    source: string = "user-confirm",
-  ): Promise<{
-    added: number;
-    updated: number;
-    skipped: number;
-    total: number;
-  } | null> {
-    if (!items || items.length === 0) return null;
-
-    const response = await fetch(`${config.ML_SERVICE_URL}/v2/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, source }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`ML feedback error ${response.status}: ${error}`);
-    }
-
-    return (await response.json()) as {
-      added: number;
-      updated: number;
-      skipped: number;
-      total: number;
-    };
-  }
-
   static async runPipelineV2(
     transactions: Array<{ id: string; description: string }>,
     topK: number = 3,
     confidenceThreshold: number = 0.5,
   ) {
-    const response = await fetch(`${config.ML_SERVICE_URL}/v2/analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        transactions: transactions.map((t) => ({
-          id: t.id,
-          description: t.description,
-        })),
-        top_k: topK,
-        confidence_threshold: confidenceThreshold,
-      }),
-    });
+    try {
+      const response = await fetch(`${config.ML_SERVICE_URL}/v2/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transactions: transactions.map((t) => ({
+            id: t.id,
+            description: t.description,
+          })),
+          top_k: topK,
+          confidence_threshold: confidenceThreshold,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`ML Service error ${response.status}: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`ML Service error ${response.status}: ${error}`);
+      }
+
+      const data = (await response.json()) as PyV2AnalyzeResponse;
+
+      return {
+        predictions: data.predictions.map((p) => ({
+          transactionId: p.transaction_id,
+          description: p.description,
+          predictedCategory: p.predicted_category,
+          confidence: p.confidence,
+          reviewRequired: p.review_required ?? false,
+          alternatives: (p.alternatives ?? []).map((a) => ({
+            category: a.category,
+            confidence: a.confidence,
+          })),
+        })),
+        durationMs: data.duration_ms,
+        reviewCount: data.review_count ?? 0,
+        modelVersion: data.model_version ?? "unknown",
+      };
+    } catch (error) {
+      throw new AppError("ML service sedang tidak dapat diakses.", 503);
     }
-
-    const data = (await response.json()) as any;
-
-    return {
-      predictions: data.predictions.map((p: any) => ({
-        transactionId: p.transaction_id,
-        description: p.description,
-        predictedCategory: p.predicted_category,
-        confidence: p.confidence,
-        reviewRequired: (p.review_required as boolean) ?? false,
-        alternatives: (p.alternatives ?? []).map((a: any) => ({
-          category: a.category as string,
-          confidence: a.confidence as number,
-        })),
-      })),
-      durationMs: data.duration_ms as number,
-      reviewCount: (data.review_count as number) ?? 0,
-      modelVersion: (data.model_version as string) ?? "unknown",
-    };
   }
 }

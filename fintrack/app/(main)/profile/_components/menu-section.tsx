@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { ChevronRight, Download, Globe, HelpCircle, Moon, Shield, Trash2, User, Smartphone, AlertTriangle, Clock } from "lucide-react";
+import { ChevronRight, Download, Globe, HelpCircle, Moon, Shield, Trash2, User, Smartphone, AlertTriangle, Clock, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useUserSettings } from "@/hooks/use-user-settings";
@@ -113,6 +113,12 @@ export function MenuSection() {
                     label: 'Mode Gelap',
                     description: !mounted ? 'Memuat...' : (theme === 'dark' ? 'Mode Gelap aktif' : 'Mode Terang aktif'),
                     leftContent: <Switch checked={mounted && theme === 'dark'} onCheckedChange={handleThemeChange} />
+                },
+                {
+                    icon: Sparkles,
+                    label: 'Kategorisasi Otomatis',
+                    description: 'Kategorikan pengeluaran secara otomatis saat dicatat',
+                    leftContent: <Switch checked={settings?.autoCategorize ?? true} onCheckedChange={(v) => updateSetting('autoCategorize', v)} />
                 },
                 {
                     icon: Globe,
