@@ -237,9 +237,10 @@ model Category {
 
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-  budgetGoals  BudgetGoal[]
-  forecasts    Forecast[]
+  transactions      Transaction[]
+  budgetGoals       BudgetGoal[]
+  forecasts         Forecast[]
+  scheduledExpenses ScheduledExpense[]
 
   @@unique([userId, name])
   @@map("categories")
