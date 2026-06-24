@@ -17,7 +17,7 @@ export class AuthService {
         const user = await this.userRepo.create({
             name: data.name,
             email: data.email,
-            password: hashedPassword
+            password: hashedPassword,
         });
 
         const token = JwtUtil.generate({ ...user, user_id: user.id }, '3d');
@@ -28,6 +28,10 @@ export class AuthService {
     public changePassword = async (data: ChangePassword, email: string) => {
         const existingUser = await this.userRepo.findByEmail(email);
         if (!existingUser) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
+
+        if (!existingUser.password) {
+            throw new AppError('Akun Google SSO tidak dapat mengganti kata sandi', HttpStatus.BAD_REQUEST);
+        }
 
         const isCorrect = await BcryptUtil.compare(data.currentPassword, existingUser.password)
         if (!isCorrect) throw new AppError('Kata sandi saat ini salah');
@@ -43,6 +47,10 @@ export class AuthService {
         const user = await this.userRepo.findByEmail(data.email);
 
         if (!user) throw new AppError(Messages.INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+
+        if (!user.password) {
+            throw new AppError('Akun ini menggunakan Google SSO. Silakan masuk dengan Google.', HttpStatus.UNAUTHORIZED);
+        }
 
         const isValidPassword = await BcryptUtil.compare(data.password, user.password);
 

@@ -69,9 +69,9 @@ export class UserRepository {
         })
     }
 
-    static async create(data: Pick<User, 'name' | 'email' | 'password'>): Promise<User> {
+    static async create(data: Pick<User, 'name' | 'email'> & { password?: string }): Promise<User> {
         return prisma.user.create({
-            data,
+            data: data as any,
         });
     }
 

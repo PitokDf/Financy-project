@@ -97,6 +97,7 @@ jobs:
             rm -rf ~/financy-project/clustering/classifier_model.joblib
             rm -rf ~/financy-project/clustering/feedback_corrections.json
             mkdir -p ~/financy-project/clustering/data
+            mkdir -p ~/financy-project/clustering/model_cache
 
             # Create .env file 
             cat <<EOF > .env

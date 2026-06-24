@@ -29,6 +29,7 @@ dist/
 # Logs
 logs/
 data
+model_cache/
 *.log
 
 # Editor / OS

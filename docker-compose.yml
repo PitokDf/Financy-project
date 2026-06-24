@@ -29,8 +29,11 @@ services:
     image: ${CLUSTERING_IMAGE:-financy-clustering:latest}
     container_name: financy-clustering
     restart: always
+    environment:
+      - SENTENCE_TRANSFORMERS_HOME=/app/model_cache
     volumes:
       - ./clustering/data:/app/data
+      - ./clustering/model_cache:/app/model_cache
     ports:
       - "8001:8000"
     healthcheck:
@@ -38,7 +41,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 180s
     dns:
       - 8.8.8.8
       - 8.8.4.4

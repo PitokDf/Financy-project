@@ -12,14 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download the E5-Large model
-ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-large')"
-
-# Enable offline mode for runtime
-ENV TRANSFORMERS_OFFLINE=1
-ENV HF_HUB_OFFLINE=1
-
 # Application setup
 COPY . .
 RUN mkdir -p /app/data

@@ -148,6 +148,10 @@ export class UserService {
             throw new AppError("User tidak ditemukan", HttpStatus.NOT_FOUND);
         }
 
+        if (!user.password) {
+            throw new AppError("Akun Google SSO tidak bisa dihapus melalui metode ini", HttpStatus.BAD_REQUEST);
+        }
+
         const isPasswordValid = await BcryptUtil.compare(password, user.password);
         if (!isPasswordValid) {
             throw new AppError("Password salah. Periksa kembali password Anda.", HttpStatus.BAD_REQUEST);

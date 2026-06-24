@@ -12,6 +12,7 @@ import { ResponseUtil } from "./utils"
 import { HttpStatus } from "./constants/http-status"
 import { corsConfiguration } from "./config/cors"
 import prisma from "./config/prisma"
+import passport from "./utils/passport"
 
 const app = express()
 
@@ -40,6 +41,9 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 // Cookie parser middleware
 app.use(cookieParser())
+
+// Passport initialization
+app.use(passport.initialize());
 
 // Middleware kompresi - Mengompres body respons untuk pemuatan yang lebih cepat
 app.use(compression());
