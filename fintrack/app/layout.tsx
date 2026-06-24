@@ -66,13 +66,19 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-export default function RootLayout({
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta
           name="viewport"
@@ -96,23 +102,25 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <QueryClientLayout>{children}</QueryClientLayout>
-          <PWAProvider />
-          <Toaster
-            position="top-center"
-            richColors
-            closeButton
-            toastOptions={{
-              style: { borderRadius: "12px" },
-            }}
-          />
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryClientLayout>{children}</QueryClientLayout>
+            <PWAProvider />
+            <Toaster
+              position="top-center"
+              richColors
+              closeButton
+              toastOptions={{
+                style: { borderRadius: "12px" },
+              }}
+            />
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

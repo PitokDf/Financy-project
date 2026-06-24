@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useGamification } from '@/hooks/use-gamification';
 import Link from 'next/link';
 import ProfileSkeleton from './_components/skeleton';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function ProfilePage() {
     const { user, logout, updateUser } = useAuthStore();
@@ -21,6 +22,8 @@ export default function ProfilePage() {
     const { stats, progressToNextLevel, xpToNextLevel } = useGamification()
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const router = useRouter();
+    const locale = useLocale();
+    const t = useTranslations('profile');
 
     useEffect(() => {
         if (profileQuery.data) {
@@ -33,8 +36,8 @@ export default function ProfilePage() {
         : 'FT';
 
     const joinDate = user?.createdAt
-        ? new Date(user.createdAt).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
-        : 'Baru saja';
+        ? new Date(user.createdAt).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })
+        : t('justNow');
 
     if (loadingQuery) return <ProfileSkeleton />
 
@@ -53,9 +56,9 @@ export default function ProfilePage() {
     const userBadgeCount = user?.badgeCount ?? 0;
 
     const STATS = [
-        { label: 'Level', value: userLevel.toString(), icon: Star, color: 'text-amber-500' },
-        { label: 'Streak', value: userStreak.toString(), icon: Flame, color: 'text-orange-500' },
-        { label: 'Badge', value: userBadgeCount.toString(), icon: Award, color: 'text-primary', link: '/achievements' },
+        { label: t('level'), value: userLevel.toString(), icon: Star, color: 'text-amber-500' },
+        { label: t('streak'), value: userStreak.toString(), icon: Flame, color: 'text-orange-500' },
+        { label: t('badge'), value: userBadgeCount.toString(), icon: Award, color: 'text-primary', link: '/achievements' },
     ];
 
     return (
@@ -79,14 +82,16 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             <div className="flex-1 pb-1">
-                                <h2 className="font-bold text-lg text-white leading-tight">{user?.name ?? 'Pengguna'}</h2>
+                                <h2 className="font-bold text-lg text-white leading-tight">{user?.name ?? (locale === 'id' ? 'Pengguna' : 'User')}</h2>
                                 <p className="text-xs text-muted-foreground">{user?.email}</p>
                             </div>
                         </div>
 
                         <div className="mt-4 bg-muted/30 p-3 rounded-2xl border border-border/50 shadow-inner">
                             <div className="flex justify-between items-center mb-1.5">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Progress ke Level {userLevel + 1}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    {t('progressToLevel', { level: userLevel + 1 })}
+                                </span>
                                 <span className="text-[10px] font-black text-primary">{Math.round(progressToNextLevel)}%</span>
                             </div>
                             <div className="h-2 bg-muted rounded-full overflow-hidden border border-border/50">
@@ -98,7 +103,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             <p className="text-[9px] text-muted-foreground text-center mt-1.5 font-medium">
-                                Butuh {xpToNextLevel} XP lagi untuk naik level
+                                {t('xpRemaining', { xp: xpToNextLevel })}
                             </p>
                         </div>
 
@@ -133,7 +138,7 @@ export default function ProfilePage() {
                     onClick={() => setShowLogoutDialog(prev => !prev)}
                 >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Keluar dari Akun
+                    {t('logout')}
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground pb-2">
@@ -144,10 +149,10 @@ export default function ProfilePage() {
             <ConfirmDialog
                 open={showLogoutDialog}
                 onOpenChange={setShowLogoutDialog}
-                title="Keluar dari Akun?"
-                description="Anda harus masuk kembali untuk mencatat dan mengakses data transaksi keuangan Anda."
+                title={t('logoutTitle')}
+                description={t('logoutDesc')}
                 icon={<LogOut className="w-6 h-6 text-red-500" />}
-                confirmLabel="Ya, Keluar"
+                confirmLabel={t('logoutConfirm')}
                 confirmVariant="destructive"
                 onConfirm={handleLogout}
                 confirmLoading={logoutLoading}

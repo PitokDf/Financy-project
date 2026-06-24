@@ -14,6 +14,7 @@ import { ExportDialog } from "./export-dialog";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { ConfirmDeleteData } from "./confirm-delete-data";
+import { useLocale, useTranslations } from 'next-intl';
 
 interface MenuItem {
     icon: React.ElementType;
@@ -36,6 +37,9 @@ export function MenuSection() {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const router = useRouter()
     const mounted = true
+    const locale = useLocale()
+    const t = useTranslations('profile')
+    const tCommon = useTranslations('common')
 
     const handleThemeChange = (isDark: boolean) => {
         const newTheme = isDark ? 'dark' : 'light';
@@ -63,29 +67,29 @@ export function MenuSection() {
 
     const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
         {
-            title: 'Akun',
+            title: t('account'),
             items: [
                 {
                     icon: User,
-                    label: 'Edit Profil',
-                    description: 'Ubah nama dan foto profil',
+                    label: t('editProfile'),
+                    description: t('editProfileDesc'),
                     action: () => router.push('/profile/edit-profile'),
                 },
                 {
                     icon: Shield,
-                    label: 'Keamanan',
-                    description: 'Ubah kata sandi & autentikasi',
+                    label: t('security'),
+                    description: t('securityDesc'),
                     action: () => router.push('/profile/change-password'),
                 },
             ],
         },
         {
-            title: 'Notifikasi & Peringatan',
+            title: t('notifications'),
             items: [
                 {
                     icon: Smartphone,
-                    label: 'Push Notification',
-                    description: !mounted ? 'Memuat...' : (isSubscribed ? 'Aktif (Perangkat ini)' : 'Tidak aktif'),
+                    label: t('pushNotification'),
+                    description: !mounted ? tCommon('loading') : (isSubscribed ? t('pushNotificationActive') : t('pushNotificationInactive')),
                     leftContent: <Switch
                         checked={mounted && isSubscribed && (settings?.pushNotifications ?? true)}
                         onCheckedChange={handlePushToggle}
@@ -93,65 +97,74 @@ export function MenuSection() {
                 },
                 {
                     icon: AlertTriangle,
-                    label: 'Peringatan Anggaran',
-                    description: 'Saat anggaran hampir habis',
+                    label: t('budgetAlert'),
+                    description: t('budgetAlertDesc'),
                     leftContent: <Switch checked={settings?.budgetAlerts ?? true} onCheckedChange={(v) => updateSetting('budgetAlerts', v)} />
                 },
                 {
                     icon: Clock,
-                    label: 'Pengingat Harian',
-                    description: 'Ingatkan mencatat transaksi (20:00)',
+                    label: t('dailyReminder'),
+                    description: t('dailyReminderDesc'),
                     leftContent: <Switch checked={settings?.dailyReminder ?? true} onCheckedChange={(v) => updateSetting('dailyReminder', v)} />
                 },
             ],
         },
         {
-            title: 'Preferensi',
+            title: t('preferences'),
             items: [
                 {
                     icon: Moon,
-                    label: 'Mode Gelap',
-                    description: !mounted ? 'Memuat...' : (theme === 'dark' ? 'Mode Gelap aktif' : 'Mode Terang aktif'),
+                    label: t('darkMode'),
+                    description: !mounted ? tCommon('loading') : (theme === 'dark' ? t('darkModeActive') : t('darkModeInactive')),
                     leftContent: <Switch checked={mounted && theme === 'dark'} onCheckedChange={handleThemeChange} />
                 },
                 {
                     icon: Sparkles,
-                    label: 'Kategorisasi Otomatis',
-                    description: 'Kategorikan pengeluaran secara otomatis saat dicatat',
+                    label: t('autoCategorize'),
+                    description: t('autoCategorizeDesc'),
                     leftContent: <Switch checked={settings?.autoCategorize ?? true} onCheckedChange={(v) => updateSetting('autoCategorize', v)} />
                 },
                 {
                     icon: Globe,
-                    label: 'Bahasa',
-                    description: 'Indonesia (ID)',
-                    action: () => toast.info('Fitur dalam pengembangan'),
+                    label: t('language'),
+                    description: t('languageActive'),
+                    action: () => {
+                        const newLocale = locale === 'id' ? 'en' : 'id';
+                        document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+                        if (newLocale === 'en') {
+                            toast.success('Language changed to English');
+                        } else {
+                            toast.success('Bahasa berhasil diubah ke Indonesia');
+                        }
+                        router.refresh();
+                    },
                 },
             ],
         },
         {
-            title: 'Data',
+            title: t('data'),
             items: [
                 {
                     icon: Download,
-                    label: 'Ekspor Data',
-                    description: 'Unduh laporan keuangan',
+                    label: t('exportData'),
+                    description: t('exportDataDesc'),
                     action: () => setShowExportDialog(true),
                 },
                 {
                     icon: Trash2,
-                    label: 'Hapus Semua Data',
-                    description: 'Tindakan tidak dapat diurungkan',
+                    label: t('deleteData'),
+                    description: t('deleteDataDesc'),
                     action: () => setShowDeleteDialog(true),
                     isDanger: true,
                 },
             ],
         },
         {
-            title: 'Lainnya',
+            title: t('others'),
             items: [
                 {
                     icon: HelpCircle,
-                    label: 'Bantuan & Dukungan',
+                    label: t('help'),
                     action() {
                         router.push('/profile/help')
                     },
