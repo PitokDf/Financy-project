@@ -16,37 +16,39 @@ passport.deserializeUser(async (id: string, done) => {
     }
 });
 
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: config.GOOGLE_CLIENT_ID,
-            clientSecret: config.GOOGLE_CLIENT_SECRET,
-            callbackURL: config.GOOGLE_CALLBACK_URL,
-        },
-        async (_accessToken: string, _refreshToken: string, profile: Profile, done) => {
-            try {
-                const email = profile.emails?.[0]?.value;
-                if (!email) {
-                    return done(new Error("No email found from Google profile"), undefined);
+if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET) {
+    passport.use(
+        new GoogleStrategy(
+            {
+                clientID: config.GOOGLE_CLIENT_ID,
+                clientSecret: config.GOOGLE_CLIENT_SECRET,
+                callbackURL: config.GOOGLE_CALLBACK_URL,
+            },
+            async (_accessToken: string, _refreshToken: string, profile: Profile, done) => {
+                try {
+                    const email = profile.emails?.[0]?.value;
+                    if (!email) {
+                        return done(new Error("No email found from Google profile"), undefined);
+                    }
+
+                    let user = await UserRepository.findByEmail(email);
+
+                    if (!user) {
+                        user = await UserRepository.create({
+                            name: profile.displayName,
+                            email,
+                        });
+                    } else if (user.password) {
+                        return done(null, false, { message: "Email sudah terdaftar. Silakan masuk menggunakan kata sandi." });
+                    }
+
+                    return done(null, user);
+                } catch (error) {
+                    return done(error, undefined);
                 }
-
-                let user = await UserRepository.findByEmail(email);
-
-                if (!user) {
-                    user = await UserRepository.create({
-                        name: profile.displayName,
-                        email,
-                    });
-                } else if (user.password) {
-                    return done(null, false, { message: "Email sudah terdaftar. Silakan masuk menggunakan kata sandi." });
-                }
-
-                return done(null, user);
-            } catch (error) {
-                return done(error, undefined);
             }
-        }
-    )
-);
+        )
+    );
+}
 
 export default passport;
