@@ -44,7 +44,7 @@ export function TransactionForm({
       jumlah: initialValues?.jumlah || 0,
       type: initialValues?.type || ("EXPENSE" as const),
       category: initialValues?.category || "",
-      date: initialValues?.date || new Date().toISOString(),
+      date: initialValues?.date || new Date().toLocaleDateString('en-CA'),
     }),
     [initialValues],
   );
