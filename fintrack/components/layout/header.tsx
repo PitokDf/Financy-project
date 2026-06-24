@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 
+import { useTranslations } from "next-intl";
+
 interface HeaderProps {
   title?: string;
   showAvatar?: boolean;
@@ -23,19 +25,6 @@ interface HeaderProps {
   onNotificationClick?: () => void;
   onProfileClick?: () => void;
 }
-
-const ROUTE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/transactions": "Transaksi",
-  "/analysis": "Analisis Pola",
-  "/analysis/lab": "AI Lab",
-  "/budget": "Anggaran Bulanan",
-  "/notifications": "Notifikasi",
-  "/achievements": "Pencapaian",
-  "/profile/change-password": "Ganti Password",
-  "/profile/edit-profile": "Edit Profil",
-  "/profile/help": "Bantuan & Dukungan",
-};
 
 export function Header({
   title,
@@ -56,6 +45,20 @@ export function Header({
   const { user } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("header");
+
+  const ROUTE_TITLES: Record<string, string> = {
+    "/dashboard": t("dashboard"),
+    "/transactions": t("transactions"),
+    "/analysis": t("analysis"),
+    "/analysis/lab": t("analysisLab"),
+    "/budget": t("budget"),
+    "/notifications": t("notifications"),
+    "/achievements": t("achievements"),
+    "/profile/change-password": t("changePassword"),
+    "/profile/edit-profile": t("editProfile"),
+    "/profile/help": t("help"),
+  };
 
   const resolvedTitle = title ?? ROUTE_TITLES[pathname] ?? "FinTrack";
   const enableNotification = showNotification ?? showAvatar;
@@ -72,10 +75,10 @@ export function Header({
 
   const greeting = (() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Selamat pagi";
-    if (hour < 15) return "Selamat siang";
-    if (hour < 18) return "Selamat sore";
-    return "Selamat malam";
+    if (hour < 12) return t("greetingMorning");
+    if (hour < 15) return t("greetingAfternoon");
+    if (hour < 18) return t("greetingEvening");
+    return t("greetingNight");
   })();
 
   const handleBack = () => {
@@ -155,7 +158,7 @@ export function Header({
                       ,
                     </span>
                     <h1 className="text-sm font-bold text-foreground leading-tight truncate">
-                      {user?.name ?? "Pengguna"}
+                      {user?.name ?? t("userFallback")}
                     </h1>
                   </div>
                 ) : (

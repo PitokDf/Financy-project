@@ -5,23 +5,20 @@ import { ReusableForm, FormFieldConfig } from "@/components/ui/reuseable-form";
 import { useBudgets } from "@/hooks/use-budgets";
 import { useCategories } from "@/hooks/use-categories";
 import { Target, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-const budgetSchema = z.object({
-    categoryId: z.string().min(1, "Kategori harus dipilih"),
-    amount: z.number().min(1000, "Anggaran minimal Rp 1.000"),
-    period: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]).default("MONTHLY"),
-});
-
-type BudgetFormValues = z.infer<typeof budgetSchema>;
-
-interface AddBudgetDialogProps {
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-}
-
-export function AddBudgetDialog({ isOpen, onOpenChange }: AddBudgetDialogProps) {
+export function AddBudgetDialog({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
+    const t = useTranslations('budget');
     const { createBudget } = useBudgets();
     const { categories, isLoading: isLoadingCategories } = useCategories();
+
+    const budgetSchema = z.object({
+        categoryId: z.string().min(1, t('validationCategory')),
+        amount: z.number().min(1000, t('validationAmount')),
+        period: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]).default("MONTHLY"),
+    });
+
+    type BudgetFormValues = z.infer<typeof budgetSchema>;
 
     const expenseCategories = categories
         .filter(c => c.type === 'EXPENSE')
@@ -33,29 +30,29 @@ export function AddBudgetDialog({ isOpen, onOpenChange }: AddBudgetDialogProps) 
     const fields: FormFieldConfig<BudgetFormValues>[] = [
         {
             name: "period",
-            label: "Periode",
+            label: t('period'),
             type: "segmented-control",
             options: [
-                { label: "Mingguan", value: "WEEKLY" },
-                { label: "Bulanan", value: "MONTHLY" },
-                { label: "Tahunan", value: "YEARLY" },
+                { label: t('weekly'), value: "WEEKLY" },
+                { label: t('monthly'), value: "MONTHLY" },
+                { label: t('yearly'), value: "YEARLY" },
             ],
             colSpan: "full"
         },
         {
             name: "categoryId",
-            label: "Kategori",
+            label: t('category'),
             type: "chips",
             className: "w-full",
-            placeholder: "Pilih kategori anggaran",
+            placeholder: t('selectCategory'),
             options: expenseCategories,
             disabled: isLoadingCategories,
         },
         {
             name: "amount",
-            label: "Jumlah Anggaran",
+            label: t('budgetAmount'),
             type: "currency",
-            placeholder: "Masukkan jumlah anggaran",
+            placeholder: t('enterBudgetAmount'),
         },
     ];
 
@@ -69,8 +66,7 @@ export function AddBudgetDialog({ isOpen, onOpenChange }: AddBudgetDialogProps) 
             withDialog
             isDialogOpen={isOpen}
             onDialogOpenChange={onOpenChange}
-            dialogTitle="Atur Anggaran Baru"
-            // dialogDescription="Tentukan limit pengeluaran untuk kategori tertentu agar keuangan tetap terkontrol."
+            dialogTitle={t('newBudgetTitle')}
             schema={budgetSchema}
             fields={fields}
             onSubmit={handleSubmit}
@@ -79,8 +75,8 @@ export function AddBudgetDialog({ isOpen, onOpenChange }: AddBudgetDialogProps) 
                 amount: 0,
                 period: "MONTHLY"
             }}
-            submitText="Simpan Anggaran"
-            loadingText="Menyimpan..."
+            submitText={t('saveBudget')}
+            loadingText={t('saving')}
             isLoading={createBudget.isPending}
         />
     );

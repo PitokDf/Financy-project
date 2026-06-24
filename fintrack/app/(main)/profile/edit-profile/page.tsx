@@ -4,9 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { UserCircle, Loader2 } from 'lucide-react';
 import { UpdateProfileForm } from '../_components/update-profile-form';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslations } from 'next-intl';
 
 export default function EditProfilePage() {
     const { profileQuery } = useAuth();
+    const t = useTranslations('profileEdit');
     
     if (profileQuery.isLoading) {
         return (
@@ -27,10 +29,10 @@ export default function EditProfilePage() {
                         </div>
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">
-                                Informasi Pribadi
+                                {t('personalInfo')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                Perbarui nama dan alamat email Anda. Pastikan email yang Anda masukkan valid.
+                                {t('profileDesc')}
                             </p>
                         </div>
                     </div>

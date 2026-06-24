@@ -22,6 +22,7 @@ import {
   useTransactionsPage,
 } from "./use-transactions-page";
 import { Suspense, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TransactionsSkeleton } from "./_components/skeleton";
 import { useSecureMode } from "@/hooks/use-secure";
 import { useSearchParams } from "next/navigation";
@@ -40,6 +41,7 @@ function TransactionsContent() {
 
   const [editData, setEditData] = useState<Transaction | null>(null);
   console.log(editData);
+  const t = useTranslations("transactions");
 
   const {
     search,
@@ -81,7 +83,7 @@ function TransactionsContent() {
             <div className="flex items-center gap-1.5 mb-1">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                Pemasukan
+                {t("income")}
               </span>
             </div>
             <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
@@ -92,7 +94,7 @@ function TransactionsContent() {
             <div className="flex items-center gap-1.5 mb-1">
               <TrendingDown className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
               <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                Pengeluaran
+                {t("expense")}
               </span>
             </div>
             <p className="text-base font-bold text-red-600 dark:text-red-400">
@@ -104,7 +106,7 @@ function TransactionsContent() {
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Cari transaksi..."
+            placeholder={t("search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-11 rounded-xl pr-9"
@@ -136,10 +138,10 @@ function TransactionsContent() {
               )}
             >
               {f === "ALL"
-                ? "Semua"
+                ? t("all")
                 : f === "INCOME"
-                  ? "Pemasukan"
-                  : "Pengeluaran"}
+                  ? t("income")
+                  : t("expense")}
             </button>
           ))}
         </div>
@@ -151,9 +153,9 @@ function TransactionsContent() {
           <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
             <Search className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="font-semibold text-foreground">Tidak ada transaksi</p>
+          <p className="font-semibold text-foreground">{t("noTx")}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Coba ubah kata kunci pencarian
+            {t("noTxDesc")}
           </p>
         </div>
       ) : (
@@ -174,7 +176,7 @@ function TransactionsContent() {
                       </p>
                       <div className="flex-1 h-px bg-border" />
                       <p className="text-xs text-muted-foreground">
-                        {item.count} transaksi
+                        {t("txCount", { count: item.count })}
                       </p>
                     </div>
                   ) : (
@@ -208,7 +210,7 @@ function TransactionsContent() {
           size="icon"
           onClick={() => setShowImportModal(true)}
           className="w-12 h-12 rounded-2xl bg-secondary text-foreground/70 hover:text-foreground hover:bg-secondary/80 active:scale-95 transition-all duration-200 shadow-none border-0 ml-auto"
-          aria-label="Import CSV"
+          aria-label={t("importCsv")}
         >
           <Import className="w-4.5 h-4.5" strokeWidth={2} />
         </Button>
@@ -219,7 +221,7 @@ function TransactionsContent() {
             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
           }}
           onClick={() => setShowAddModal(true)}
-          aria-label="Tambah transaksi"
+          aria-label={t("addTx")}
         >
           <Plus className="w-6 h-6 text-white" />
         </Button>
@@ -227,8 +229,8 @@ function TransactionsContent() {
 
       <ConfirmDialog
         icon={<Trash2 className="text-red-500" />}
-        title="Hapus Transaksi"
-        description="Apakah anda yakin ingin menghapus transaksi ini?"
+        title={t("deleteTxTitle")}
+        description={t("deleteTxDesc")}
         onConfirm={handleDeleteTransaction}
         onCancel={() => {
           setShowDeleteModal(false);

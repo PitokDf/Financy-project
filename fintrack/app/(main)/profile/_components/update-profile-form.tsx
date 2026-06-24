@@ -1,14 +1,10 @@
+'use client';
+
 import { ReusableForm } from '@/components/ui/reuseable-form';
 import { useAuth } from '@/hooks/use-auth';
 import { User, Mail } from 'lucide-react';
-import z from 'zod'
-
-const updateProfileSchema = z.object({
-    name: z.string().min(3, 'Minimal 3 karakter'),
-    email: z.string().email('Email tidak valid').optional().or(z.literal('')),
-});
-
-export type UpdateProfileValues = z.infer<typeof updateProfileSchema>;
+import z from 'zod';
+import { useTranslations } from 'next-intl';
 
 interface UpdateProfileFormProps {
     initialData?: {
@@ -19,21 +15,29 @@ interface UpdateProfileFormProps {
 
 export function UpdateProfileForm({ initialData }: UpdateProfileFormProps) {
     const { updateProfileMutation } = useAuth();
+    const t = useTranslations('profileEdit');
+
+    const updateProfileSchema = z.object({
+        name: z.string().min(3, t('minCharacters', { count: 3 })),
+        email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
+    });
+
+    type UpdateProfileValues = z.infer<typeof updateProfileSchema>;
 
     return (
         <ReusableForm<UpdateProfileValues>
             fields={[
                 {
-                    label: 'Nama Lengkap',
+                    label: t('fullName'),
                     name: 'name',
-                    placeholder: 'Masukkan nama lengkap Anda',
+                    placeholder: t('fullNamePlaceholder'),
                     type: 'text',
                     icon: User
                 },
                 {
-                    label: 'Alamat Email',
+                    label: t('emailAddress'),
                     name: 'email',
-                    placeholder: 'Masukkan alamat email Anda',
+                    placeholder: t('emailAddressPlaceholder'),
                     type: 'email',
                     icon: Mail
                 }
@@ -44,7 +48,7 @@ export function UpdateProfileForm({ initialData }: UpdateProfileFormProps) {
             }}
             schema={updateProfileSchema}
             onSubmit={(values) => updateProfileMutation({ ...values, email: values.email || undefined })}
-            submitText={'Simpan Perubahan'}
+            submitText={t('saveChanges')}
         />
-    )
+    );
 }

@@ -5,8 +5,8 @@ import z from "zod";
 import { Category } from "@/hooks/use-categories";
 
 export const transactionSchema = z.object({
-  description: z.string().min(5, "Deskripsi minimal 5 karakter"),
-  jumlah: z.number().min(1, "Nominal minimal Rp 1"),
+  description: z.string().min(5),
+  jumlah: z.number().min(1),
   type: z.enum(["EXPENSE", "INCOME"]),
   category: z.string().optional(),
   date: z.string(),
@@ -14,9 +14,12 @@ export const transactionSchema = z.object({
 
 export type TransactionValues = z.infer<typeof transactionSchema>;
 
+type TFn = (key: string) => string;
+
 export const getTransactionFormFields = (
   categories: Category[],
   onAddCategory: () => void,
+  t: TFn,
 ): FormFieldConfig<TransactionValues>[] => {
   const expenseOptions = categories
     .filter((c) => c.type === "EXPENSE")
@@ -38,13 +41,13 @@ export const getTransactionFormFields = (
       type: "segmented-control",
       options: [
         {
-          label: "Pengeluaran",
+          label: t('expense'),
           value: "EXPENSE",
           activeBgClass: "bg-red-500",
           activeTextClass: "text-white",
         },
         {
-          label: "Pemasukan",
+          label: t('income'),
           value: "INCOME",
           activeBgClass: "bg-emerald-500",
           activeTextClass: "text-white",
@@ -54,20 +57,20 @@ export const getTransactionFormFields = (
     },
     {
       name: "jumlah",
-      label: "Nominal",
+      label: t('amount'),
       placeholder: "0",
       type: "currency",
     },
     {
       name: "category",
-      label: "Kategori Pengeluaran",
+      label: t('expenseCategory'),
       type: "chips",
       condition: (values) => values.type === "EXPENSE",
-      options: [{ label: "Dikategorikan AI", value: "" }, ...expenseOptions],
+      options: [{ label: t('aiCategorized'), value: "" }, ...expenseOptions],
     },
     {
       name: "category",
-      label: "Kategori Pemasukan",
+      label: t('incomeCategory'),
       typeResolver() {
         return incomeOptions.length > 0 ? "chips" : "custom";
       },
@@ -81,19 +84,19 @@ export const getTransactionFormFields = (
             onClick: onAddCategory,
             className: "border rounded-md p-2",
           },
-          "+ Tambah Kategori",
+          t('addCategory'),
         ),
     },
     {
       name: "date",
       type: "date",
-      label: "Tanggal Transaksi",
+      label: t('date'),
       className: "h-12 rounded-xl",
     },
     {
       name: "description",
-      label: "Catatan",
-      placeholder: "Tuliskan catatan transaksi kamu (minimal 12 karakter)...",
+      label: t('notes'),
+      placeholder: t('notesPlaceholder'),
       type: "textarea",
       className: "resize-none h-24 rounded-xl",
     },
@@ -108,7 +111,7 @@ export const getTransactionFormFields = (
             className:
               "text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 w-full text-center p-2 rounded-xl border border-dashed border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all mt-2",
           },
-          "+ Buat Kategori Baru",
+          t('createCategory'),
         ),
     },
   ];

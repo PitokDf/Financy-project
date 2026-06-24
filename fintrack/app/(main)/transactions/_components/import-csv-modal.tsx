@@ -8,6 +8,7 @@ import { useTransactions } from "@/hooks/use-transactions";
 import { UploadCloud, FileText, X, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface ImportCsvModalProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
     const { importCsvAsync, isImporting } = useTransactions();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const t = useTranslations('txForm');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) setSelectedFile(e.target.files[0]);
@@ -28,7 +30,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (file?.name.endsWith('.csv')) setSelectedFile(file);
-        else toast.error('Hanya file .CSV yang diterima');
+        else toast.error(t('onlyCsvError'));
     };
 
     useEffect(() => {
@@ -40,7 +42,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
             await cache.delete('/shared-file');
             const file = new File([blob], 'transactions.csv', { type: 'text/csv' });
             setSelectedFile(file);
-            toast.info(`File diterima: ${file.name}`);
+            toast.info(t('fileReceived', { name: file.name }));
         };
         fetchShared();
     }, []);
@@ -75,10 +77,10 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                         </div>
                         <div>
                             <DialogTitle className="text-base font-bold leading-none mb-0.5">
-                                Import CSV
+                                {t('importCsvTitle')}
                             </DialogTitle>
                             <DialogDescription className="text-[11px] text-muted-foreground leading-none mt-0">
-                                Tanggal · Deskripsi · Nominal · Tipe
+                                {t('importCsvSubtitle')}
                             </DialogDescription>
                         </div>
                     </div>
@@ -109,7 +111,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                                 )} />
                             </div>
                             <p className="text-sm font-semibold text-foreground">
-                                {isDragging ? 'Lepaskan di sini' : 'Pilih atau seret file'}
+                                {isDragging ? t('dropHere') : t('chooseOrDrag')}
                             </p>
                             <p className="text-[11px] text-muted-foreground mt-1">Format .CSV</p>
                             <input
@@ -142,7 +144,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                                 <button
                                     onClick={() => setSelectedFile(null)}
                                     className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors ml-1"
-                                    aria-label="Hapus file"
+                                    aria-label={t('removeFile')}
                                 >
                                     <X className="w-3 h-3 text-muted-foreground" />
                                 </button>
@@ -153,7 +155,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                     {/* Format hint */}
                     <div className="mt-3 flex items-start gap-2">
                         <div className="flex gap-1.5 flex-wrap">
-                            {['Tanggal', 'Deskripsi', 'Nominal', 'Tipe'].map(col => (
+                            {[t('date'), t('description'), t('amount'), t('type')].map(col => (
                                 <span key={col} className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-medium text-muted-foreground border border-border/50">
                                     {col}
                                 </span>
@@ -171,7 +173,7 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                         onClick={() => onOpenChange(false)}
                         disabled={isImporting}
                     >
-                        Batal
+                        {t('cancel')}
                     </Button>
                     <Button
                         type="button"
@@ -180,8 +182,8 @@ export function ImportCsvModal({ isOpen, onOpenChange }: ImportCsvModalProps) {
                         disabled={!selectedFile || isImporting}
                     >
                         {isImporting
-                            ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Mengimpor…</>
-                            : <><UploadCloud className="w-4 h-4 mr-2" />Mulai Import</>
+                            ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{t('importing')}</>
+                            : <><UploadCloud className="w-4 h-4 mr-2" />{t('startImport')}</>
                         }
                     </Button>
                 </div>

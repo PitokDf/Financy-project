@@ -27,6 +27,7 @@ import { useSecureMode } from "@/hooks/use-secure";
 import { VoiceTransactionButton } from "@/components/shared/voice-transaction-button";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTranslations } from "next-intl";
 
 export default function DashboardPage() {
   const { stats } = useGamification();
@@ -34,6 +35,7 @@ export default function DashboardPage() {
   const { data: dashboardData, isLoading } = useDashboard();
   const { isSecure, toggle } = useSecureMode();
   const [idToDelete, setIdToDelete] = useState<string | undefined>(undefined);
+  const t = useTranslations("dashboard");
 
   if (isLoading || !dashboardData) return <DashboardSkeleton />;
 
@@ -87,7 +89,7 @@ export default function DashboardPage() {
             >
               {stats?.streak || 0}{" "}
               <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
-                Hari
+                {t("days")}
               </span>
             </span>
           </div>
@@ -99,7 +101,9 @@ export default function DashboardPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
               <Wallet className="w-4 h-4 text-white/80" />
-              <p className="text-white/80 text-xs font-medium">Saldo Total</p>
+              <p className="text-white/80 text-xs font-medium">
+                {t("totalBalance")}
+              </p>
             </div>
             <p className="text-3xl font-black text-white flex items-center justify-between gap-2 mb-4">
               {formatCurrencyWithSecure(summary.totalBalance, isSecure)}
@@ -116,7 +120,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1 mb-1">
                   <TrendingUp className="w-3 h-3 text-white/70" />
                   <p className="text-white/70 text-[10px] font-medium">
-                    Pemasukan
+                    {t("income")}
                   </p>
                 </div>
                 <p className="text-white font-bold text-sm">
@@ -127,7 +131,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1 mb-1">
                   <TrendingDown className="wDashboardSkeleton-3 h-3 text-white/70" />
                   <p className="text-white/70 text-[10px] font-medium">
-                    Pengeluaran
+                    {t("expense")}
                   </p>
                 </div>
                 <p className="text-white font-bold text-sm">
@@ -150,17 +154,12 @@ export default function DashboardPage() {
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
-                  AI Forecast Ranking
+                  {t("forecastTitle")}
                 </span>
               </div>
               <InfoTooltip
                 triggerClassName="text-white"
-                content={
-                  <p className="text-xs">
-                    Prediksi 3 kategori pengeluaran terbesar untuk bulan depan
-                    menggunakan algoritma SMA (Simple Moving Average).
-                  </p>
-                }
+                content={<p className="text-xs">{t("forecastDesc")}</p>}
               />
             </div>
 
@@ -188,7 +187,7 @@ export default function DashboardPage() {
                         {f.categoryName}
                       </p>
                       <p className="text-[10px] text-white/70 font-medium italic">
-                        Estimasi bulan depan
+                        {t("forecastEstim")}
                       </p>
                     </div>
                   </div>
@@ -207,13 +206,10 @@ export default function DashboardPage() {
       <div className=" pt-4 mb-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex gap-1 justify-center">
-            <h3 className="font-bold text-foreground">Kategori Teratas</h3>
+            <h3 className="font-bold text-foreground">{t("topCategories")}</h3>
             <InfoTooltip
               content={
-                <p className="flex-1 max-w-dvw">
-                  Kategori teratas adalah kategori dengan pengeluaran terbanyak
-                  di bulan ini.
-                </p>
+                <p className="flex-1 max-w-dvw">{t("topCategoriesDesc")}</p>
               }
             />
           </div>
@@ -221,14 +217,12 @@ export default function DashboardPage() {
             href="/analysis"
             className="text-xs text-primary font-semibold flex items-center gap-0.5"
           >
-            Selengkapnya <ChevronRight className="w-3 h-3" />
+            {t("more")} <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="space-y-2.5">
           {categories.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Belum ada pengeluaran di bulan ini.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("noExpense")}</p>
           ) : (
             categories.map((cat) => (
               <div key={cat.name} className="flex items-center gap-3">
@@ -271,18 +265,20 @@ export default function DashboardPage() {
 
       <div className="pb-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-foreground">Transaksi Terbaru</h3>
+          <h3 className="font-bold text-foreground">
+            {t("recentTransactions")}
+          </h3>
           <Link
             href="/transactions"
             className="text-xs text-primary font-semibold flex items-center gap-0.5"
           >
-            Lihat semua <ChevronRight className="w-3 h-3" />
+            {t("viewAll")} <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="space-y-2">
           {transactions.length === 0 ? (
             <div className="text-center text-muted-foreground py-4">
-              <p>Belum ada transaksi</p>
+              <p>{t("noTransaction")}</p>
             </div>
           ) : (
             transactions
@@ -314,7 +310,7 @@ export default function DashboardPage() {
             style={{
               background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
             }}
-            aria-label="Tambah transaksi"
+            aria-label={t("addTx")}
           >
             <Plus className="w-6 h-6 text-white" />
           </Button>
@@ -324,8 +320,8 @@ export default function DashboardPage() {
       {idToDelete && (
         <ConfirmDialog
           icon={<Trash2 className="text-red-500" />}
-          title="Hapus Transaksi"
-          description="Apakah anda yakin ingin menghapus transaksi ini?"
+          title={t("deleteTxTitle")}
+          description={t("deleteTxDesc")}
           onConfirm={async () => await deleteTransaction(idToDelete)}
           onCancel={() => {
             setIdToDelete("");

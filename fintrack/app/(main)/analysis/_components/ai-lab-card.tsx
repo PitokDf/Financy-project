@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface AiLabCardProps {
     isPendingConfirmation: boolean;
@@ -14,6 +15,8 @@ export function AiLabCard({
     clusterCount = 14,
     transactionCount = 62,
 }: AiLabCardProps) {
+    const t = useTranslations('analysis');
+
     /* ── RUNNING ──────────────────────────────────────────────── */
     if (isRunning) {
         return (
@@ -62,14 +65,14 @@ export function AiLabCard({
                             "
                         >
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            Memproses
+                            {t('processing')}
                         </span>
 
                         <p className="text-[16px] font-bold leading-tight text-slate-800 dark:text-white">
-                            AI sedang bekerja
+                            {t('aiWorking')}
                         </p>
                         <p className="text-[12px] mt-0.5 text-slate-400 dark:text-white/40">
-                            Memprediksi kategori {transactionCount} transaksi...
+                            {t('predictingCount', { count: transactionCount })}
                         </p>
 
                         {/* bouncing dots */}
@@ -95,7 +98,7 @@ export function AiLabCard({
                             "
                         >
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Sedang berjalan...
+                            {t('running')}
                         </button>
                     </div>
                 </div>
@@ -126,14 +129,14 @@ export function AiLabCard({
                             "
                         >
                             <AlertTriangle className="w-3 h-3" />
-                            Perlu konfirmasi
+                            {t('needConfirmation')}
                         </span>
 
                         <p className="text-[16px] font-bold leading-tight text-amber-900 dark:text-white">
-                            Hasil siap direview
+                            {t('resultsReady')}
                         </p>
                         <p className="text-[12px] mt-0.5 text-amber-700 dark:text-amber-200/60">
-                            {clusterCount} kategori ditemukan dari {transactionCount} transaksi.
+                            {t('categoriesFoundCount', { clusterCount, transactionCount })}
                         </p>
 
                         {/* alert bar */}
@@ -148,7 +151,7 @@ export function AiLabCard({
                                 <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" />
                             </span>
                             <span className="text-[11px] font-semibold flex-1 text-amber-800 dark:text-amber-200/80">
-                                Menunggu persetujuan Anda
+                                {t('waitingApproval')}
                             </span>
                             <span
                                 className="
@@ -157,7 +160,7 @@ export function AiLabCard({
                                     dark:bg-amber-400 dark:text-amber-950
                                 "
                             >
-                                {clusterCount} kategori
+                                {t('categoriesCount', { count: clusterCount })}
                             </span>
                         </div>
 
@@ -170,7 +173,7 @@ export function AiLabCard({
                                     dark:bg-white dark:text-orange-900
                                 "
                             >
-                                Review sekarang
+                                {t('reviewNow')}
                                 <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                             <div
@@ -223,15 +226,15 @@ export function AiLabCard({
                     </span>
 
                     <p className="text-[16px] font-bold text-white leading-tight">
-                        Prediksi Kategori AI
+                        {t('aiPredictionTitle')}
                     </p>
                     <p className="text-[12px] text-white/60 mt-0.5 max-w-[190px]">
-                        Tebak kategori transaksi tak berkategori secara otomatis.
+                        {t('aiPredictionDesc')}
                     </p>
 
                     <div className="flex items-center justify-between mt-3.5">
                         <button className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold bg-white/22 text-white active:bg-white/30">
-                            Mulai analisis
+                            {t('startAnalysis')}
                             <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                         <div className="w-8 h-8 rounded-full bg-white/18 flex items-center justify-center">

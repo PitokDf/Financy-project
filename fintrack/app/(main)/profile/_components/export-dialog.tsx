@@ -13,62 +13,54 @@ import { Button } from "@/components/ui/button";
 import { useExport, ExportFormat } from "@/hooks/use-export";
 import { cn } from "@/lib/utils";
 import { SelectOption } from "@/components/ui/select-option";
+import { useTranslations } from "next-intl";
 
 interface ExportDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const FORMAT_OPTIONS: {
-  value: ExportFormat;
-  label: string;
-  icon: React.ElementType;
-  description: string;
-}[] = [
-  {
-    value: "csv",
-    label: "CSV",
-    icon: FileText,
-    description: "Kompatibel dengan Excel & Sheets",
-  },
-  {
-    value: "xlsx",
-    label: "Excel",
-    icon: FileSpreadsheet,
-    description: "Format Microsoft Excel (.xlsx)",
-  },
-  {
-    value: "pdf",
-    label: "PDF",
-    icon: File,
-    description: "Laporan siap cetak & dibagikan",
-  },
-];
-
-const MONTHS = [
-  { value: 1, label: "Januari" },
-  { value: 2, label: "Februari" },
-  { value: 3, label: "Maret" },
-  { value: 4, label: "April" },
-  { value: 5, label: "Mei" },
-  { value: 6, label: "Juni" },
-  { value: 7, label: "Juli" },
-  { value: 8, label: "Agustus" },
-  { value: 9, label: "September" },
-  { value: 10, label: "Oktober" },
-  { value: 11, label: "November" },
-  { value: 12, label: "Desember" },
-];
-
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
 export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
+  const t = useTranslations('profileEdit');
   const [format, setFormat] = useState<ExportFormat>("csv");
   const [allData, setAllData] = useState(false);
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [year, setYear] = useState<number>(currentYear);
   const { exportData, isExporting } = useExport();
+
+  const FORMAT_OPTIONS: {
+    value: ExportFormat;
+    label: string;
+    icon: React.ElementType;
+    description: string;
+  }[] = [
+    {
+      value: "csv",
+      label: "CSV",
+      icon: FileText,
+      description: t('csvDesc'),
+    },
+    {
+      value: "xlsx",
+      label: "Excel",
+      icon: FileSpreadsheet,
+      description: t('xlsxDesc'),
+    },
+    {
+      value: "pdf",
+      label: "PDF",
+      icon: File,
+      description: t('pdfDesc'),
+    },
+  ];
+
+  const MONTHS = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: t(`months.${i + 1}` as any),
+  }));
 
   if (!isOpen) return null;
 
@@ -96,15 +88,15 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-5" />
 
           <h2 className="text-base font-bold text-foreground mb-1">
-            Ekspor Data
+            {t('exportTitle')}
           </h2>
           <p className="text-xs text-muted-foreground mb-5">
-            Pilih format dan periode laporan keuangan Anda
+            {t('exportSubtitle')}
           </p>
 
           {/* Format Selector */}
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-            Format
+            {t('format')}
           </p>
           <div className="grid grid-cols-3 gap-2 mb-5">
             {FORMAT_OPTIONS.map((opt) => {
@@ -133,7 +125,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           {/* Period Selector */}
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Periode
+              {t('period')}
             </p>
             <button
               onClick={() => setAllData(!allData)}
@@ -145,14 +137,14 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
               )}
             >
               <CalendarDays className="w-3 h-3" />
-              Semua Data
+              {t('allData')}
             </button>
           </div>
 
           {!allData && (
             <div className="grid grid-cols-2 gap-2 mb-5">
               <SelectOption
-                placeholder="Bulan"
+                placeholder={t('month')}
                 value={month.toString()}
                 onValueChange={(v) => setMonth(Number(v))}
                 options={MONTHS.map((m) => ({
@@ -161,7 +153,7 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
                 }))}
               />
               <SelectOption
-                placeholder="Tahun"
+                placeholder={t('year')}
                 value={year.toString()}
                 onValueChange={(v) => setYear(Number(v))}
                 options={YEARS.map((y) => ({
@@ -181,11 +173,11 @@ export function ExportDialog({ isOpen, onClose }: ExportDialogProps) {
           >
             {isExporting ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Memproses...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('processing')}
               </>
             ) : (
               <>
-                <Download className="w-4 h-4 mr-2" /> Download{" "}
+                <Download className="w-4 h-4 mr-2" /> {t('download')}{" "}
                 {format.toUpperCase()}
               </>
             )}

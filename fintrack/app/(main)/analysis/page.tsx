@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAnalysis } from '@/hooks/use-analysis';
+import { useTranslations } from 'next-intl';
 import {
     Sparkles,
     Loader2,
@@ -18,17 +19,19 @@ import { storageClient } from '@/lib/local-storage';
 import { AnalysisDashboardSkeleton } from './_components/skeleton';
 import { AiLabCard } from './_components/ai-lab-card';
 
-const RANGE_OPTIONS = [
-    { label: '7 Hari', value: '7d' as const },
-    { label: '30 Hari', value: '30d' as const },
-    { label: 'Bulan Ini', value: 'this_month' as const },
-    { label: '3 Bulan', value: '3m' as const }
-];
-
-type RangeOptionsType = typeof RANGE_OPTIONS[0]['value']
+type RangeOptionsType = '7d' | '30d' | 'this_month' | '3m';
 const RANGE_OPTIONS_KEY = 'range-options';
 
 export default function AnalysisDashboardPage() {
+    const t = useTranslations('analysis');
+
+    const RANGE_OPTIONS = [
+        { label: t('range7d'), value: '7d' as const },
+        { label: t('range30d'), value: '30d' as const },
+        { label: t('rangeMonth'), value: 'this_month' as const },
+        { label: t('range3m'), value: '3m' as const }
+    ];
+
     const [activeRange, setActiveRange] = useState<RangeOptionsType>(() => {
         if (typeof window == 'undefined') return '30d';
         return storageClient.get<RangeOptionsType>(RANGE_OPTIONS_KEY) ?? '30d'

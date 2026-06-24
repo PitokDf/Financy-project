@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 
 interface TransactionFormProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export function TransactionForm({
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [formType, setFormType] = useState<"EXPENSE" | "INCOME">("EXPENSE");
+  const t = useTranslations('txForm');
 
   initialValues && console.log("Form Initial Values:", initialValues);
 
@@ -49,8 +51,8 @@ export function TransactionForm({
 
   const formFields = useMemo(
     () =>
-      getTransactionFormFields(categories, () => setShowCategoryDialog(true)),
-    [categories],
+      getTransactionFormFields(categories, () => setShowCategoryDialog(true), t),
+    [categories, t],
   );
 
   const handleCreateCategory = async (e: React.FormEvent) => {
@@ -69,8 +71,8 @@ export function TransactionForm({
     <>
       <ReusableForm<TransactionValues>
         defaultValues={defaultValues}
-        dialogTitle="Tambah Transaksi"
-        submitText="Simpan Transaksi"
+        dialogTitle={t('addTx')}
+        submitText={t('saveTx')}
         schema={transactionSchema}
         withDialog
         fields={formFields}
@@ -88,13 +90,13 @@ export function TransactionForm({
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
         <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
-            <DialogTitle>Buat Kategori Baru</DialogTitle>
+            <DialogTitle>{t('createCategory')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateCategory} className="space-y-4 pt-4">
             <div className="space-y-2 flex flex-col">
-              <label className="text-sm font-medium">Nama Kategori</label>
+              <label className="text-sm font-medium">{t('notes')}</label>
               <Input
-                placeholder="Contoh: Belanja Bulanan"
+                placeholder={t('notesPlaceholder')}
                 className="h-11"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
@@ -109,10 +111,10 @@ export function TransactionForm({
                 onClick={() => setShowCategoryDialog(false)}
                 disabled={isCreating}
               >
-                Batal
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isCreating || !newCatName.trim()}>
-                {isCreating ? "Menyimpan..." : "Simpan Kategori"}
+                {isCreating ? t('importing') : t('saveTx')}
               </Button>
             </DialogFooter>
           </form>

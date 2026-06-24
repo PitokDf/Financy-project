@@ -6,6 +6,7 @@ import { formatCurrencyWithSecure } from '@/lib/utils';
 import { CHART_COLORS } from './constants';
 import { CategoryBreakdown as CategoryBreakdownType } from '@/hooks/use-analysis';
 import { useSecureMode } from '@/hooks/use-secure';
+import { useTranslations } from 'next-intl';
 
 interface CategoryBreakdownProps {
     categories: CategoryBreakdownType[] | undefined;
@@ -15,12 +16,13 @@ interface CategoryBreakdownProps {
 
 export function CategoryBreakdown({ categories, isLoading, totalExpense }: CategoryBreakdownProps) {
     const { isSecure } = useSecureMode();
+    const t = useTranslations('analysis');
 
     return (
         <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="text-sm font-bold flex items-center gap-2 mb-6">
                 <Tag className="w-4 h-4 text-primary" />
-                Breakdown Pengeluaran
+                {t('spendingBreakdown')}
             </h3>
 
             <div className="flex flex-col items-center gap-6">
@@ -60,7 +62,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                         </ResponsiveContainer>
                     )}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Total</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('total')}</span>
                         <span className="text-[13px] font-black">{formatCurrencyWithSecure(totalExpense, isSecure)}</span>
                     </div>
                 </div>
@@ -81,7 +83,7 @@ export function CategoryBreakdown({ categories, isLoading, totalExpense }: Categ
                         </div>
                     ))}
                     {(!categories || categories.length === 0) && !isLoading && (
-                        <p className="text-center text-xs text-muted-foreground py-8">Belum ada data pengeluaran</p>
+                        <p className="text-center text-xs text-muted-foreground py-8">{t('noExpenseData')}</p>
                     )}
                 </div>
             </div>

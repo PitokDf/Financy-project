@@ -12,12 +12,16 @@ import { BudgetPageSkeleton } from './_components/skeleton';
 import { useBudgets } from '@/hooks/use-budgets';
 import { AddBudgetDialog } from './_components/add-budget-dialog';
 import { useSearchParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 
 function BudgetContent() {
     const { budgets, isLoading, updateBudget } = useBudgets();
     const [showAddForm, setShowAddForm] = useState(false);
     const searchParams = useSearchParams();
     const budgetAlertId = searchParams.get('budgetAlert')
+    const locale = useLocale();
+    const t = useTranslations('budget');
+
     if (isLoading) {
         return <BudgetPageSkeleton />;
     }
@@ -29,7 +33,7 @@ function BudgetContent() {
     const warningCount = budgets?.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'warning').length || 0;
     const dangerCount = budgets?.filter(b => getBudgetStatus(b.spentAmount, b.amount) === 'danger').length || 0;
 
-    const currentMonth = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    const currentMonth = new Date().toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' });
 
     return (
         <div className="animate-fade-in space-y-4">
@@ -39,12 +43,12 @@ function BudgetContent() {
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                             <Target className="w-4 h-4 text-white/80" />
-                            <p className="text-white/80 text-xs font-medium">Total Anggaran {currentMonth}</p>
+                            <p className="text-white/80 text-xs font-medium">{t('totalBudget', { month: currentMonth })}</p>
                         </div>
                         <span className="text-white font-bold text-sm">{overallPercentage}%</span>
                     </div>
                     <p className="text-2xl font-black text-white mb-1">{formatCurrency(totalSpent)}</p>
-                    <p className="text-white/70 text-xs mb-3">dari {formatCurrency(totalBudget)}</p>
+                    <p className="text-white/70 text-xs mb-3">{t('from')} {formatCurrency(totalBudget)}</p>
 
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden mb-3">
                         <div
@@ -57,19 +61,19 @@ function BudgetContent() {
                         {dangerCount > 0 && (
                             <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2.5 py-1">
                                 <AlertTriangle className="w-3 h-3 text-white" />
-                                <span className="text-white text-xs font-medium">{dangerCount} terlampaui</span>
+                                <span className="text-white text-xs font-medium">{dangerCount} {t('exceeded')}</span>
                             </div>
                         )}
                         {warningCount > 0 && (
                             <div className="flex items-center gap-1.5 bg-amber-500 rounded-full px-2.5 py-1">
                                 <AlertTriangle className="w-3 h-3 text-white" />
-                                <span className="text-white text-xs font-medium">{warningCount} perhatian</span>
+                                <span className="text-white text-xs font-medium">{warningCount} {t('warning')}</span>
                             </div>
                         )}
                         {(dangerCount === 0 && warningCount === 0 && totalBudget > 0) && (
                             <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-2.5 py-1">
                                 <CheckCircle2 className="w-3 h-3 text-white" />
-                                <span className="text-white text-xs font-medium">Semua aman</span>
+                                <span className="text-white text-xs font-medium">{t('allSafe')}</span>
                             </div>
                         )}
                     </div>
@@ -77,14 +81,14 @@ function BudgetContent() {
             </div>
 
             <div className="flex items-center justify-between">
-                <h3 className="font-bold text-foreground text-sm">Rencana Anggaran</h3>
+                <h3 className="font-bold text-foreground text-sm">{t('budgetPlan')}</h3>
                 <Button
                     size="sm"
                     onClick={() => setShowAddForm(true)}
                     className="h-8 px-3 text-xs rounded-xl"
                 >
                     <Plus className="w-3.5 h-3.5 mr-1" />
-                    Tambah
+                    {t('add')}
                 </Button>
             </div>
 
@@ -92,7 +96,7 @@ function BudgetContent() {
                 {budgets?.length === 0 ? (
                     <div className="text-center py-10 bg-muted/20 border border-dashed rounded-2xl">
                         <Target className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Belum ada anggaran untuk bulan ini.</p>
+                        <p className="text-sm text-muted-foreground">{t('noBudget')}</p>
                     </div>
                 ) : (
                     budgets?.map((budget) => <div id={budget.id} key={budget.id} className={cn({
@@ -113,7 +117,7 @@ function BudgetContent() {
                         <div className="w-10 h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 group-hover:border-primary/50 flex items-center justify-center transition-colors">
                             <Plus className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-medium">Tambah Anggaran Baru</span>
+                        <span className="text-xs font-medium">{t('addNewBudget')}</span>
                     </button>
                 </CardContent>
             </Card>

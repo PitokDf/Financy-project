@@ -18,81 +18,18 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface FaqItem {
     question: string;
     answer: string;
 }
 
-const FAQ_DATA: FaqItem[] = [
-    {
-        question: 'Bagaimana cara menambahkan transaksi?',
-        answer: 'Buka halaman Dashboard atau Transaksi, lalu klik tombol "+" yang ada di tengah bawah layar. Pilih tipe transaksi (Pemasukan/Pengeluaran), isi detail, dan simpan.'
-    },
-    {
-        question: 'Bagaimana cara mengatur anggaran bulanan?',
-        answer: 'Buka menu Anggaran dari navigasi bawah. Anda bisa membuat anggaran baru per kategori untuk setiap bulan. Sistem akan memantau dan mengirim notifikasi jika pengeluaran mendekati batas.'
-    },
-    {
-        question: 'Bagaimana cara kerja kategorisasi otomatis?',
-        answer: 'Secara otomatis, FinTrack akan membaca catatan transaksi yang Anda tulis (misal: "Beli bensin") dan langsung menentukan kategori yang paling cocok (seperti "Transportasi"). Jika Anda lebih suka menentukan kategori sendiri nanti, Anda bisa mematikan fitur ini di menu Profil > Preferensi > Kategorisasi Otomatis.'
-    },
-    {
-        question: 'Apa itu fitur AI Lab?',
-        answer: 'AI Lab adalah halaman khusus untuk mengelompokkan banyak transaksi secara pintar. Jika sebelumnya Anda mematikan fitur kategorisasi otomatis dan membiarkan kategori transaksi kosong, Anda bisa masuk ke halaman ini untuk merapikan dan memberi kategori ke semua transaksi tersebut secara cepat dalam sekali klik.'
-    },
-    {
-        question: 'Bagaimana cara mengekspor data?',
-        answer: 'Buka Profil > Ekspor Data. Anda bisa memilih format (CSV, Excel, atau PDF) dan periode waktu yang diinginkan. File akan langsung terunduh ke perangkat Anda.'
-    },
-    {
-        question: 'Apakah data saya aman?',
-        answer: 'Ya, data Anda disimpan dengan aman di server kami. Kami menggunakan autentikasi berbasis token dan tidak pernah menyimpan kata sandi dalam bentuk asli.'
-    },
-    {
-        question: 'Bagaimana cara mengaktifkan notifikasi?',
-        answer: 'Buka Profil > aktifkan toggle "Notifikasi Push". Pastikan browser Anda mengizinkan notifikasi dari FinTrack. Anda akan menerima pengingat anggaran dan pencapaian.'
-    },
-];
-
 interface FeatureInfo {
     icon: React.ElementType;
     title: string;
     description: string;
 }
-
-const FEATURES: FeatureInfo[] = [
-    {
-        icon: PiggyBank,
-        title: 'Manajemen Transaksi',
-        description: 'Catat uang masuk dan uang keluar harian Anda dengan mudah. Kategori transaksi akan otomatis terisi secara pintar, dan bisa diaktifkan atau dimatikan lewat Profil.'
-    },
-    {
-        icon: BarChart3,
-        title: 'Analisis Keuangan',
-        description: 'Lihat pola pengeluaran, arus kas, dan analisis kategori dalam grafik interaktif.'
-    },
-    {
-        icon: Sparkles,
-        title: 'AI Smart Clustering',
-        description: 'Algoritma AI mengelompokkan transaksi serupa untuk membantu Anda memahami kebiasaan keuangan.'
-    },
-    {
-        icon: Download,
-        title: 'Ekspor Laporan',
-        description: 'Unduh laporan keuangan dalam format CSV, Excel, atau PDF untuk kebutuhan Anda.'
-    },
-    {
-        icon: Shield,
-        title: 'Anggaran & Planner',
-        description: 'Tetapkan anggaran per kategori dan pantau realisasinya secara real-time.'
-    },
-    {
-        icon: Bell,
-        title: 'Notifikasi Cerdas',
-        description: 'Terima pengingat saat mendekati batas anggaran dan capai pencapaian baru.'
-    },
-];
 
 function FaqAccordionItem({ item }: { item: FaqItem }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -124,6 +61,71 @@ function FaqAccordionItem({ item }: { item: FaqItem }) {
 }
 
 export default function HelpPage() {
+    const t = useTranslations('help');
+
+    const FAQ_DATA: FaqItem[] = [
+        {
+            question: t('faqData.q1'),
+            answer: t('faqData.a1')
+        },
+        {
+            question: t('faqData.q2'),
+            answer: t('faqData.a2')
+        },
+        {
+            question: t('faqData.q3'),
+            answer: t('faqData.a3')
+        },
+        {
+            question: t('faqData.q4'),
+            answer: t('faqData.a4')
+        },
+        {
+            question: t('faqData.q5'),
+            answer: t('faqData.a5')
+        },
+        {
+            question: t('faqData.q6'),
+            answer: t('faqData.a6')
+        },
+        {
+            question: t('faqData.q7'),
+            answer: t('faqData.a7')
+        },
+    ];
+
+    const FEATURES: FeatureInfo[] = [
+        {
+            icon: PiggyBank,
+            title: t('features.t1'),
+            description: t('features.d1')
+        },
+        {
+            icon: BarChart3,
+            title: t('features.t2'),
+            description: t('features.d2')
+        },
+        {
+            icon: Sparkles,
+            title: t('features.t3'),
+            description: t('features.d3')
+        },
+        {
+            icon: Download,
+            title: t('features.t4'),
+            description: t('features.d4')
+        },
+        {
+            icon: Shield,
+            title: t('features.t5'),
+            description: t('features.d5')
+        },
+        {
+            icon: Bell,
+            title: t('features.t6'),
+            description: t('features.d6')
+        },
+    ];
     return (
         <div className="animate-fade-in space-y-5">
             {/* Hero Info */}
@@ -136,10 +138,10 @@ export default function HelpPage() {
                             </div>
                             <div className="space-y-1">
                                 <p className="text-sm font-semibold text-foreground">
-                                    Pusat Bantuan FinTrack
+                                    {t('title')}
                                 </p>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Temukan jawaban atas pertanyaan umum, pelajari fitur-fitur yang tersedia, atau hubungi tim dukungan kami.
+                                    {t('desc')}
                                 </p>
                             </div>
                         </div>
@@ -150,7 +152,7 @@ export default function HelpPage() {
             {/* Quick Actions */}
             <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                    Hubungi Kami
+                    {t('contactUs')}
                 </p>
                 <Card className="border-border/50 py-0 gap-0 shadow-none divide-y divide-border/50">
                     <a
@@ -161,7 +163,7 @@ export default function HelpPage() {
                             <Mail className="w-4 h-4 text-blue-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">Email Dukungan</p>
+                            <p className="text-sm font-medium text-foreground">{t('emailSupport')}</p>
                             <p className="text-xs text-muted-foreground">pitokfauzi@pitok.my.id</p>
                         </div>
                         <ExternalLink className="w-4 h-4 text-muted-foreground/50" />
@@ -176,8 +178,8 @@ export default function HelpPage() {
                             <MessageCircle className="w-4 h-4 text-green-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">WhatsApp</p>
-                            <p className="text-xs text-muted-foreground">Chat langsung dengan developer</p>
+                            <p className="text-sm font-medium text-foreground">{t('whatsapp')}</p>
+                            <p className="text-xs text-muted-foreground">{t('whatsappDesc')}</p>
                         </div>
                         <ExternalLink className="w-4 h-4 text-muted-foreground/50" />
                     </a>
@@ -187,7 +189,7 @@ export default function HelpPage() {
             {/* FAQ Section */}
             <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                    Pertanyaan Umum (FAQ)
+                    {t('faq')}
                 </p>
                 <Card className="border-border/50 py-0 gap-0 shadow-none">
                     {FAQ_DATA.map((faq, i) => (
@@ -199,7 +201,7 @@ export default function HelpPage() {
             {/* Features Guide */}
             <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                    Fitur FinTrack
+                    {t('featuresTitle')}
                 </p>
                 <div className="grid grid-cols-1 gap-2.5">
                     {FEATURES.map((feature, i) => {

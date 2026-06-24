@@ -15,10 +15,11 @@ import {
 } from 'recharts';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id as idLocale, enUS } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
 import { FinancialStat } from '@/hooks/use-analysis';
 import { storageClient } from '@/lib/local-storage';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface CashFlowChartProps {
     stats: FinancialStat[];
@@ -29,6 +30,9 @@ type ChartType = 'bar' | 'area';
 const CHART_TYPE_KEY = 'chart-type'
 
 export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
+    const t = useTranslations('analysis');
+    const locale = useLocale();
+    const dateLocale = locale === 'id' ? idLocale : enUS;
     const [chartType, setChartType] = useState<ChartType>(() => {
         if (typeof window === 'undefined') return 'bar';
         return storageClient.get<ChartType>(CHART_TYPE_KEY) ?? 'bar';
@@ -39,20 +43,20 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-500" />
-                    Tren Arus Kas
+                    {t('cashFlowTrend')}
                 </h3>
                 <div className="flex items-center bg-muted/60 p-1 rounded-full text-xs font-semibold">
                     <button
                         onClick={() => { setChartType('bar'); storageClient.set(CHART_TYPE_KEY, 'bar') }}
                         className={`px-3 py-1 rounded-full transition-all ${chartType === 'bar' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                        Batang
+                        {t('chartBar')}
                     </button>
                     <button
                         onClick={() => { setChartType('area'); storageClient.set(CHART_TYPE_KEY, 'area') }}
                         className={`px-3 py-1 rounded-full transition-all ${chartType === 'area' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                        Tren
+                        {t('chartArea')}
                     </button>
                 </div>
             </div>
@@ -79,7 +83,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                                 <XAxis
                                     dataKey="date"
-                                    tickFormatter={(value) => format(new Date(value), 'dd MMM', { locale: id })}
+                                    tickFormatter={(value) => format(new Date(value), 'dd MMM', { locale: dateLocale })}
                                     tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
                                     axisLine={false}
                                     tickLine={false}
@@ -94,14 +98,14 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                             return (
                                                 <div className="bg-card border border-border p-3 rounded-2xl shadow-xl">
                                                     <p className="text-[10px] font-bold text-muted-foreground mb-2">
-                                                        {format(new Date(payload[0].payload.date), 'dd MMM yyyy', { locale: id })}
+                                                        {format(new Date(payload[0].payload.date), 'dd MMM yyyy', { locale: dateLocale })}
                                                     </p>
                                                     <div className="space-y-1">
                                                         <p className="text-xs font-bold text-emerald-500">
-                                                            Pemasukan: {formatCurrency(payload[0].value as number)}
+                                                            {t('income')}: {formatCurrency(payload[0].value as number)}
                                                         </p>
                                                         <p className="text-xs font-bold text-red-400">
-                                                            Pengeluaran: {formatCurrency(payload[1].value as number)}
+                                                            {t('expense')}: {formatCurrency(payload[1].value as number)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -115,7 +119,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                     height={36}
                                     iconType="circle"
                                     formatter={(value) => {
-                                        return <span className="text-xs font-semibold text-muted-foreground mr-4">{value === 'income' ? 'Pemasukan' : 'Pengeluaran'}</span>
+                                        return <span className="text-xs font-semibold text-muted-foreground mr-4">{value === 'income' ? t('income') : t('expense')}</span>
                                     }}
                                 />
                                 <Area name="income" type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
@@ -126,7 +130,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                                 <XAxis
                                     dataKey="date"
-                                    tickFormatter={(value) => format(new Date(value), 'MMM', { locale: id })}
+                                    tickFormatter={(value) => format(new Date(value), 'MMM', { locale: dateLocale })}
                                     tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
                                     axisLine={false}
                                     tickLine={false}
@@ -142,14 +146,14 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                             return (
                                                 <div className="bg-card border border-border p-3 rounded-2xl shadow-xl">
                                                     <p className="text-[10px] font-bold text-muted-foreground mb-2">
-                                                        {format(new Date(payload[0].payload.date), 'dd MMM yyyy', { locale: id })}
+                                                        {format(new Date(payload[0].payload.date), 'dd MMM yyyy', { locale: dateLocale })}
                                                     </p>
                                                     <div className="space-y-1">
                                                         <p className="text-xs font-bold text-emerald-500">
-                                                            Pemasukan: {formatCurrency(payload[0].value as number)}
+                                                            {t('income')}: {formatCurrency(payload[0].value as number)}
                                                         </p>
                                                         <p className="text-xs font-bold text-red-400">
-                                                            Pengeluaran: {formatCurrency(payload[1].value as number)}
+                                                            {t('expense')}: {formatCurrency(payload[1].value as number)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -163,7 +167,7 @@ export function CashFlowChart({ stats, isLoading }: CashFlowChartProps) {
                                     height={36}
                                     iconType="circle"
                                     formatter={(value) => {
-                                        return <span className="text-xs font-semibold text-muted-foreground mr-4">{value === 'income' ? 'Pemasukan' : 'Pengeluaran'}</span>
+                                        return <span className="text-xs font-semibold text-muted-foreground mr-4">{value === 'income' ? t('income') : t('expense')}</span>
                                     }}
                                 />
                                 <Bar

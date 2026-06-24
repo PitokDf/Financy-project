@@ -2,10 +2,11 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
-
 import { UpdatePasswordForm } from '../_components/update-password-form';
+import { useTranslations } from 'next-intl';
 
 export default function ChangePasswordPage() {
+    const t = useTranslations('profileEdit');
     return (
         <div className="animate-fade-in space-y-4">
             {/* Security Info */}
@@ -17,10 +18,10 @@ export default function ChangePasswordPage() {
                         </div>
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">
-                                Keamanan Akun
+                                {t('accountSecurity')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                Pastikan kata sandi baru Anda kuat dan berbeda dari kata sandi sebelumnya.
+                                {t('passwordDesc')}
                             </p>
                         </div>
                     </div>

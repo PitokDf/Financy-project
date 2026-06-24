@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { ConfirmDeleteData } from "./confirm-delete-data";
 import { useLocale, useTranslations } from 'next-intl';
+import { LanguageDialog } from "./language-dialog";
 
 interface MenuItem {
     icon: React.ElementType;
@@ -35,6 +36,7 @@ export function MenuSection() {
     const [showPermissionDialog, setShowPermissionDialog] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+    const [showLanguageDialog, setShowLanguageDialog] = useState(false)
     const router = useRouter()
     const mounted = true
     const locale = useLocale()
@@ -128,16 +130,7 @@ export function MenuSection() {
                     icon: Globe,
                     label: t('language'),
                     description: t('languageActive'),
-                    action: () => {
-                        const newLocale = locale === 'id' ? 'en' : 'id';
-                        document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-                        if (newLocale === 'en') {
-                            toast.success('Language changed to English');
-                        } else {
-                            toast.success('Bahasa berhasil diubah ke Indonesia');
-                        }
-                        router.refresh();
-                    },
+                    action: () => setShowLanguageDialog(true),
                 },
             ],
         },
@@ -249,6 +242,11 @@ export function MenuSection() {
             <ConfirmDeleteData
                 open={showDeleteDialog}
                 onOpenChange={setShowDeleteDialog}
+            />
+
+            <LanguageDialog
+                isOpen={showLanguageDialog}
+                onClose={() => setShowLanguageDialog(false)}
             />
         </div>
     )

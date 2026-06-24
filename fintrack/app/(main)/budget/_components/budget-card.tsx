@@ -5,6 +5,7 @@ import { MoveHorizontal } from "lucide-react";
 import { getBudgetStatus, getProgressColor, STATUS_CONFIG } from "./utils";
 import * as LucideIcon from 'lucide-react'
 import z from 'zod';
+import { useTranslations } from 'next-intl';
 
 import { BudgetItem } from "@/hooks/use-budgets";
 import { useState } from "react";
@@ -18,6 +19,7 @@ type UpdateBudgetValues = z.infer<typeof updateBudgetSchema>;
 
 export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: BudgetItem, isBudgetAlert?: boolean, onUpdate: (data: UpdateBudgetValues) => void }) {
     const [isEditing, setIsEditing] = useState(false);
+    const t = useTranslations('budget');
     const status = getBudgetStatus(budget.spentAmount, budget.amount);
     const percentage = Math.round((budget.spentAmount / budget.amount) * 100);
     const StatusIcon = STATUS_CONFIG[status].icon;
@@ -58,9 +60,9 @@ export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: Budget
                                 className={cn('text-[10px] px-1 py-2 h-4', STATUS_CONFIG[status].color, 'border-current/30')}
                             >
                                 <StatusIcon className="w-2.5 h-2.5 mr-0.5" />
-                                {STATUS_CONFIG[status].label}
+                                {t(status as 'safe' | 'warning' | 'danger')}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">{percentage}% terpakai</span>
+                            <span className="text-xs text-muted-foreground">{percentage}% {t('used')}</span>
                         </div>
                     </div>
                 </div>
@@ -80,10 +82,10 @@ export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: Budget
                         <div className="text-right">
                             {isEditing ?
                                 <p className="text-xs text-muted-foreground">
-                                    Target Harga
+                                    {t('targetAmount')}
                                 </p>
                                 : <p className="text-xs text-muted-foreground">
-                                    {remaining >= 0 ? 'Tersisa' : 'Melebihi'}
+                                    {remaining >= 0 ? t('remaining') : t('exceededTitle')}
                                 </p>
                             }
                             {isEditing ? (

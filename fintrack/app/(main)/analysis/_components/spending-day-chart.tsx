@@ -4,15 +4,16 @@ import { useMemo } from 'react';
 import { CalendarDays, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { FinancialStat } from '@/hooks/use-analysis';
+import { useTranslations, useLocale } from 'next-intl';
 
-const ORDERED_DAYS = [
-    { index: 1, short: 'Sen', full: 'Senin' },
-    { index: 2, short: 'Sel', full: 'Selasa' },
-    { index: 3, short: 'Rab', full: 'Rabu' },
-    { index: 4, short: 'Kam', full: 'Kamis' },
-    { index: 5, short: 'Jum', full: 'Jumat' },
-    { index: 6, short: 'Sab', full: 'Sabtu' },
-    { index: 0, short: 'Min', full: 'Minggu' },
+const ID_ORDERED_DAYS = [
+    { index: 1, shortKey: 'Sen', fullKey: 'Senin' },
+    { index: 2, shortKey: 'Sel', fullKey: 'Selasa' },
+    { index: 3, shortKey: 'Rab', fullKey: 'Rabu' },
+    { index: 4, shortKey: 'Kam', fullKey: 'Kamis' },
+    { index: 5, shortKey: 'Jum', fullKey: 'Jumat' },
+    { index: 6, shortKey: 'Sab', fullKey: 'Sabtu' },
+    { index: 0, shortKey: 'Min', fullKey: 'Minggu' },
 ];
 
 interface SpendingDayChartProps {
@@ -21,26 +22,28 @@ interface SpendingDayChartProps {
 }
 
 export function SpendingDayChart({ stats, isLoading }: SpendingDayChartProps) {
+    const t = useTranslations('analysis');
+
     const dayData = useMemo(() => {
-        // Akumulasikan expense & hitung kemunculan per hari
         const acc: Record<number, { total: number; count: number }> = {};
         for (let i = 0; i < 7; i++) acc[i] = { total: 0, count: 0 };
 
         for (const stat of stats) {
-            // date format: "yyyy-MM-dd" — tambahkan T00:00 agar tidak kena UTC shift
             const date = new Date(`${stat.date}T00:00:00`);
             const dow = date.getDay();
             acc[dow].total += stat.expense;
             if (stat.expense > 0) acc[dow].count += 1;
         }
 
-        return ORDERED_DAYS.map(d => ({
+        return ID_ORDERED_DAYS.map(d => ({
             ...d,
+            short: t(`days.${d.shortKey}`),
+            full: t(`days.${d.fullKey}`),
             avgExpense: acc[d.index].count > 0
                 ? acc[d.index].total / acc[d.index].count
                 : 0,
         }));
-    }, [stats]);
+    }, [stats, t]);
 
     const maxExpense = Math.max(...dayData.map(d => d.avgExpense), 1);
     const peakDay = dayData.reduce(
@@ -65,7 +68,7 @@ export function SpendingDayChart({ stats, isLoading }: SpendingDayChartProps) {
             <div className="flex items-start justify-between mb-1">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                     <CalendarDays className="w-4 h-4 text-primary" />
-                    Pola Pengeluaran per Hari
+                    {t('dailySpendingPattern')}
                 </h3>
             </div>
 
@@ -75,9 +78,9 @@ export function SpendingDayChart({ stats, isLoading }: SpendingDayChartProps) {
                     <span className="text-[9px] font-black text-white">!</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-tight">
-                    Rata-rata pengeluaran tertinggi di hari{' '}
+                    {t('highestSpendingOn')}{' '}
                     <span className="font-bold text-primary">{peakDay.full}</span>
-                    {' '}{' '}
+                    {'  '}
                     <span className="font-bold text-foreground">{formatCurrency(peakDay.avgExpense)}</span>
                 </p>
             </div>
@@ -125,7 +128,7 @@ export function SpendingDayChart({ stats, isLoading }: SpendingDayChartProps) {
             </div>
 
             <p className="text-[9px] text-muted-foreground/50 mt-3.5 text-center">
-                Rata-rata per kemunculan hari dalam periode yang dipilih
+                {t('averageOccurrenceDesc')}
             </p>
         </div>
     );

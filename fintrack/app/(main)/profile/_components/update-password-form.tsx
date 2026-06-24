@@ -1,55 +1,60 @@
+'use client';
+
 import { ReusableForm } from '@/components/ui/reuseable-form';
 import { useAuth } from '@/hooks/use-auth';
 import { Lock } from 'lucide-react';
-import z from 'zod'
-
-const updatePasswordSchema = z.object({
-    currentPassword: z.string().min(6, 'Minimal 6 karakter'),
-    newPassword: z.string().min(6, 'Minimal 6 karakter'),
-    confirmPassword: z.string()
-}).superRefine((value, ctx) => {
-    if (value.currentPassword === value.newPassword) {
-        ctx.addIssue({
-            path: ['newPassword'],
-            message: 'Password baru harus berbeda dari password lama',
-            code: z.ZodIssueCode.custom
-        });
-    }
-
-    if (value.newPassword !== value.confirmPassword) {
-        ctx.addIssue({
-            path: ['confirmPassword'],
-            message: 'Konfirmasi password tidak sama',
-            code: z.ZodIssueCode.custom
-        })
-    }
-})
-
-export type UpdateProfileValues = z.Infer<typeof updatePasswordSchema>
+import z from 'zod';
+import { useTranslations } from 'next-intl';
 
 export function UpdatePasswordForm() {
-    const {changePasswordMutation} = useAuth()
+    const { changePasswordMutation } = useAuth();
+    const t = useTranslations('profileEdit');
+
+    const updatePasswordSchema = z.object({
+        currentPassword: z.string().min(6, t('minCharacters', { count: 6 })),
+        newPassword: z.string().min(6, t('minCharacters', { count: 6 })),
+        confirmPassword: z.string()
+    }).superRefine((value, ctx) => {
+        if (value.currentPassword === value.newPassword) {
+            ctx.addIssue({
+                path: ['newPassword'],
+                message: t('passwordSameAsOld'),
+                code: z.ZodIssueCode.custom
+            });
+        }
+
+        if (value.newPassword !== value.confirmPassword) {
+            ctx.addIssue({
+                path: ['confirmPassword'],
+                message: t('passwordMismatch'),
+                code: z.ZodIssueCode.custom
+            })
+        }
+    });
+
+    type UpdatePasswordValues = z.infer<typeof updatePasswordSchema>;
+
     return (
-        <ReusableForm<UpdateProfileValues>
+        <ReusableForm<UpdatePasswordValues>
             fields={[
                 {
-                    label: 'Kata Sandi Saat Ini',
+                    label: t('currentPassword'),
                     name: 'currentPassword',
-                    placeholder: 'Masukkan kata sandi saat ini',
+                    placeholder: t('currentPasswordPlaceholder'),
                     type: 'password',
                     icon: Lock
                 },
                 {
-                    label: 'Kata Sandi Saat Baru',
+                    label: t('newPassword'),
                     name: 'newPassword',
-                    placeholder: 'Minimal 6 karakter',
+                    placeholder: t('newPasswordPlaceholder'),
                     type: 'password',
                     icon: Lock
                 },
                 {
-                    label: 'Ulangi Kata Sandi Baru',
+                    label: t('confirmPassword'),
                     name: 'confirmPassword',
-                    placeholder: 'Ulangi kata sandi baru',
+                    placeholder: t('confirmPasswordPlaceholder'),
                     type: 'password',
                     icon: Lock
                 }
@@ -57,7 +62,7 @@ export function UpdatePasswordForm() {
             defaultValues={{ confirmPassword: '', currentPassword: '', newPassword: '' }}
             schema={updatePasswordSchema}
             onSubmit={changePasswordMutation}
-            submitText={'Ubah Kata Sandi'}
+            submitText={t('changePassword')}
         />
-    )
+    );
 }

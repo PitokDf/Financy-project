@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   useAnalysis,
@@ -35,6 +36,7 @@ export default function AnalysisLabPage() {
     isLoadingLatest,
   } = useAnalysis();
   const { categories } = useCategories();
+  const t = useTranslations("lab");
 
   const [uiState, setUiState] = useState<UIState>("IDLE");
   const [analysisResult, setAnalysisResult] =
@@ -62,12 +64,12 @@ export default function AnalysisLabPage() {
       initialMappings[idx] =
         c.suggestedName ||
         c.name ||
-        (idx === -1 ? "Lain-lain" : `Kategori ${idx + 1}`);
+        (idx === -1 ? t("others") : t("categoryDefaultName", { num: idx + 1 }));
       initialAssignments[idx] = c.members;
     });
     if (!initialAssignments[-1]) {
       initialAssignments[-1] = [];
-      initialMappings[-1] = "Lain-lain";
+      initialMappings[-1] = t("others");
     }
     setMappings(initialMappings);
     setAssignments(initialAssignments);
@@ -91,7 +93,7 @@ export default function AnalysisLabPage() {
       const idx = Number(key);
       return {
         index: idx,
-        name: mappings[idx] || `Kategori ${idx + 1}`,
+        name: mappings[idx] || t("categoryDefaultName", { num: idx + 1 }),
         color: CLUSTER_COLORS[i % CLUSTER_COLORS.length],
         icon: "Tag",
         transactionIds: assignments[idx]?.map((t) => t.id) || [],
@@ -155,8 +157,8 @@ export default function AnalysisLabPage() {
     visibleClusters.push({
       id: "unassigned",
       index: -1,
-      name: "Lain-lain",
-      suggestedName: "Lain-lain",
+      name: t("others"),
+      suggestedName: t("others"),
       color: "#9CA3AF",
       size: assignments[-1].length,
       totalAmount: assignments[-1].reduce(
@@ -197,25 +199,22 @@ export default function AnalysisLabPage() {
           </div>
 
           <div className="text-center space-y-2 mb-10">
-            <h2 className="text-2xl font-bold tracking-tight">Analisis AI</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px] mx-auto">
-              Kategorikan transaksi tanpa kategori secara otomatis dengan
-              kecerdasan buatan.
+              {t("desc")}
             </p>
           </div>
 
           {/* Feature pills */}
           <div className="flex flex-wrap gap-2 justify-center mb-10">
-            {["Deteksi pola", "Nama otomatis", "Prediksi pengeluaran"].map(
-              (f) => (
-                <span
-                  key={f}
-                  className="px-3 py-1 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border/60"
-                >
-                  {f}
-                </span>
-              ),
-            )}
+            {[t("features.0"), t("features.1"), t("features.2")].map((f) => (
+              <span
+                key={f}
+                className="px-3 py-1 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border/60"
+              >
+                {f}
+              </span>
+            ))}
           </div>
 
           <Button
@@ -229,7 +228,7 @@ export default function AnalysisLabPage() {
             ) : (
               <Sparkles className="w-4 h-4 mr-2 text-white/80" />
             )}
-            Jalankan Prediksi
+            {t("runPrediction")}
           </Button>
         </div>
       )}
@@ -255,11 +254,9 @@ export default function AnalysisLabPage() {
           {/* Steps */}
           <div className="text-center space-y-1.5">
             <p className="text-base font-semibold text-foreground">
-              Menganalisis pola transaksi
+              {t("analyzing")}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Mohon tunggu sebentar…
-            </p>
+            <p className="text-xs text-muted-foreground">{t("pleaseWait")}</p>
           </div>
 
           <div className="flex gap-1.5">
@@ -279,23 +276,27 @@ export default function AnalysisLabPage() {
         <div className="animate-fade-in space-y-5 pb-28">
           {/* Page header */}
           <div className="space-y-0.5">
-            <h2 className="text-lg font-bold tracking-tight">Hasil Analisis</h2>
-            <p className="text-xs text-muted-foreground">
-              Tinjau dan beri nama setiap kategori
-            </p>
+            <h2 className="text-lg font-bold tracking-tight">
+              {t("resultTitle")}
+            </h2>
+            <p className="text-xs text-muted-foreground">{t("resultDesc")}</p>
           </div>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-2.5">
             {[
               {
-                label: "Transaksi",
+                label: t("stats.transactions"),
                 value: analysisResult.totalTransactions,
                 suffix: "",
               },
-              { label: "Kategori", value: visibleClusters.length, suffix: "" },
               {
-                label: "Akurasi",
+                label: t("stats.categories"),
+                value: visibleClusters.length,
+                suffix: "",
+              },
+              {
+                label: t("stats.accuracy"),
                 value: `${(analysisResult.silhouetteScore * 100).toFixed(0)}`,
                 suffix: "%",
               },
@@ -325,11 +326,12 @@ export default function AnalysisLabPage() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    {analysisResult.preAssignedSummary?.count} transaksi
-                    dikategorikan otomatis
+                    {t("preassignedSuccess", {
+                      count: analysisResult.preAssignedSummary?.count || 0,
+                    })}
                   </p>
                   <p className="text-[10px] text-emerald-500/70 mt-0.5">
-                    Berdasarkan kategori yang sudah ada
+                    {t("preassignedSuccessDesc")}
                   </p>
                 </div>
               </div>
@@ -339,12 +341,13 @@ export default function AnalysisLabPage() {
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    {analysisResult.preAssignedSummary?.count} prediksi
-                    confidence rendah
+                  <p className="text-xs font-semibold text-amber-600 dark:text-emerald-400">
+                    {t("preassignedLowConf", {
+                      count: analysisResult.preAssignedSummary?.count || 0,
+                    })}
                   </p>
                   <p className="text-[10px] text-amber-500/70 mt-0.5">
-                    Harap periksa dan koreksi jika perlu
+                    {t("preassignedLowConfDesc")}
                   </p>
                 </div>
               </div>
@@ -353,7 +356,7 @@ export default function AnalysisLabPage() {
           {/* Pie chart section */}
           <div className="bg-muted/30 rounded-2xl border border-border/40 p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
-              Distribusi Kategori
+              {t("categoryDist")}
             </p>
             <ClusterPieChart
               clusters={analysisResult.clusters}
@@ -365,11 +368,11 @@ export default function AnalysisLabPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Beri Nama Kategori
+                {t("nameCategory")}
               </p>
               <div className="flex items-center gap-3">
                 <p className="text-[10px] text-muted-foreground">
-                  {visibleClusters.length} grup
+                  {t("groups", { count: visibleClusters.length })}
                 </p>
                 <Button
                   variant="outline"
@@ -378,7 +381,7 @@ export default function AnalysisLabPage() {
                   className="h-7 text-[10px] px-2.5 rounded-xl border-dashed hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-colors"
                 >
                   <Plus className="w-3 h-3 mr-1" />
-                  Grup Baru
+                  {t("newGroup")}
                 </Button>
               </div>
             </div>
@@ -398,7 +401,7 @@ export default function AnalysisLabPage() {
                   name:
                     mappings[c.index] ||
                     c.suggestedName ||
-                    `Kategori ${c.index + 1}`,
+                    t("categoryDefaultName", { num: c.index + 1 }),
                 }))}
                 existingCategories={categories.map((c) => ({
                   id: c.id,
@@ -417,9 +420,7 @@ export default function AnalysisLabPage() {
                     updated[-1] = [...(updated[-1] || []), ...txs];
                     return updated;
                   });
-                  toast.success(
-                    `${txIds.length} transaksi dikeluarkan ke Lain-lain`,
-                  );
+                  toast.success(t("excludeToast", { count: txIds.length }));
                 }}
                 onMoveTransactions={(txIds, targetIndex) => {
                   setAssignments((prev) => {
@@ -443,7 +444,7 @@ export default function AnalysisLabPage() {
                       ?.suggestedName ||
                     `Grup baru`;
                   toast.success(
-                    `${txIds.length} transaksi dipindahkan ke ${targetName}`,
+                    t("moveToast", { count: txIds.length, target: targetName }),
                   );
                 }}
               />
@@ -466,7 +467,7 @@ export default function AnalysisLabPage() {
             ) : (
               <CheckCircle2 className="w-4 h-4 mr-2" />
             )}
-            Terapkan ke Aplikasi
+            {t("apply")}
           </Button>
         </div>
       )}
@@ -484,11 +485,9 @@ export default function AnalysisLabPage() {
 
           <div className="text-center space-y-1">
             <h2 className="text-xl font-bold tracking-tight">
-              Analisis Selesai!
+              {t("analysisComplete")}
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Kategori AI telah diterapkan ke transaksi Anda.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("appliedDesc")}</p>
           </div>
 
           {/* Forecast card */}
@@ -504,7 +503,7 @@ export default function AnalysisLabPage() {
                   <div className="flex items-center gap-1.5 mb-5">
                     <Sparkles className="w-3 h-3 text-white/70" />
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
-                      Prediksi 3 Kategori Terbesar
+                      {t("topForecasts")}
                     </p>
                   </div>
 
@@ -534,10 +533,10 @@ export default function AnalysisLabPage() {
           ) : (
             <div className="w-full p-5 rounded-3xl bg-muted/50 border border-border/50 text-center">
               <p className="text-sm font-semibold text-foreground">
-                Kategori berhasil dibuat!
+                {t("categoryCreated")}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Butuh lebih banyak data untuk menghasilkan forecast.
+                {t("needMoreData")}
               </p>
             </div>
           )}
@@ -548,14 +547,14 @@ export default function AnalysisLabPage() {
               onClick={() => setUiState("IDLE")}
               className="w-full h-12 rounded-2xl gradient-primary text-white font-semibold text-sm border-0 shadow-md shadow-primary/20"
             >
-              <Sparkles className="w-4 h-4 mr-2" /> Analisis Ulang
+              <Sparkles className="w-4 h-4 mr-2" /> {t("reAnalyze")}
             </Button>
             <Button
               onClick={() => (window.location.href = "/transactions")}
               variant="ghost"
               className="w-full h-12 rounded-2xl font-semibold text-sm text-muted-foreground hover:text-foreground"
             >
-              Lihat Transaksi <ArrowRight className="w-4 h-4 ml-2" />
+              {t("viewTx")} <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>

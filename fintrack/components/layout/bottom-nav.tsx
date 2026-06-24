@@ -5,22 +5,25 @@ import { usePathname } from "next/navigation";
 import { Home, ArrowLeftRight, BarChart3, Target, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useTranslations } from "next-intl";
+
 interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: "Beranda", href: "/dashboard", icon: Home },
-  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Analisis", href: "/analysis", icon: BarChart3 },
-  { label: "Anggaran", href: "/budget", icon: Target },
-  { label: "Profil", href: "/profile", icon: User },
-];
-
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+
+  const NAV_ITEMS: NavItem[] = [
+    { label: t("dashboard"), href: "/dashboard", icon: Home },
+    { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
+    { label: t("analysis"), href: "/analysis", icon: BarChart3 },
+    { label: t("budget"), href: "/budget", icon: Target },
+    { label: t("profile"), href: "/profile", icon: User },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
