@@ -4,10 +4,11 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'backend/**'
-      - 'docker-compose.yml'
-      - '!backend/.gitignore'
-      - '.github/workflows/deploy.yml'
+      # - 'backend/**'
+      # - 'docker-compose.yml'
+      # - '!backend/.gitignore'
+      # - '.github/workflows/deploy.yml'
+      - disabled
   workflow_dispatch:
 
 env:
@@ -119,6 +120,6 @@ jobs:
 
             docker compose pull
             docker compose up -d
-            
+
             # Clean up old unused images to save disk space
             docker image prune -af
