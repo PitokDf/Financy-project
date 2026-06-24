@@ -35,6 +35,7 @@ model User {
   forecasts         Forecast[]
   userSetting       UserSetting?
   pushSubscriptions PushSubscription[]
+  scheduledExpenses  ScheduledExpense[]
 
   @@map("users")
 }
@@ -184,6 +185,28 @@ model Transaction {
   @@map("transactions")
 }
 
+model ScheduledExpense {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  description     String
+  amount          Int
+  categoryId      String?   @map("category_id")
+  dayOfMonth      Int       @map("day_of_month") // 1-31
+  isActive        Boolean   @default(true) @map("is_active")
+  lastProcessedAt DateTime? @map("last_processed_at") // last month-year this was executed
+  lastNotifiedDay Int?      @map("last_notified_day") // last dayOfMonth a reminder was sent
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isActive])
+  @@map("scheduled_expenses")
+}
+
 enum TransactionType {
   INCOME
   EXPENSE
@@ -306,6 +329,7 @@ enum NotificationType {
   REMINDER // Daily reminder
   STREAK_WARNING // Streak about to break
   CHALLENGE_COMPLETE // Weekly challenge completed
+  SCHEDULED_EXPENSE  // Scheduled expense reminder
 }
 
 

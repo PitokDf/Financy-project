@@ -4,10 +4,10 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'clustering/**'
-      - '!clustering/.gitignore'
-      - 'docker-compose.yml'
-      - '.github/workflows/deploy-clustering.yml'
+      - "clustering/**"
+      - "!clustering/.gitignore"
+      # - 'docker-compose.yml'
+      - ".github/workflows/deploy-clustering.yml"
   workflow_dispatch:
 
 env:
@@ -111,12 +111,12 @@ jobs:
             # Since appleboy/ssh-action doesn't transfer files, we assume the user's deploy.yml
             # or a previous step ensures the compose file is there.
             # In clustering deploy, we should also copy the latest docker-compose.yml
-            
+
             # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
 
             docker compose pull
             docker compose up -d clustering
-            
+
             # Clean up
             docker image prune -af

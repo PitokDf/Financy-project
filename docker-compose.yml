@@ -19,6 +19,8 @@ services:
       - ML_SERVICE_URL=http://clustering:8000
     ports:
       - "6789:6789"
+    env_file:
+      - .env
     depends_on:
       redis:
         condition: service_started
