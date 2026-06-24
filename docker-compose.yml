@@ -3,6 +3,7 @@ services:
     image: ${BACKEND_IMAGE:-financy-backend:latest}
     container_name: financy-api
     restart: always
+    env_file: .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
@@ -19,8 +20,6 @@ services:
       - ML_SERVICE_URL=http://clustering:8000
     ports:
       - "6789:6789"
-    env_file:
-      - .env
     depends_on:
       redis:
         condition: service_started
