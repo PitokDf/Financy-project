@@ -34,12 +34,12 @@ const FAQ_DATA: FaqItem[] = [
         answer: 'Buka menu Anggaran dari navigasi bawah. Anda bisa membuat anggaran baru per kategori untuk setiap bulan. Sistem akan memantau dan mengirim notifikasi jika pengeluaran mendekati batas.'
     },
     {
-        question: 'Bagaimana cara kerja kategorisasi otomatis AI?',
-        answer: 'Secara default, FinTrack menggunakan model machine learning (Sentence-BERT) untuk menganalisis deskripsi transaksi pengeluaran dan mengkategorikannya secara instan saat disimpan. Fitur ini dapat dinyalakan atau dimatikan kapan saja lewat menu Profil > Preferensi > Kategorisasi Otomatis.'
+        question: 'Bagaimana cara kerja kategorisasi otomatis?',
+        answer: 'Secara otomatis, FinTrack akan membaca catatan transaksi yang Anda tulis (misal: "Beli bensin") dan langsung menentukan kategori yang paling cocok (seperti "Transportasi"). Jika Anda lebih suka menentukan kategori sendiri nanti, Anda bisa mematikan fitur ini di menu Profil > Preferensi > Kategorisasi Otomatis.'
     },
     {
         question: 'Apa itu fitur AI Lab?',
-        answer: 'AI Lab adalah fitur analisis cerdas tempat Anda dapat mengelompokkan transaksi serupa (Smart Clustering) atau melakukan kategorisasi massal (Batch Categorization) untuk seluruh transaksi yang belum memiliki kategori (misalnya ketika Anda mematikan fitur kategorisasi otomatis real-time).'
+        answer: 'AI Lab adalah halaman khusus untuk mengelompokkan banyak transaksi secara pintar. Jika sebelumnya Anda mematikan fitur kategorisasi otomatis dan membiarkan kategori transaksi kosong, Anda bisa masuk ke halaman ini untuk merapikan dan memberi kategori ke semua transaksi tersebut secara cepat dalam sekali klik.'
     },
     {
         question: 'Bagaimana cara mengekspor data?',
@@ -65,7 +65,7 @@ const FEATURES: FeatureInfo[] = [
     {
         icon: PiggyBank,
         title: 'Manajemen Transaksi',
-        description: 'Catat pemasukan dan pengeluaran harian secara mudah dengan kategorisasi AI otomatis (dapat diaktifkan/dinonaktifkan lewat Profil).'
+        description: 'Catat uang masuk dan uang keluar harian Anda dengan mudah. Kategori transaksi akan otomatis terisi secara pintar, dan bisa diaktifkan atau dimatikan lewat Profil.'
     },
     {
         icon: BarChart3,
