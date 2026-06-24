@@ -9,11 +9,6 @@ export class StreakJob {
     }
 
     async register() {
-        if (!this.streakQueue['queue']) {
-            frameworkLogger.warn("[StreakJob] Redis not configured. Skipping streak job registration.");
-            return;
-        }
-
         const repeatables = await this.streakQueue['queue'].getRepeatableJobs();
 
         for (const job of repeatables) {

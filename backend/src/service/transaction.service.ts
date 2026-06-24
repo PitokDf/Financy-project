@@ -208,8 +208,8 @@ export class TransactionService {
         }
 
         const transaction = await this.repo.create(userId, data);
-        redisClient?.del(`dashboard:${userId}`);
 
+        redisClient.del(`dashboard:${userId}`);
         await this.gamificationQueue.add('update-gamification', {
             userId: userId,
             action: 'TRANSACTION_CREATED',
@@ -223,13 +223,13 @@ export class TransactionService {
 
     public delete = async (userId: string, trxId: string) => {
         const transaction = await this.repo.delete(userId, trxId);
-        redisClient?.del(`dashboard:${userId}`);
+        redisClient.del(`dashboard:${userId}`);
         return transaction;
     }
 
     public update = async (userId: string, trxId: string, data: any) => {
         const transaction = await this.repo.update(userId, trxId, data);
-        redisClient?.del(`dashboard:${userId}`);
+        redisClient.del(`dashboard:${userId}`);
         await this.reminderBudgetQueue.add('cek-budget', { userId });
         return transaction;
     }

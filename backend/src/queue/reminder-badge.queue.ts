@@ -6,7 +6,7 @@ export class ReminderBadgeQueue extends BaseQueue<{ userId: string }> {
         super('reminder-budget');
     }
 
-    async add(name: string, data: { userId: string }, options?: JobsOptions): Promise<Job<{ userId: string }, any, string> | void> {
+    async add(name: string, data: { userId: string }, options?: JobsOptions): Promise<Job<{ userId: string }, any, string>> {
         return super.add(name, data, options);
     }
 }
