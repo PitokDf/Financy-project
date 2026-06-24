@@ -5,7 +5,7 @@ export type JwtPayload = {
     user_id: string;
     name: string;
     email: string;
-    password: string;
+    password: string | null;
     avatar: string | null;
     createdAt: Date;
     updatedAt: Date;
