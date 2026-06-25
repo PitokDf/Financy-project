@@ -10,7 +10,7 @@ if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET) {
     authGoogleRouter.get('/', controller.initiate)
     authGoogleRouter.get('/callback', controller.callback)
 } else {
-    authGoogleRouter.all('*', (_req: Request, res: Response) => {
+    authGoogleRouter.use((_req: Request, res: Response) => {
         res.status(400).json({ error: 'Google authentication is not configured' });
     });
 }
