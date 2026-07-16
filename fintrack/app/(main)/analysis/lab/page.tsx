@@ -17,14 +17,24 @@ import {
   Sparkles,
   TrendingUp,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { CLUSTER_COLORS } from "./_components/constant";
 import { ClusterPieChart } from "./_components/cluster-pie-chart";
 import { ClusterCard } from "./_components/cluster-card";
+import axiosClient from "@/lib/api/client";
 
 type UIState = "IDLE" | "RUNNING" | "REVIEWING" | "FORECAST_REVEAL";
+
+interface NeedsReviewTx {
+  id: string;
+  description: string;
+  amount: number;
+  date: string;
+  category?: { name: string; color: string; icon: string };
+}
 
 export default function AnalysisLabPage() {
   const {
@@ -46,6 +56,9 @@ export default function AnalysisLabPage() {
     Record<number, MlClusterResponse["members"]>
   >({});
   const [forecastData, setForecastData] = useState<any>(null);
+  const [needsReviewTxs, setNeedsReviewTxs] = useState<NeedsReviewTx[]>([]);
+  const [isLoadingReview, setIsLoadingReview] = useState(true);
+  const [selectedReviewIds, setSelectedReviewIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (latestRun?.status === "waiting_confirmation") loadResult(latestRun);
@@ -54,6 +67,53 @@ export default function AnalysisLabPage() {
   useEffect(() => {
     if (latestRun?.status === "running") setUiState("RUNNING");
   }, [latestRun]);
+
+  useEffect(() => {
+    const fetchNeedsReview = async () => {
+      try {
+        const res = await axiosClient.get("/transactions/needs-review");
+        setNeedsReviewTxs(Array.isArray(res) ? res : []);
+      } catch {
+        setNeedsReviewTxs([]);
+      } finally {
+        setIsLoadingReview(false);
+      }
+    };
+    fetchNeedsReview();
+  }, []);
+
+  const handleToggleReview = (id: string) => {
+    setSelectedReviewIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllReview = () => {
+    if (selectedReviewIds.size === needsReviewTxs.length) {
+      setSelectedReviewIds(new Set());
+    } else {
+      setSelectedReviewIds(new Set(needsReviewTxs.map((tx) => tx.id)));
+    }
+  };
+
+  const handleConfirmReview = async () => {
+    if (selectedReviewIds.size === 0) return;
+    try {
+      await axiosClient.post("/transactions/batch-confirm-review", {
+        transactionIds: Array.from(selectedReviewIds),
+      });
+      setNeedsReviewTxs((prev) =>
+        prev.filter((tx) => !selectedReviewIds.has(tx.id))
+      );
+      setSelectedReviewIds(new Set());
+      toast.success(`${selectedReviewIds.size} transaksi dikonfirmasi`);
+    } catch {
+      toast.error("Gagal mengkonfirmasi");
+    }
+  };
 
   const loadResult = (result: AnalysisRunResult) => {
     setAnalysisResult(result);
@@ -182,7 +242,100 @@ export default function AnalysisLabPage() {
     <div className="animate-fade-in text-foreground">
       {/* ── IDLE ── */}
       {uiState === "IDLE" && (
-        <div className="flex flex-col items-center pt-12 px-1">
+        <div className="animate-fade-in space-y-6 pt-4">
+          {/* Needs Review Section */}
+          {!isLoadingReview && needsReviewTxs.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Perlu Review</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {needsReviewTxs.length} transaksi kategori otomatis
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllReview}
+                  className="h-7 text-[10px] px-2.5 rounded-xl"
+                >
+                  {selectedReviewIds.size === needsReviewTxs.length
+                    ? "Batal Pilih"
+                    : "Pilih Semua"}
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {needsReviewTxs.map((tx) => (
+                  <div
+                    key={tx.id}
+                    onClick={() => handleToggleReview(tx.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                      selectedReviewIds.has(tx.id)
+                        ? "bg-amber-500/10 border-amber-500/30"
+                        : "bg-muted/50 border-border/40 hover:bg-muted"
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        selectedReviewIds.has(tx.id)
+                          ? "bg-amber-500 border-amber-500"
+                          : "border-muted-foreground/30"
+                      }`}
+                    >
+                      {selectedReviewIds.has(tx.id) && (
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {tx.description}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {tx.category?.name || "Belum dikategorikan"} ·{" "}
+                        {new Date(tx.date).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                    <p className="text-sm font-bold text-red-500 shrink-0">
+                      -{formatCurrency(tx.amount)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {selectedReviewIds.size > 0 && (
+                <Button
+                  onClick={handleConfirmReview}
+                  className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm border-0"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Konfirmasi {selectedReviewIds.size} Transaksi
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Divider if both sections exist */}
+          {!isLoadingReview && needsReviewTxs.length > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <p className="text-[10px] text-muted-foreground font-medium">
+                ATAU
+              </p>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
+
+          {/* Hero illustration area */}
+          <div className="flex flex-col items-center px-1">
           {/* Hero illustration area */}
           <div className="relative mb-8">
             {/* Soft glow rings */}

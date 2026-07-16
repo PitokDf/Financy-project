@@ -200,6 +200,10 @@ export class TransactionService {
                         });
 
                         data.categoryId = category.id;
+
+                        if (pred.reviewRequired) {
+                            (data as any).needsReview = true;
+                        }
                     }
                 }
             } catch (err) {
@@ -228,9 +232,22 @@ export class TransactionService {
     }
 
     public update = async (userId: string, trxId: string, data: any) => {
+        if (data.categoryId) {
+            data.needsReview = false;
+        }
         const transaction = await this.repo.update(userId, trxId, data);
         redisClient?.del(`dashboard:${userId}`);
         await this.reminderBudgetQueue.add('cek-budget', { userId });
         return transaction;
+    }
+
+    public getNeedsReview = async (userId: string) => {
+        return this.repo.getNeedsReview(userId);
+    }
+
+    public batchConfirmReview = async (userId: string, transactionIds: string[]) => {
+        const result = await this.repo.batchClearNeedsReview(userId, transactionIds);
+        redisClient?.del(`dashboard:${userId}`);
+        return result;
     }
 }

@@ -44,6 +44,7 @@ export interface Transaction {
     categoryId?: string;
     clusterId?: string;
     source: TransactionSource;
+    needsReview?: boolean;
     createdAt: string;
     updatedAt: string;
     category?: Category;

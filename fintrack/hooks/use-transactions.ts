@@ -16,6 +16,7 @@ export interface Transaction {
   type: "INCOME" | "EXPENSE";
   date: string;
   categoryId?: string;
+  needsReview?: boolean;
   category?: {
     name: string;
     color: string;
