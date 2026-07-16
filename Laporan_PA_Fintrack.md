@@ -945,7 +945,7 @@ Berdasarkan keterbatasan yang telah diidentifikasi pada Sub-bab 4.3, beberapa sa
 
 [1] A. Rosidi and A. Afriyudi, "Aplikasi pencatatan keuangan pribadi berbasis web mobile," _Jurnal Teknologi Informatika Dan Komputer_, vol. 9, no. 1, pp. 100–113, 2023.
 
-[2] A. Sandi Asmoro and S. Sriyono, "Peran Machine Learning dalam Pengambilan Keputusan Manajerial di Industri Fintech," _Journal of Accounting and Finance Management_, vol. 6, no. 3, pp. 997–1003, 2025.
+[2] A. Sandi Asmoro and S. Sriyono, "Peran Machi    ne Learning dalam Pengambilan Keputusan Manajerial di Industri Fintech," _Journal of Accounting and Finance Management_, vol. 6, no. 3, pp. 997–1003, 2025.
 
 [3] P. Bitrián, I. Buil, and S. Catalán, "Making Finance Fun: The Gamification of Personal Financial Management Apps," _International Journal of Bank Marketing_, vol. 39, no. 7, pp. 1310–1332, 2021.
 
