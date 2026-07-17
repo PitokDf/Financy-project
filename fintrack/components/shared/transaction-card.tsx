@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, memo, Ref } from "react";
-import { ArrowDownRight, ArrowUpRight, Trash2, Pencil } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Trash2, Pencil, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionType } from "@/types";
@@ -19,6 +19,7 @@ interface TransactionCardProps {
     categoryIcon?: string;
     categoryColor: string;
     categoryId?: string;
+    needsReview?: boolean;
     onDelete?: (id: string) => void;
     onEdit?: (data: Transaction) => void;
     ref?: Ref<HTMLDivElement>;
@@ -36,6 +37,7 @@ export const TransactionCard = memo(
         categoryColor,
         categoryIcon,
         categoryId,
+        needsReview,
         onDelete,
         onEdit
     }: TransactionCardProps) {
@@ -137,7 +139,15 @@ export const TransactionCard = memo(
                                 </div>
                                 <div className="flex-1 min-w-0 pointer-events-none">
                                     <p className="text-sm font-semibold text-foreground truncate">{description}</p>
-                                    <p className="text-xs text-muted-foreground">{category}</p>
+                                    <div className="flex items-center gap-1.5">
+                                        <p className="text-xs text-muted-foreground">{category}</p>
+                                        {needsReview && (
+                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full px-1.5 py-0.5">
+                                                <AlertTriangle className="w-2.5 h-2.5" />
+                                                Review
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="text-right shrink-0 pointer-events-none">
                                     <p

@@ -44,4 +44,20 @@ export class TransactionController {
         const result = await this.service.importCsv(userId, req.file);
         return ResponseUtil.success(res, result, HttpStatus.CREATED, "CSV berhasil diimpor");
     })
+
+    public getNeedsReview = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const result = await this.service.getNeedsReview(userId);
+        return res.status(HttpStatus.OK).json(result);
+    })
+
+    public batchConfirmReview = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const { transactionIds } = req.body;
+        if (!Array.isArray(transactionIds)) {
+            return ResponseUtil.error(res, "transactionIds harus berupa array", [], HttpStatus.BAD_REQUEST);
+        }
+        const result = await this.service.batchConfirmReview(userId, transactionIds);
+        return ResponseUtil.success(res, result);
+    })
 }

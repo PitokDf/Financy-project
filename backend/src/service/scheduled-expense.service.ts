@@ -92,9 +92,11 @@ export class ScheduledExpenseService {
                             aiKeywords: [pred.predictedCategory.toLowerCase()]
                         });
 
-                        await this.txRepo.update(userId, transactionId, {
-                            categoryId: category.id,
-                        });
+                        const updateData: any = { categoryId: category.id };
+                        if (pred.reviewRequired) {
+                            updateData.needsReview = true;
+                        }
+                        await this.txRepo.update(userId, transactionId, updateData);
                     }
                 }
             }

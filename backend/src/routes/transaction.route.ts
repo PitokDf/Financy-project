@@ -17,8 +17,10 @@ const transactionRouter = Router();
 
 transactionRouter.use(authMiddleware)
 transactionRouter.get('/', controller.getAll)
+transactionRouter.get('/needs-review', controller.getNeedsReview)
 transactionRouter.post('/', controller.create)
 transactionRouter.post('/import-csv', fileUploadService.csvUpload('file'), controller.importCsv)
+transactionRouter.post('/batch-confirm-review', controller.batchConfirmReview)
 transactionRouter.patch('/:trxId', controller.update)
 transactionRouter.delete('/:trxId', controller.delete)
 

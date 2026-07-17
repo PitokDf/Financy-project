@@ -294,6 +294,7 @@ export default function DashboardPage() {
                   category={tx.category}
                   categoryColor={tx.categoryColor}
                   categoryIcon={tx.categoryIcon}
+                  needsReview={tx.needsReview}
                   onDelete={setIdToDelete}
                 />
               ))

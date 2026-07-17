@@ -196,7 +196,7 @@ export class TransactionRepository {
 
         if (month && year) {
             const startDate = new Date(year, month - 1, 1);
-            const endDate = new Date(year, month, 0); // Last day of month
+            const endDate = new Date(year, month, 0);
             where.date = { gte: startDate, lte: endDate };
         } else if (year) {
             const startDate = new Date(year, 0, 1);
@@ -208,6 +208,33 @@ export class TransactionRepository {
             where,
             include: { category: true },
             orderBy: [{ date: 'asc' }, { createdAt: 'asc' }]
+        });
+    }
+
+    public getNeedsReview = async (userId: string) => {
+        return prisma.transaction.findMany({
+            where: {
+                userId,
+                needsReview: true,
+                type: 'EXPENSE',
+            },
+            include: { category: true },
+            orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+        });
+    }
+
+    public batchClearNeedsReview = async (userId: string, transactionIds: string[]) => {
+        if (!transactionIds.length) return { count: 0 };
+
+        return prisma.transaction.updateMany({
+            where: {
+                userId,
+                id: { in: transactionIds },
+                needsReview: true,
+            },
+            data: {
+                needsReview: false,
+            },
         });
     }
 }
