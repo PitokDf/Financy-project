@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTransactions } from '@/hooks/use-transactions';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { TransactionType } from '@/types';
 import { TransactionValues } from './_components/schema';
 
@@ -32,6 +33,7 @@ export function useTransactionsPage() {
     const action = searchParams.get('action');
     const [search, setSearchRaw] = useState('');
     const setSearch = (val: string) => { setSearchRaw(val); };
+    const debouncedSearch = useDebouncedValue(search, 300);
 
     const [filter, setFilterRaw] = useState<FilterType>('ALL');
     const setFilter = (val: FilterType) => { setFilterRaw(val); };
@@ -50,11 +52,12 @@ export function useTransactionsPage() {
         hasNextPage,
         fetchNextPage,
         isLoading
-    } = useTransactions(search, filter);
+    } = useTransactions(debouncedSearch, filter);
     const grouped = useMemo(() => GROUP_BY_DATE(transactions as DisplayTransaction[]), [transactions]);
 
     const hasMore = hasNextPage;
     const loadMore = () => fetchNextPage();
+    const isSearching = search !== debouncedSearch;
 
     const handleCreateTransaction = (values: TransactionValues, id?: string) => {
         const mappedData = {
@@ -114,6 +117,7 @@ export function useTransactionsPage() {
         handleCreateTransaction,
         handleDeleteTransaction,
         formatDate,
-        isLoading
+        isInitialLoading: isLoading,
+        isSearching,
     };
 }

@@ -29,3 +29,8 @@ docs
 skills-lock.json
 CLAUDE*
 .agents
+*.md
+!README.md
+/*.csv
+*pdf
+*txt

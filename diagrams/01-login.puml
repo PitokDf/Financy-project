@@ -1,0 +1,72 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Membuka halaman login;
+
+|Website|
+:Menampilkan
+halaman login;
+
+|Pengguna|
+:Memasukkan email
+dan password;
+
+:Klik tombol login;
+
+|Website|
+:Menerima data input;
+
+|Back-end|
+if (Apakah email\nterdaftar?) then (YA)
+  :Memvalidasi password
+  dengan bcrypt;
+
+  if (Password\nvalid?) then (YA)
+    :Membuat JWT token
+    (berlaku 3 hari);
+
+    :Menyimpan cookie
+    HTTP-only;
+
+    |Website|
+    :Menyimpan data user
+    di Zustand;
+
+    :Redirect ke
+    halaman dashboard;
+
+  else (TIDAK)
+    |Website|
+    :Menampilkan pesan
+    "Password salah";
+
+  endif
+
+else (TIDAK)
+
+  |Website|
+  :Menampilkan pesan
+  "Email tidak ditemukan";
+
+endif
+
+|Pengguna|
+:Mengakses
+fitur aplikasi;
+
+stop
+@enduml

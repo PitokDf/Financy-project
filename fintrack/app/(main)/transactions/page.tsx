@@ -11,6 +11,7 @@ import {
   TrendingDown,
   Trash2,
   Import,
+  Loader2,
 } from "lucide-react";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionForm } from "./_components/transaction-form";
@@ -63,7 +64,8 @@ function TransactionsContent() {
     handleCreateTransaction,
     handleDeleteTransaction,
     formatDate,
-    isLoading,
+    isInitialLoading,
+    isSearching,
   } = useTransactionsPage();
   const flatItems = useMemo<FlatItem[]>(() => {
     return grouped.flatMap(([date, transactions]) => [
@@ -74,7 +76,7 @@ function TransactionsContent() {
       })),
     ]);
   }, [grouped]);
-  if (isLoading) return <TransactionsSkeleton />;
+  if (isInitialLoading) return <TransactionsSkeleton />;
 
   return (
     <div className="animate-fade-in flex flex-col h-screen">
@@ -116,14 +118,16 @@ function TransactionsContent() {
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-11 rounded-xl pr-9"
             />
-            {search && (
+            {isSearching ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+            ) : search ? (
               <button
                 onClick={() => setSearch("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -173,7 +177,7 @@ function TransactionsContent() {
       )}
 
       {/* List */}
-      {!showScheduled && (flatItems.length === 0 ? (
+      {!showScheduled && (flatItems.length === 0 && !isSearching ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
             <Search className="w-7 h-7 text-muted-foreground" />
@@ -185,6 +189,11 @@ function TransactionsContent() {
         </div>
       ) : (
         <div className="flex-1 min-h-0">
+          {isSearching && (
+            <div className="h-0.5 w-full overflow-hidden bg-muted">
+              <div className="h-full w-1/3 bg-primary rounded-full animate-[loading_1s_ease-in-out_infinite]" />
+            </div>
+          )}
           <Virtuoso
             data={flatItems}
             endReached={() => {

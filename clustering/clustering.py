@@ -3,7 +3,7 @@ import time
 import os
 import joblib
 import numpy as np
-from typing import List, Optional, Sequence
+from typing import List
 from sentence_transformers import SentenceTransformer
 
 # Konfigurasi penyimpanan

@@ -1,0 +1,85 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Buka /analysis/lab;
+
+|Website|
+:Cek status analisis terakhir;
+
+|Pengguna|
+:Klik "Jalankan Prediksi";
+
+|Website|
+:POST /api/analysis/run-v2;
+
+|Back-end|
+if (Ada run\nwaiting_confirmation?) then (YA)
+  :Kembalikan hasil sebelumnya;
+
+else (TIDAK)
+  :Ambil transaksi belum terkategorisasi;
+
+  :Buat run status: RUNNING;
+
+  :Kirim batch ke ML Service
+  POST /v2/analyze;
+
+  |ML Service|
+  :Preprocessing → embedding
+  → prediksi kategori;
+
+  :Kembalikan prediksi
+  + confidence score;
+
+  |Back-end|
+  :Kelompokkan prediksi
+  per kategori → cluster;
+
+  :Update status → waiting_confirmation;
+
+  :Push notification "Selesai!";
+
+endif
+
+|Website|
+:Tampilkan pie chart + cluster cards;
+
+|Pengguna|
+:Konfirmasi / ubah kategori;
+
+:Klik konfirmasi;
+
+|Website|
+:POST /api/analysis/confirm;
+
+|Back-end|
+fork
+  :Upsert kategori
+  + update transaksi;
+fork again
+  :Trigger gamification;
+fork again
+  :Ambil forecast;
+end fork
+
+:Update status → completed;
+
+|Website|
+:Tampilkan proyeksi pengeluaran;
+
+stop
+@enduml

@@ -1,0 +1,48 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Buka /budget;
+
+|Website|
+:Tampilkan kartu budget
+dengan progress bar;
+
+|Pengguna|
+:Klik buat budget baru
+→ pilih kategori, nominal, periode;
+
+|Back-end|
+if (Budget kategori\nsudah ada?) then (YA)
+  :Tampilkan pesan error;
+else (TIDAK)
+  :Simpan budget + trigger gamification;
+endif
+
+:Ambil budget + spentAmount;
+
+|Website|
+:Tampilkan progress bar
+(terisi sesuai pengeluaran);
+
+|Pengguna|
+:Hapus budget;
+
+|Back-end|
+:Hapus dari database;
+
+stop
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Memasukkan deskripsi
+transaksi;
+
+:Klik tombol
+simpan transaksi;
+
+|Website|
+:Mengirim data ke backend
+POST /api/transactions;
+
+|Back-end|
+:Memanggil
+TransactionService.create();
+
+if (Ada categoryId\natau INCOME?) then (YA)
+  :Menyimpan dengan
+  kategori user / auto-create;
+
+else (TIDAK)
+  if (autoCategorize\nenabled?) then (YA)
+    :Kirim ke ML Service
+    (preprocessing → embedding
+    → prediksi kategori);
+
+    if (review_required?) then (YA)
+      :Set needsReview=true;
+    endif
+
+  endif
+
+endif
+
+:Simpan transaksi
+ke PostgreSQL;
+
+:Cache invalidation
++ trigger gamification
++ reminder-budget queue;
+
+|Website|
+if (needsReview?) then (YA)
+  :Badge kuning
+  perlu review;
+
+else (TIDAK)
+  :Tampilkan transaksi;
+
+endif
+
+stop
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Buka tab "Terjadwal"
+di halaman transaksi;
+
+:Klik buat jadwal baru
+→ isi deskripsi, nominal, dayOfMonth;
+
+|Back-end|
+:Simpan scheduled expense;
+
+|Pengguna|
+:Klik konfirmasi
+pada kartu jatuh tempo;
+
+|Back-end|
+:Buat transaksi baru (EXPENSE)
++ tandai sudah diproses;
+
+fork
+  :ML kategorisasi otomatis;
+fork again
+  :Trigger gamification;
+fork again
+  :Trigger budget check;
+end fork
+
+|Website|
+:Tampilkan transaksi tercatat;
+
+stop
+@enduml

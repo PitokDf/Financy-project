@@ -1,0 +1,122 @@
+@startuml Use Case Diagram - Fintrack
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F5F5F5
+  BorderColor #333333
+  ArrowColor #333333
+  FontSize 11
+}
+skinparam rectangle {
+  BorderColor #333333
+}
+skinparam note {
+  BackgroundColor #FFFBDD
+  BorderColor #333333
+}
+skinparam defaultTextAlignment center
+
+title Fintrack - Use Case Diagram
+
+rectangle "Fintrack System" as System {
+
+  ' ====== Autentikasi ======
+  usecase "Login" as UC_Login
+  usecase "Register" as UC_Register
+
+  ' ====== Manajemen Transaksi ======
+  usecase "Tambah Transaksi" as UC_AddTx
+  usecase "Lihat Riwayat\nTransaksi" as UC_ViewTx
+  usecase "Edit Transaksi" as UC_EditTx
+  usecase "Hapus Transaksi" as UC_DelTx
+  usecase "Cari Transaksi" as UC_SearchTx
+  usecase "Filter Transaksi" as UC_FilterTx
+  usecase "Input Suara\n(Voice Input)" as UC_VoiceInput
+  usecase "Impor CSV" as UC_ImportCSV
+
+  ' ====== Kategorisasi Otomatis ======
+  usecase "Kategorisasi\nOtomatis" as UC_AutoCat
+  usecase "Review Kategori\n(AI Lab)" as UC_ReviewCat
+
+  ' ====== Pengeluaran Terjadwal ======
+  usecase "Buat Jadwal\nPengeluaran" as UC_CreateSched
+  usecase "Konfirmasi\nPengeluaran" as UC_ApproveSched
+  usecase "Edit Jadwal" as UC_EditSched
+  usecase "Hapus Jadwal" as UC_DelSched
+
+  ' ====== Budget Goals ======
+  usecase "Tetapkan\nAnggaran" as UC_CreateBudget
+  usecase "Lihat Progres\nAnggaran" as UC_ViewBudget
+
+  ' ====== Gamifikasi ======
+  usecase "Lihat Poin &\nLencana" as UC_ViewGamif
+  usecase "Selesaikan\nTantangan" as UC_DoChallenge
+
+  ' ====== Notifikasi ======
+  usecase "Berlangganan\nNotifikasi Push" as UC_SubPush
+  usecase "Lihat Notifikasi\nIn-App" as UC_ViewNotif
+
+  ' ====== Ekspor & Lainnya ======
+  usecase "Ekspor Laporan\n(CSV/XLSX/PDF)" as UC_Export
+  usecase "Forecasting\nPengeluaran" as UC_Forecast
+  usecase "Offline Sync" as UC_Offline
+  usecase "Pengaturan\nProfil" as UC_Settings
+  usecase "Ganti Password" as UC_ChangePass
+  usecase "Instal PWA" as UC_InstallPWA
+}
+
+actor "Pengguna" as User
+
+' ====== Koneksi Actor ke Use Case ======
+User --> UC_Login
+User --> UC_Register
+User --> UC_AddTx
+User --> UC_ViewTx
+User --> UC_EditTx
+User --> UC_DelTx
+User --> UC_VoiceInput
+User --> UC_CreateSched
+User --> UC_ApproveSched
+User --> UC_CreateBudget
+User --> UC_ViewBudget
+User --> UC_ViewGamif
+User --> UC_DoChallenge
+User --> UC_SubPush
+User --> UC_ViewNotif
+User --> UC_Export
+User --> UC_Forecast
+User --> UC_Settings
+
+' ====== Include relationships ======
+UC_AddTx ..> UC_AutoCat : <<include>>
+UC_VoiceInput ..> UC_AutoCat : <<include>>
+UC_ApproveSched ..> UC_AutoCat : <<include>>
+UC_ImportCSV ..> UC_AutoCat : <<include>>
+UC_ViewTx ..> UC_Login : <<include>>
+UC_CreateBudget ..> UC_Login : <<include>>
+UC_Settings ..> UC_ChangePass : <<include>>
+
+' ====== Extend relationships ======
+UC_ReviewCat ..> UC_AutoCat : <<extend>>
+UC_Offline ..> UC_AddTx : <<extend>>
+UC_InstallPWA ..> UC_Settings : <<extend>>
+UC_SearchTx ..> UC_ViewTx : <<extend>>
+UC_FilterTx ..> UC_ViewTx : <<extend>>
+UC_EditSched ..> UC_CreateSched : <<extend>>
+UC_DelSched ..> UC_CreateSched : <<extend>>
+UC_EditTx ..> UC_ViewTx : <<extend>>
+UC_DelTx ..> UC_ViewTx : <<extend>>
+
+' ====== Notes ======
+note right of UC_ReviewCat
+  Hanya muncul ketika
+  confidence score < 0.5
+end note
+
+note bottom of UC_AutoCat
+  Menggunakan
+  Multilingual-E5-Large +
+  Logistic Regression
+end note
+
+@enduml

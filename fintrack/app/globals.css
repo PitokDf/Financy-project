@@ -201,6 +201,16 @@
     }
   }
 
+  @keyframes loading {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(400%);
+    }
+  }
+
   .animate-border-glow {
     animation: border-glow 1.5s ease-in-out infinite;
   }

@@ -1,0 +1,51 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Back-end|
+start
+:Terima job TRANSAKSI BARU
+dari gamification-queue;
+
+:Update XP pengguna;
+
+if (Level naik?) then (YA)
+  :Notifikasi LEVEL_UP;
+endif
+
+:Cek semua badge
+(15+ kondisi);
+
+if (Badge baru?) then (YA)
+  :Notifikasi ACHIEVEMENT;
+endif
+
+:Update daily streak;
+
+if (Streak = 7 hari?) then (YA)
+  :Notifikasi STREAK_MILESTONE;
+endif
+
+:Cek weekly challenge;
+
+if (Challenge selesai?) then (YA)
+  :Notifikasi CHALLENGE_COMPLETE;
+endif
+
+|Website|
+:Tampilkan update XP,
+level, badge real-time;
+
+stop
+@enduml

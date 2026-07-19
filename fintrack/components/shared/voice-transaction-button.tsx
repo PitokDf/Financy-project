@@ -75,7 +75,7 @@ export function VoiceTransactionButton() {
         const { amount, description, type } = parseVoiceInput(text);
         setParsedResult({ amount, description });
         if (amount > 0) {
-            createMutation.mutate({ amount, description, type, date: new Date().toLocaleDateString('en-CA') });
+            createMutation.mutate({ amount, description, type, date: new Date().toISOString() });
         } else {
             setIsProcessing(false);
             toast.error('Tidak ada nominal angka yang terdeteksi.');

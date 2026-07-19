@@ -1,0 +1,69 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Membuka halaman
+register;
+
+|Website|
+:Menampilkan
+halaman register;
+
+|Pengguna|
+:Memasukkan nama,
+email, dan password;
+
+:Klik tombol daftar;
+
+|Website|
+:Menerima data input;
+
+|Back-end|
+if (Email sudah\nterdaftar?) then (YA)
+  |Website|
+  :Menampilkan pesan
+  "Email sudah digunakan";
+
+else (TIDAK)
+  :Memvalidasi input
+  dengan Zod schema;
+
+  :Menghash password
+  dengan bcrypt;
+
+  :Menyimpan user baru
+  ke database;
+
+  :Membuat JWT token;
+
+  :Menyimpan cookie
+  HTTP-only;
+
+  |Website|
+  :Menyimpan data user
+  di Zustand;
+
+  :Redirect ke
+  halaman dashboard;
+
+endif
+
+|Pengguna|
+:Mengakses
+fitur aplikasi;
+
+stop
+@enduml

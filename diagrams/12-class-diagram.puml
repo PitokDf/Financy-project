@@ -1,0 +1,352 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam class {
+  BackgroundColor #E3F2FD
+  BorderColor #333333
+  FontColor #000000
+  AttributeFontSize 10
+}
+skinparam package {
+  BackgroundColor #FAFAFA
+  BorderColor #666666
+}
+
+title Class Diagram - Fintrack Backend (Express.js)
+
+package "Controller Layer" {
+  class AuthController {
+    - authService: AuthService
+    + login(req, res): Response
+    + register(req, res): Response
+    + logout(req, res): Response
+    + changePassword(req, res): Response
+  }
+
+  class TransactionController {
+    - transactionService: TransactionService
+    + getAll(req, res): Response
+    + create(req, res): Response
+    + update(req, res): Response
+    + delete(req, res): Response
+    + importCsv(req, res): Response
+    + getNeedsReview(req, res): Response
+    + batchConfirmReview(req, res): Response
+  }
+
+  class AnalysisController {
+    - analysisService: AnalysisService
+    + run(req, res): Response
+    + runV2(req, res): Response
+    + confirm(req, res): Response
+    + getLatestRun(req, res): Response
+    + getStats(req, res): Response
+    + getCategoryBreakdown(req, res): Response
+  }
+
+  class BudgetController {
+    - budgetService: BudgetService
+    + getBudgets(req, res): Response
+    + createBudget(req, res): Response
+    + updateBudget(req, res): Response
+    + deleteBudget(req, res): Response
+  }
+
+  class GamificationController {
+    - gamificationService: GamificationService
+    + getStats(req, res): Response
+    + getBadges(req, res): Response
+    + getAllBadges(req, res): Response
+    + getChallenges(req, res): Response
+  }
+
+  class NotificationController {
+    + getNotifications(req, res): Response
+    + getUnreadCount(req, res): Response
+    + markAsRead(req, res): Response
+    + markAllAsRead(req, res): Response
+    + deleteNotification(req, res): Response
+  }
+
+  class PushController {
+    + subscribe(req, res): Response
+    + unsubscribe(req, res): Response
+    + sendTest(req, res): Response
+  }
+
+  class ExportController {
+    + exportData(req, res): Response
+  }
+
+  class ScheduledExpenseController {
+    + getAll(req, res): Response
+    + getById(req, res): Response
+    + create(req, res): Response
+    + update(req, res): Response
+    + delete(req, res): Response
+    + approve(req, res): Response
+  }
+}
+
+package "Service Layer" {
+  class AuthService {
+    - userRepository: UserRepository
+    + register(data): User
+    + login(email, password): TokenPair
+    + changePassword(userId, oldPw, newPw): void
+  }
+
+  class TransactionService {
+    - transactionRepository: TransactionRepository
+    - gamificationService: GamificationService
+    + getAllPaginated(userId, cursor, limit): PaginatedResult
+    + create(userId, data): Transaction
+    + update(userId, id, data): Transaction
+    + delete(userId, id): void
+    + importCsv(userId, file): ImportResult
+    + getNeedsReview(userId): Transaction[]
+    + batchConfirmReview(userId, ids): void
+  }
+
+  class AnalysisService {
+    - analysisRepository: AnalysisRepository
+    - categoryRepository: CategoryRepository
+    - transactionRepository: TransactionRepository
+    - forecastService: ForecastService
+    + run(payload, userId): AnalysisRun
+    + runV2(payload, userId): AnalysisRun
+    + confirm(payload): ConfirmResult
+    + getLatestRun(userId): AnalysisRun
+    + getStats(userId, startDate, endDate): Stats
+    + getCategoryBreakdown(userId, startDate, endDate): Breakdown[]
+  }
+
+  class AnalysisMLService {
+    + {static} runPipeline(transactions, categories, kMin, kMax): MlResult
+    + {static} runPipelineV2(transactions, topK, threshold): PyV2AnalyzeResponse
+  }
+
+  class BudgetService {
+    - budgetRepository: BudgetRepository
+    + getBudgetsWithProgress(userId): BudgetWithProgress[]
+    + createBudget(userId, data): BudgetGoal
+    + updateBudget(userId, id, data): BudgetGoal
+    + deleteBudget(userId, id): void
+  }
+
+  class GamificationService {
+    - gamificationRepository: GamificationRepository
+    + awardXP(userId, amount, action): UserStats
+    + syncStreak(userId): UserStats
+    + updateStreak(userId, amount): StreakResult
+    + handleAction(userId, action): void
+    + checkAndAwardBadge(userId, condition): void
+    + ensureWeeklyChallenges(userId): UserChallenge[]
+    + updateChallengeProgress(userId, type, amount): void
+  }
+
+  class ForecastService {
+    - transactionRepository: TransactionRepository
+    - forecastRepository: ForecastRepository
+    - categoryRepository: CategoryRepository
+    + forecastTopCategory(userId, categoryId): Forecast
+    + getTopForecasts(userId, limit): Forecast[]
+  }
+
+  class NotificationService {
+    + getNotifications(userId, limit, offset): Notification[]
+    + markAsRead(userId, id): void
+    + markAllAsRead(userId): void
+    + deleteNotification(userId, id): void
+    + getUnreadCount(userId): number
+  }
+
+  class PushService {
+    + {static} subscribe(userId, subscription): void
+    + {static} unsubscribe(endpoint): void
+    + {static} sendNotificationToUser(userId, title, body, data): void
+    + {static} sendBudgetReminderNotification(userId, budgetId, name, pct): void
+    + {static} sendStreakReminderNotification(userId): void
+  }
+
+  class ScheduledExpenseService {
+    - repo: ScheduledExpenseRepository
+    - txRepo: TransactionRepository
+    - categoryRepo: CategoryRepository
+    + getAll(userId): ScheduledExpense[]
+    + getById(id, userId): ScheduledExpense
+    + create(data): ScheduledExpense
+    + update(id, userId, data): ScheduledExpense
+    + delete(id, userId): boolean
+    + approve(id, userId): Transaction
+  }
+
+  class ExportService {
+    - transactionRepository: TransactionRepository
+    + generate(userId, format, month, year): ExportResult
+  }
+}
+
+package "Repository Layer" {
+  class UserRepository {
+    + findByEmail(email): User
+    + create(data): User
+    + update(id, data): User
+  }
+
+  class TransactionRepository {
+    + getAllPaginated(userId, cursor, limit, search, type): Transaction[]
+    + create(userId, data): Transaction
+    + createMany(data): Transaction[]
+    + update(userId, trxId, data): Transaction
+    + delete(userId, trxId): void
+    + findForAnalysis(userId, startDate, endDate): Transaction[]
+    + getNeedsReview(userId): Transaction[]
+    + batchClearNeedsReview(userId, ids): void
+    + getAllForExport(userId, month, year): Transaction[]
+    + updateCluster(ids, clusterId): void
+    + updateCategoryByTransactionIds(ids, categoryId): void
+    + getMonthlyAggregates(userId, categoryId, months): Aggregate[]
+  }
+
+  class CategoryRepository {
+    + getAll(userId): Category[]
+    + findByIds(ids): Category[]
+    + create(data): Category
+    + upsertByUserAndName(data): Category
+  }
+
+  class BudgetRepository {
+    + findAll(userId): BudgetGoal[]
+    + create(userId, data): BudgetGoal
+    + update(userId, id, data): BudgetGoal
+    + delete(userId, id): void
+    + findByCategory(userId, categoryId): BudgetGoal
+    + getSpendingByCategory(userId, ids, start, end): Spending[]
+  }
+
+  class AnalysisRepository {
+    + createRun(data): AnalysisRun
+    + findRunById(id): AnalysisRun
+    + findRunWithClusters(id, userId): AnalysisRun
+    + updateRun(id, data): AnalysisRun
+    + createCluster(data): Cluster
+    + findLatestPendingRun(userId): AnalysisRun
+  }
+
+  class ForecastRepository {
+    + upsertForecast(data): Forecast
+    + getLatestByUserId(userId): Forecast[]
+  }
+
+  class GamificationRepository {
+    + getStats(userId): UserStats
+    + upsertStats(userId, data): UserStats
+    + getAllBadges(): Badge[]
+    + getUserBadges(userId): UserBadge[]
+    + unlockBadge(userId, badgeId): UserBadge
+    + getActiveChallenges(userId, weekNumber, year): UserChallenge[]
+    + updateChallengeProgress(userId, challengeId, progress): void
+  }
+
+  class NotificationRepository {
+    + create(data): Notification
+    + findManyByUserId(userId, limit, offset): Notification[]
+    + markAsRead(userId, id): void
+    + markAllAsRead(userId): void
+    + delete(userId, id): void
+    + countUnread(userId): number
+  }
+
+  class PushRepository {
+    + upsert(userId, subscription): void
+    + delete(endpoint): void
+    + findManyByUserId(userId): PushSubscription[]
+  }
+
+  class ScheduledExpenseRepository {
+    + getAll(userId): ScheduledExpense[]
+    + getById(id): ScheduledExpense
+    + getActiveByDay(dayOfMonth): ScheduledExpense[]
+    + create(data): ScheduledExpense
+    + update(id, data): ScheduledExpense
+    + markProcessed(id, now): void
+    + markNotified(id, dayOfMonth): void
+    + delete(id): void
+  }
+}
+
+package "External" {
+  class MLService {
+    Note as MLNote
+    MLNote: FastAPI (Python)
+    MLNote: ---
+    MLNote: POST /v2/analyze
+    MLNote: Multilingual-E5-Large + LR
+    MLNote: classifier_model.joblib
+  }
+}
+
+package "Infrastructure" {
+  class RedisQueue {
+    + addJob(data): void
+    + process(callback): void
+  }
+
+  class PostgreSQL {
+    Note as DBNote
+    DBNote: Prisma ORM
+    DBNote: ---
+    DBNote: 17 models
+  }
+}
+
+' --- Relationships ---
+
+AuthController --> AuthService
+TransactionController --> TransactionService
+AnalysisController --> AnalysisService
+BudgetController --> BudgetService
+GamificationController --> GamificationService
+NotificationController --> NotificationService
+PushController --> PushService
+ExportController --> ExportService
+ScheduledExpenseController --> ScheduledExpenseService
+
+AuthService --> UserRepository
+TransactionService --> TransactionRepository
+TransactionService --> GamificationService
+TransactionService --> RedisQueue
+AnalysisService --> AnalysisRepository
+AnalysisService --> CategoryRepository
+AnalysisService --> TransactionRepository
+AnalysisService --> ForecastService
+AnalysisService --> MLService
+BudgetService --> BudgetRepository
+BudgetService --> RedisQueue
+GamificationService --> GamificationRepository
+ForecastService --> TransactionRepository
+ForecastService --> ForecastRepository
+ForecastService --> CategoryRepository
+ScheduledExpenseService --> ScheduledExpenseRepository
+ScheduledExpenseService --> TransactionRepository
+ScheduledExpenseService --> CategoryRepository
+ExportService --> TransactionRepository
+
+TransactionRepository --> PostgreSQL
+CategoryRepository --> PostgreSQL
+BudgetRepository --> PostgreSQL
+AnalysisRepository --> PostgreSQL
+ForecastRepository --> PostgreSQL
+GamificationRepository --> PostgreSQL
+NotificationRepository --> PostgreSQL
+PushRepository --> PostgreSQL
+ScheduledExpenseRepository --> PostgreSQL
+UserRepository --> PostgreSQL
+
+RedisQueue --> GamificationService
+
+@enduml

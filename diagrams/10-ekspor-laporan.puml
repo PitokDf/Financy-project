@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Membuka halaman profil;
+
+:Menekan tombol
+"Ekspor Laporan";
+
+:Memilih format
+(CSV / XLSX / PDF)
+dan periode;
+
+:Klik tombol ekspor;
+
+|Website|
+:Mengirim permintaan
+GET /api/export
+dengan parameter
+format, bulan, tahun;
+
+|Back-end|
+:Mengambil data transaksi
+untuk periode yang dipilih
+dari database;
+
+if (Format =\nPDF?) then (YA)
+  :Membuat file PDF
+  dengan PDFKit;
+
+else if (Format =\nXLSX?) then (YA)
+  :Membuat file Excel
+  dengan exceljs;
+
+else (CSV)
+  :Membuat string CSV;
+
+endif
+
+:Trigger gamification-queue
+(EXPORT_CREATED);
+
+:Mengembalikan file
+sebagai download
+attachment;
+
+|Website|
+:Menerima blob file;
+
+:Menampilkan dialog
+download;
+
+|Pengguna|
+:File berhasil
+didownload;
+
+stop
+@enduml

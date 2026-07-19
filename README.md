@@ -1,354 +1,337 @@
-# Fintrack
+<!-- prettier-ignore -->
+<div align="center">
 
-Aplikasi web manajemen keuangan pribadi yang mengkategorikan transaksi secara otomatis dari deskripsi teks, mengelompokkan pola pengeluaran dengan K-Means + Sentence-BERT, dan belajar dari koreksi pengguna secara inkremental tanpa retrain penuh.
+<img src="./fintrack/public/logo.png" alt="FinTrack logo" align="center" height="96" />
 
-**Tugas Akhir** — Politeknik Negeri Padang, Program Studi Sarjana Terapan Teknologi Rekayasa Perangkat Lunak.
+# FinTrack
 
----
+**Personal finance management with AI-powered transaction clustering**
 
-## Daftar Isi
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10-3776ab?style=flat-square&logo=python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?style=flat-square&logo=docker&logoColor=white)
 
-- [Fitur Utama](#fitur-utama)
-- [Arsitektur](#arsitektur)
-- [Stack Teknologi](#stack-teknologi)
-- [Struktur Repository](#struktur-repository)
-- [Prasyarat](#prasyarat)
-- [Quick Start (Docker Compose)](#quick-start-docker-compose)
-- [Setup Pengembangan Lokal](#setup-pengembangan-lokal)
-- [Variabel Lingkungan](#variabel-lingkungan)
-- [ML Pipeline](#ml-pipeline)
-- [Incremental Learning](#incremental-learning)
-- [Endpoint API Utama](#endpoint-api-utama)
-- [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
-- [Lisensi](#lisensi)
+[Overview](#overview) • [Architecture](#architecture) • [Features](#features) • [Getting Started](#getting-started) • [Project Structure](#project-structure)
+
+</div>
 
 ---
 
-## Fitur Utama
+## Overview
 
-- **Kategorisasi otomatis** transaksi via Sentence-BERT (E5-Large) + SVM RBF kernel.
-- **Clustering pola pengeluaran** menggunakan K-Means dengan elbow + silhouette sebagai pemilih k optimal.
-- **Incremental learning** berbasis exemplar memory — belajar dari koreksi user tanpa melakukan retrain SVM (nol _catastrophic forgetting_).
-- **Peramalan bulanan** per kategori menggunakan Simple Moving Average (SMA).
-- **Target anggaran (budget goals)** dengan alert otomatis di 80% dan 100% pemakaian.
-- **Notifikasi & reminder** berbasis event (budget alert, pola baru, reminder pencatatan harian, push notification via Web Push).
-- **Ekspor laporan** PDF (ringkasan + grafik) dan Excel (.xlsx).
-- **Gamifikasi**: streak harian, koleksi badge, poin XP, tantangan mingguan.
-- **Import CSV** transaksi dan dashboard visualisasi (pie chart, line chart, elbow chart).
-- **Progressive Web App** dengan offline support via Serwist.
+Financy is a full-stack personal finance application that helps users track income and expenses, set budgets, and visualize spending patterns. It integrates a machine learning microservice that automatically categorizes transactions using multilingual text embeddings and logistic regression, eliminating the need for manual tagging.
 
-## Arsitektur
+The system is built as three independent services orchestrated with Docker Compose: a **Next.js PWA** frontend, an **Express.js** backend API, and a **FastAPI** ML clustering service.
 
-```
-                           ┌──────────────────┐
-                           │  fintrack (Next) │   Next.js 16 App Router
-                           │     :3000        │   React 19, PWA
-                           └────────┬─────────┘
-                                    │ HTTPS (axios)
-                                    ▼
-┌───────────────────┐      ┌──────────────────┐       ┌───────────────────┐
-│     Redis         │◄────►│  backend (API)   │──────►│  clustering (ML)  │
-│     :6379         │      │  Express + Prisma│  REST │  FastAPI          │
-│  queue + cache    │      │     :6789        │       │     :8000         │
-└───────────────────┘      └────────┬─────────┘       └────────┬──────────┘
-                                    │                           │
-                                    ▼                           ▼
-                           ┌──────────────────┐       ┌───────────────────┐
-                           │   PostgreSQL     │       │ classifier_model  │
-                           │    (external)    │       │ incremental_mem   │
-                           └──────────────────┘       └───────────────────┘
-```
+<div align="center">
+  <img src="./fintrack/public/screenshots/dashboard_mobile.png" alt="Dashboard" width="240" />
+  &nbsp;&nbsp;
+  <img src="./fintrack/public/screenshots/transaksi_mobile.png" alt="Transactions" width="240" />
+  &nbsp;&nbsp;
+  <img src="./fintrack/public/screenshots/analisis_mobile.png" alt="Analysis" width="240" />
+</div>
 
-- **fintrack** (frontend): Next.js App Router, mobile-first, PWA dengan service worker.
-- **backend** (API): Express 5 + Prisma + BullMQ untuk worker async (notifikasi, gamifikasi).
-- **clustering** (ML service): FastAPI yang membungkus Sentence-BERT encoder + SVC classifier + incremental memory.
-- **Redis**: job queue (BullMQ) dan cache.
-- **PostgreSQL**: sumber kebenaran data transaksional.
-
-## Stack Teknologi
-
-| Layer      | Teknologi                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| Frontend   | Next.js 16, React 19, TanStack Query, Tailwind CSS 4, shadcn/ui, Recharts, Zustand, Serwist (PWA) |
-| Backend    | Node.js (Bun dev, tsc build), Express 5, Prisma 7, Zod, BullMQ, Web Push, pdfmake, xlsx           |
-| ML Service | Python 3.10, FastAPI, Sentence-Transformers, scikit-learn (SVC), PyTorch CPU                      |
-| Data       | PostgreSQL, Redis                                                                                 |
-| DevOps     | Docker, docker-compose                                                                            |
-
-## Struktur Repository
+## Architecture
 
 ```
-.
-├── fintrack/              # Next.js frontend
-├── backend/               # Express API + Prisma
-│   ├── src/
-│   │   ├── controller/    # Route handlers
-│   │   ├── service/       # Business logic (analysis, forecast, gamification, dsb.)
-│   │   ├── repositories/  # Prisma data access
-│   │   ├── routes/        # Express routers
-│   │   ├── schemas/       # Zod validators
-│   │   ├── queue/         # BullMQ producers
-│   │   ├── worker/        # BullMQ consumers
-│   │   └── jobs/          # Scheduled jobs
-│   └── prisma/            # Schema, migrations, seeds
-├── clustering/            # FastAPI ML service
-│   ├── main.py            # FastAPI app + endpoints
-│   ├── clustering.py      # ClassifierService (encoder + SVC + memory blend)
-│   ├── incremental.py     # IncrementalMemory (exemplar-based)
-│   ├── train_script.ipynb # Notebook pelatihan model dasar
-│   └── data/              # Model bundle, base dataset, incremental memory
-├── docker-compose.yml
-└── docs/                  # Dokumen dan diagram
+┌──────────────────────┐
+│  fintrack (PWA)      │  Next.js 16 · React 19 · Tailwind CSS
+│  :3000               │  TanStack Query · Zustand · shadcn/ui
+└──────────┬───────────┘
+           │ REST
+           ▼
+┌──────────────────────┐
+│  backend (API)       │  Express.js 5 · Prisma · PostgreSQL
+│  :6789               │  BullMQ · Redis · JWT Auth
+└──────────┬───────────┘
+           │ REST
+           ▼
+┌──────────────────────┐
+│  clustering (ML)     │  FastAPI · PyTorch · Sentence Transformers
+│  :8000               │  multilingual-e5-large · scikit-learn
+└──────────────────────┘
 ```
 
-## Prasyarat
+> [!NOTE]
+> The frontend is not included in Docker Compose — it runs separately during development via `npm run dev`. Only the backend API, ML clustering service, and Redis are containerized.
 
-- **Docker & docker-compose** (rekomendasi untuk deployment terintegrasi)
-- **Node.js ≥ 20** dan **Bun** (untuk dev backend dan frontend)
-- **Python ≥ 3.10** (untuk dev ML service)
-- **PostgreSQL 14+** (bisa eksternal atau container tambahan)
-- **Redis 7+** (otomatis lewat compose)
+## Features
 
-## Quick Start (Docker Compose)
+### Transaction Management
 
-1. Salin env template:
+- Record income and expenses manually or via CSV import
+- Voice input through the Web Speech API for quick entry
+- Infinite-scroll virtualized list with search and type filters
 
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
+### AI Auto-Categorization
 
-2. Isi minimal: `DATABASE_URL`, `JWT_SECRET`, `REDIS_PASSWORD`, `CLIENT_URL`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
+- Predicts spending categories using `intfloat/multilingual-e5-large` (1024-dim embeddings)
+- Logistic Regression classifier trained on ~6,930 Indonesian transaction descriptions
+- Confidence threshold (default 0.50) flags low-certainty predictions for manual review
+- In-memory cache up to 50,000 entries for fast re-classification
 
-3. Build image backend dan clustering:
+### Budgeting
 
-   ```bash
-   docker build -t financy-backend:latest backend
-   docker build -t financy-clustering:latest clustering
-   ```
+- Set per-category budgets with weekly, monthly, or yearly periods
+- Automatic notifications at 80% (warning) and 100% (exceeded) thresholds
 
-4. Jalankan stack:
+### Forecasting
 
-   ```bash
-   docker compose up -d
-   ```
+- Monthly spending predictions per category using Simple Moving Average (SMA-3)
 
-5. Jalankan migrasi Prisma (sekali, di host dengan akses ke DATABASE_URL):
+### Gamification
 
-   ```bash
-   cd backend
-   bun install
-   bunx prisma migrate deploy
-   ```
+- XP and level system with daily streaks
+- Achievement badges and weekly challenges to encourage consistent tracking
 
-6. Frontend dev:
+### Recurring Expenses
 
-   ```bash
-   cd fintrack
-   bun install
-   bun dev
-   ```
+- Schedule fixed monthly expenses on any day of the month
+- Cron job processes due items at midnight WIB, creating pending transactions
 
-Service akan dapat diakses di:
+### Export
 
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:6789/api/v1`
-- ML service: `http://localhost:8001` (host) → `:8000` (container)
+- Transaction reports in CSV, XLSX, or PDF with Indonesian Rupiah formatting
 
-## Setup Pengembangan Lokal
+### PWA & Offline Support
 
-### Backend
+- Installable on Android and iOS with home screen shortcuts
+- Offline-first via IndexedDB mutation queue with automatic sync on reconnect
+- Push notifications through Web Push (VAPID)
+
+### Internationalization
+
+- Indonesian and English UI via `next-intl`
+
+<div align="center">
+  <img src="./fintrack/public/screenshots/anggaran_mobile.png" alt="Budget" width="240" />
+  &nbsp;&nbsp;
+  <img src="./fintrack/public/screenshots/desktop.png" alt="Desktop" width="400" />
+</div>
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (backend runtime)
+- [Node.js](https://nodejs.org/) v18+ (frontend)
+- [Python](https://python.org/) 3.10+ (clustering service)
+- [PostgreSQL](https://postgresql.org/)
+- [Redis](https://redis.io/)
+- [Docker](https://docker.com/) (optional, for containerized deployment)
+
+### Quick Start with Docker Compose
+
+Docker Compose runs the backend API, ML clustering service, and Redis. The frontend runs separately.
+
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/financy-project.git
+cd financy-project
+
+# Create environment files
+cp backend/.env.example backend/.env
+# Edit backend/.env with your database URL, JWT secret, etc.
+
+# Start backend + ML + Redis
+docker compose up --build
+```
+
+The services will be available at:
+
+| Service     | URL                     |
+| ----------- | ----------------------- |
+| Backend API | `http://localhost:6789` |
+| ML Service  | `http://localhost:8001` |
+| Redis       | `localhost:6379`        |
+
+Then in a separate terminal, start the frontend:
+
+```bash
+cd fintrack
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+### Manual Development
+
+Run all three services independently:
+
+<details>
+<summary><strong>Backend (Express.js)</strong></summary>
 
 ```bash
 cd backend
-cp .env.example .env
 bun install
 bunx prisma generate
 bunx prisma migrate dev
-bun dev
+bun run db:seed
+bun run dev
 ```
 
-API tersedia di `http://localhost:6789`. Healthcheck: `GET /api/v1/health`.
+</details>
 
-### ML Service
+<details>
+<summary><strong>Frontend (Next.js)</strong></summary>
+
+```bash
+cd fintrack
+npm install
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><strong>ML Clustering (FastAPI)</strong></summary>
 
 ```bash
 cd clustering
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python main.py
 ```
 
-Butuh file `classifier_model.joblib` di root `clustering/` atau di `data/` — hasil training dari `train_script.ipynb`. Model pertama kali boot akan men-download Sentence-Transformer `intfloat/multilingual-e5-large` (~2.2 GB).
+</details>
 
-### Frontend
+> [!IMPORTANT]
+> The backend requires a running PostgreSQL instance and Redis. Make sure `DATABASE_URL` and `REDIS_HOST` are configured in `backend/.env` before starting.
+
+### Environment Variables
+
+**Backend** (`backend/.env`):
+
+| Variable         | Description                  | Default                 |
+| ---------------- | ---------------------------- | ----------------------- |
+| `DATABASE_URL`   | PostgreSQL connection string | —                       |
+| `JWT_SECRET`     | JWT signing key              | —                       |
+| `ML_SERVICE_URL` | Clustering service URL       | `http://localhost:8000` |
+| `CLIENT_URL`     | Frontend URL (CORS)          | `http://localhost:3000` |
+| `REDIS_HOST`     | Redis host                   | `localhost`             |
+| `REDIS_PORT`     | Redis port                   | `6379`                  |
+| `REDIS_PASSWORD` | Redis password               | —                       |
+
+**Frontend** (`fintrack/.env`):
+
+| Variable              | Description          | Default                        |
+| --------------------- | -------------------- | ------------------------------ |
+| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:6789/api/v1` |
+
+## Project Structure
+
+```
+financy-project/
+├── fintrack/                  #   Frontend PWA (Next.js)
+│   ├── app/                   #   App Router pages & layouts
+│   ├── components/            #   UI components (shadcn/ui, layout)
+│   ├── hooks/                 #   15 custom React hooks
+│   ├── lib/                   #   API client, Zustand store, locales
+│   └── public/                #   Static assets, icons, screenshots
+├── backend/                   #   Backend API (Express.js)
+│   ├── src/
+│   │   ├── controller/        #   HTTP handlers
+│   │   ├── service/           #   Business logic
+│   │   ├── repositories/      #   Data access (Prisma)
+│   │   ├── routes/            #   API route definitions
+│   │   ├── middleware/        #   Auth, errors, rate limiting
+│   │   ├── queue/             #   BullMQ queue definitions
+│   │   ├── worker/            #   Background job workers
+│   │   └── schemas/           #   Zod validation schemas
+│   ├── prisma/                #   Database schema & migrations
+│   └── tests/                 #   Integration tests
+├── clustering/                #   ML Service (FastAPI)
+│   ├── main.py                #   FastAPI entry point
+│   ├── clustering.py          #   Classifier service
+│   └── data/                  #   Training data & model artifacts
+└── docker-compose.yml         #   Production orchestration
+```
+
+## API Reference
+
+All endpoints are prefixed with `/api/v1`. Most require JWT authentication.
+
+| Method | Endpoint                   | Description                           |
+| ------ | -------------------------- | ------------------------------------- |
+| `POST` | `/auth/register`           | Register a new account                |
+| `POST` | `/auth/login`              | Log in                                |
+| `GET`  | `/auth/google/`            | Google OAuth flow                     |
+| `GET`  | `/transactions/`           | List transactions (cursor pagination) |
+| `POST` | `/transactions/`           | Create transaction (auto-categorized) |
+| `POST` | `/transactions/import-csv` | Import from CSV                       |
+| `POST` | `/analysis/run-v2`         | Run ML clustering analysis            |
+| `POST` | `/analysis/confirm`        | Confirm cluster-to-category mappings  |
+| `GET`  | `/dashboard/`              | Dashboard summary (cached)            |
+| `GET`  | `/budgets/`                | List budgets with spending progress   |
+| `GET`  | `/export/`                 | Export transactions (CSV/XLSX/PDF)    |
+| `GET`  | `/gamification/stats`      | XP, level, and streak stats           |
+
+See `backend/src/routes/` for the complete endpoint list.
+
+## Background Jobs
+
+The backend uses BullMQ with Redis for asynchronous processing:
+
+| Worker                     | Responsibility                           |
+| -------------------------- | ---------------------------------------- |
+| `gamification-worker`      | XP calculation, level-ups, badge unlocks |
+| `reminder-budget-worker`   | Budget threshold notifications           |
+| `streak-worker`            | Daily streak tracking and resets         |
+| `scheduled-expense-worker` | Recurring expense creation               |
+
+Two cron jobs run on schedule:
+
+- **Streak warning** — daily at 20:00 WIB, notifies users who haven't logged a transaction
+- **Scheduled expense check** — daily at midnight WIB, processes due recurring items
+
+## Database
+
+15 Prisma models across five domains:
+
+| Domain        | Models                                                                  |
+| ------------- | ----------------------------------------------------------------------- |
+| Users & Auth  | `User`, `UserSetting`                                                   |
+| Finance       | `Transaction`, `Category`, `BudgetGoal`, `ScheduledExpense`, `Forecast` |
+| ML Analysis   | `AnalysisRun`, `Cluster`                                                |
+| Gamification  | `UserStats`, `Badge`, `UserBadge`, `Challenge`, `UserChallenge`         |
+| Notifications | `Notification`, `PushSubscription`                                      |
+
+## Training the ML Model
+
+The clustering service uses a pre-trained model stored as `classifier_model_v2.joblib`. To retrain:
 
 ```bash
-cd fintrack
-cp .env.example .env  # kalau ada, selain itu buat manual
-bun install
-bun dev
+jupyter notebook train_script_2.ipynb
 ```
 
-Isi minimal di `fintrack/.env`:
+The training pipeline:
 
-```dotenv
-NEXT_PUBLIC_API_URL=http://localhost:6789/api/v1
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=<isi sama dengan backend>
-```
+1. Loads ~6,930 labeled Indonesian transaction descriptions
+2. Generates embeddings with `intfloat/multilingual-e5-large`
+3. Tunes a Logistic Regression classifier via `GridSearchCV`
+4. Exports the best model as a joblib file
 
-## Variabel Lingkungan
+> [!TIP]
+> After retraining, place the new `classifier_model_v2.joblib` in `clustering/` and restart the service.
 
-### backend/.env (utama)
+## Deployment
 
-| Variabel                                          | Keterangan                                               |
-| ------------------------------------------------- | -------------------------------------------------------- |
-| `PORT`                                            | Port Express (default `6789`)                            |
-| `DATABASE_URL`                                    | Koneksi PostgreSQL                                       |
-| `JWT_SECRET`                                      | Secret untuk signing JWT                                 |
-| `JWT_ISSUER`                                      | Issuer claim JWT                                         |
-| `CLIENT_URL`                                      | URL frontend (dipakai di CORS dan link email)            |
-| `ALLOWED_ORIGINS`                                 | Daftar origin CORS, comma-separated                      |
-| `COOKIES_DOMAIN`                                  | Domain cookie (production)                               |
-| `TOKEN_SET_IN`                                    | `cookie` (default) atau `header`                         |
-| `ML_SERVICE_URL`                                  | URL FastAPI ML service (default `http://localhost:8000`) |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`      | Redis untuk BullMQ & cache                               |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`           | Web Push                                                 |
-| `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX_REQUESTS` | Rate limiting                                            |
-| `UPLOAD_MAX_SIZE`, `UPLOAD_DIR`                   | Upload file (CSV import)                                 |
-| `CACHE_TTL`                                       | TTL cache in-memory                                      |
-
-### clustering (opsional)
-
-| Variabel                  | Default                            | Keterangan                                                 |
-| ------------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| `DATA_DIR`                | `clustering/data`                  | Lokasi model bundle + memory                               |
-| `INCREMENTAL_MEMORY_PATH` | `$DATA_DIR/incremental_memory.npz` | File persistent memory                                     |
-| `FEEDBACK_LOG_PATH`       | `$DATA_DIR/feedback_log.jsonl`     | Audit log feedback                                         |
-| `INCREMENTAL_MAX_SIZE`    | `50000`                            | Kapasitas memory (FIFO eviction)                           |
-| `MEMORY_HIGH_THRESHOLD`   | `0.92`                             | Similarity untuk override penuh                            |
-| `MEMORY_BLEND_THRESHOLD`  | `0.80`                             | Similarity untuk mulai blending                            |
-| `MEMORY_BLEND_WEIGHT`     | `0.60`                             | Bobot maksimum memory di zona blending                     |
-| `ALLOW_NEW_LABELS`        | `0`                                | Set `1` untuk menerima label di luar vocabulary classifier |
-
-### fintrack/.env
-
-| Variabel                       | Keterangan                                |
-| ------------------------------ | ----------------------------------------- |
-| `NEXT_PUBLIC_API_URL`          | URL absolut backend API                   |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Public key Web Push (harus match backend) |
-
-## ML Pipeline
-
-Alur analisis V2 (`POST /api/v1/analysis/run-v2`):
-
-1. Backend ambil transaksi user tanpa kategori → kirim ke `POST /v2/analyze`.
-2. ML service membersihkan deskripsi (lowercase, hapus angka panjang, trim), di-encode dengan E5 (`query: <text>`), dinormalisasi L2.
-3. Probabilitas diambil dari SVC (RBF kernel) yang di-training di notebook dengan 42 kategori pre-defined.
-4. Incremental memory di-query via cosine similarity terhadap embedding user sebelumnya.
-5. Probabilitas di-blend dengan memory (lihat bagian berikut).
-6. Hasil prediksi dikelompokkan menjadi "pseudo-cluster" per kategori, dipersist sebagai `AnalysisRun` + `Cluster` + anggotanya.
-7. User meninjau dan memilih konfirmasi nama kategori akhir. Setelah confirm:
-   - Backend meng-upsert `Category`, menghubungkan transaksi ke kategori final.
-   - Pasangan `(description, category_name)` dikirim fire-and-forget ke `POST /v2/feedback` untuk memperkuat memory.
-
-## Incremental Learning
-
-Pendekatan: **retrieval-augmented classification dengan exemplar memory**. Classifier SVM dasar tidak di-retrain, jadi akurasi pada distribusi asli terjaga.
-
-### Cara kerja
-
-- Setiap koreksi user di-encode dan disimpan sebagai tuple `(description, embedding, label)`.
-- Saat inferensi, query di-cosine-similarity dengan seluruh memory.
-- Logika blending tiap prediksi:
-
-  | Similarity (sim)    | Aksi                                           |
-  | ------------------- | ---------------------------------------------- |
-  | `sim ≥ 0.92`        | Override penuh → label memory menang           |
-  | `0.80 ≤ sim < 0.92` | Blend linier antara probs SVC dan label memory |
-  | `sim < 0.80`        | Probs SVC dipakai apa adanya                   |
-
-### Ketahanan
-
-- **Voting dedup**: satu description dengan beberapa label dimenangkan oleh label terbanyak — satu misclick tidak meracuni memory.
-- **FIFO bounded**: memory dibatasi `INCREMENTAL_MAX_SIZE` entry untuk mencegah bloat.
-- **Out-of-vocab skip**: label yang tidak dikenal classifier di-skip secara default.
-- **Thread-safe**: mutasi memory di-guard dengan lock; persist atomic (tmp file + rename).
-- **Audit log**: setiap ingest tercatat di `feedback_log.jsonl` dengan timestamp dan sumber.
-
-### API Memory
-
-- `POST /v2/feedback` — kirim batch koreksi `{items: [{description, category}, ...], source}`.
-- `GET /v2/memory/stats` — ukuran memory, distribusi label, waktu update terakhir.
-- `GET /health` — status service + ringkasan memory.
-
-## Endpoint API Utama
-
-Semua endpoint backend di-prefix `/api/v1` dan membutuhkan JWT di cookie atau header `Authorization: Bearer <token>` (kecuali `/auth/*`).
-
-### Auth
-
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/logout`
-- `GET /auth/me`
-
-### Transaksi
-
-- `GET /transactions` — list + filter + search
-- `POST /transactions`
-- `PUT /transactions/:id`
-- `DELETE /transactions/:id`
-- `POST /transactions/import` — upload CSV
-
-### Analisis (clustering)
-
-- `POST /analysis/run-v2` — jalankan klasifikasi dan pengelompokan
-- `POST /analysis/confirm` — konfirmasi mapping cluster → kategori; juga memicu submit feedback ke ML
-- `GET /analysis/latest` — status run terakhir
-- `GET /analysis/stats` — agregasi harian
-- `GET /analysis/category-breakdown`
-
-### Budget, Forecast, Notification, Export, Gamification, Dashboard
-
-Lihat `backend/src/routes/` untuk rute lengkap per modul.
-
-### ML service
-
-- `POST /v2/analyze` — klasifikasi transaksi
-- `POST /v2/feedback` — ingest koreksi user
-- `GET  /v2/memory/stats`
-- `GET  /health`
-
-## Testing
-
-Backend (Jest + Supertest):
+### Docker Compose (Production)
 
 ```bash
-cd backend
-bun test
-bun test --coverage
+export DATABASE_URL="postgresql://..."
+export JWT_SECRET="..."
+export REDIS_PASSWORD="..."
+export CLIENT_URL="https://fintrack.pitok.my.id"
+export ALLOWED_ORIGINS="https://fintrack.pitok.my.id"
+
+docker compose up -d --build
 ```
 
-ML service — smoke test untuk modul memory:
+### Vercel (Backend)
 
-```bash
-cd clustering
-source venv/bin/activate
-pytest  # kalau ada suite tambahan, atau jalankan skrip ad-hoc
-```
-
-Frontend: belum ada test runner terkonfigurasi secara default. Tambahkan Vitest / Playwright sesuai kebutuhan.
-
-## Troubleshooting
-
-- **Backend tidak bisa panggil ML service**: pastikan `ML_SERVICE_URL` valid dari sudut pandang container (di compose: `http://clustering:8000`).
-- **First boot ML lambat**: download model E5-Large ~2.2 GB. Setelah di-cache di `model_cache/` akan cepat.
-- **Memory hilang setelah restart container**: pastikan `./clustering/data` di-mount sebagai volume (sudah di `docker-compose.yml`).
-- **Akurasi turun setelah banyak feedback**: turunkan `MEMORY_BLEND_WEIGHT` atau naikkan `MEMORY_HIGH_THRESHOLD`. Anda juga bisa hapus `incremental_memory.npz` untuk reset memory tanpa menyentuh model dasar.
-- **Prisma error di production**: jalankan `bunx prisma migrate deploy` (bukan `dev`). Pastikan `DATABASE_URL` menunjuk ke DB yang sama dengan yang dipakai aplikasi.
-
-## Lisensi
-
-MIT © Pito Desri Pauzi
+The backend includes `api/index.js` for Vercel serverless deployment. Set the environment variables in the Vercel dashboard and deploy.

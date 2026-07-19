@@ -1,0 +1,99 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Klik tombol
+catat transaksi;
+
+|Website|
+if (Koneksi\ninternet tersedia?) then (YA)
+  :Mengirim data ke backend
+  POST /api/transactions;
+
+  |Back-end|
+  :Memproses transaksi
+  (kategorisasi ML,
+  gamifikasi, budget check);
+
+  :Menyimpan ke PostgreSQL;
+
+  |Website|
+  :Invalidate queries
+  (transactions, dashboard);
+
+  :Menampilkan transaksi
+  berhasil;
+
+else (TIDAK)
+  :Menyimpan data ke
+  IndexedDB
+  (pending_mutations);
+
+  :Menampilkan UI optimis
+  "Transaksi tersimpan
+  (offline)";
+
+  :Menampilkan badge
+  "Mode Offline";
+
+endif
+
+|Pengguna|
+:Melihat transaksi
+berhasil dicatat;
+
+note right
+  Ketika koneksi pulih,
+  OfflineSyncProvider
+  mendeteksi event "online"
+  dan memanggil
+  syncPendingMutations().
+end note
+
+|Website|
+if (Kembali\nonline?) then (YA)
+  :Membaca semua data
+  dari IndexedDB
+  (pending_mutations);
+
+  :Menampilkan toast
+  "Sinkronisasi N data...";
+
+  while (Ada mutation\nbelum sync?) is (YA)
+    if (Action = CREATE?) then (YA)
+      :POST /api/transactions;
+    else if (Action = DELETE?) then (YA)
+      :DELETE /api/transactions/:id;
+    else (UPDATE)
+      :PUT /api/transactions/:id;
+    endif
+
+    :Hapus dari IndexedDB;
+
+  endwhile (TIDAK)
+
+  :Invalidate queries
+  (transactions, user-stats,
+  dashboard-stats);
+
+  :Menampilkan toast
+  "Berhasil sinkronisasi
+  N data!";
+
+endif
+
+stop
+@enduml

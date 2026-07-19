@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Membuka dashboard;
+:Klik tombol mikrofon;
+
+|Website|
+:Inisialisasi Web Speech API
+(id-ID, continuous=false, interimResults=true);
+:Mendengarkan + menampilkan transkrip live;
+:Pengguna berhenti bicara (auto-stop);
+:Parse client-side
+(strip "Rp", konversi kata nominal, ekstrak angka);
+
+if (Jumlah > 0?) then (YA)
+  :Tampilkan UI "Menganalisis...";
+
+  |Back-end|
+  :POST /api/transactions;
+  :TransactionService.create();
+
+  if (INCOME?) then (YA)
+    :Keyword matching + auto-create kategori;
+  else (TIDAK)
+    if (autoCategorize?) then (YA)
+      :ML pipeline (preprocessing,
+      embedding, prediksi kategori);
+      if (needsReview?) then (YA)
+        :Tandai needsReview=true;
+      endif
+    endif
+  endif
+
+  :Simpan ke PostgreSQL + hapus cache Redis;
+  :Trigger gamification & budget queue;
+
+  |Website|
+  :Invalidate cache + tampilkan hasil;
+
+else (TIDAK)
+  :Toast "Tidak ada nominal terdeteksi";
+endif
+
+|Pengguna|
+:Melihat transaksi dari input suara;
+stop
+@enduml

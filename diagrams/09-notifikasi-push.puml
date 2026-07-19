@@ -1,0 +1,81 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #FFD54F
+  BorderColor #333333
+  FontColor #000000
+  DiamondBackgroundColor #C8E6C9
+  DiamondBorderColor #333333
+  ArrowColor #333333
+}
+
+|Pengguna|
+start
+:Membuka halaman profil;
+
+:Menekan tombol
+"Berlangganan Notifikasi";
+
+|Website|
+:Meminta izin notifikasi
+ke browser;
+
+if (Pengguna\nmengizinkan?) then (YA)
+  :Membuat subscription
+  object (endpoint,
+  keys p256dh, auth);
+
+  :Mengirim subscription
+  ke backend
+  POST /api/push/subscribe;
+
+  |Back-end|
+  :Menyimpan subscription
+  ke database;
+
+  :Membuat notifikasi
+  SUBSCRIPTION_ACTIVE;
+
+else (TIDAK)
+  :Menampilkan pesan
+  "Izin notifikasi ditolak";
+
+endif
+
+|Back-end|
+:Mengirim push notification
+saat event terjadi
+(budget warning,
+badge unlock, dll);
+
+:Membuat notifikasi
+in-app di database;
+
+:Mengirim web push
+via VAPID ke subscription;
+
+|Service Worker|
+:Menerima push event;
+
+:Memfilter notifikasi
+berdasarkan userId;
+
+:Menampilkan notifikasi
+di perangkat;
+
+if (Pengguna\nmengklik notifikasi?) then (YA)
+  :Navigate ke URL
+  relevan;
+
+  |Website|
+  :Menampilkan halaman
+  terkait notifikasi;
+
+endif
+
+stop
+@enduml

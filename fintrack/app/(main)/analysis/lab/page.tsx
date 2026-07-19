@@ -58,7 +58,9 @@ export default function AnalysisLabPage() {
   const [forecastData, setForecastData] = useState<any>(null);
   const [needsReviewTxs, setNeedsReviewTxs] = useState<NeedsReviewTx[]>([]);
   const [isLoadingReview, setIsLoadingReview] = useState(true);
-  const [selectedReviewIds, setSelectedReviewIds] = useState<Set<string>>(new Set());
+  const [selectedReviewIds, setSelectedReviewIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     if (latestRun?.status === "waiting_confirmation") loadResult(latestRun);
@@ -106,7 +108,7 @@ export default function AnalysisLabPage() {
         transactionIds: Array.from(selectedReviewIds),
       });
       setNeedsReviewTxs((prev) =>
-        prev.filter((tx) => !selectedReviewIds.has(tx.id))
+        prev.filter((tx) => !selectedReviewIds.has(tx.id)),
       );
       setSelectedReviewIds(new Set());
       toast.success(`${selectedReviewIds.size} transaksi dikonfirmasi`);
@@ -335,9 +337,7 @@ export default function AnalysisLabPage() {
           )}
 
           {/* Hero illustration area */}
-          <div className="flex flex-col items-center px-1">
-          {/* Hero illustration area */}
-          <div className="relative mb-8">
+          <div className="relative mb-8 mt-8 flex flex-col items-center px-1">
             {/* Soft glow rings */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-32 h-32 rounded-full bg-primary/8 animate-pulse" />
@@ -350,24 +350,11 @@ export default function AnalysisLabPage() {
               <Brain className="w-8 h-8 text-white" />
             </div>
           </div>
-
           <div className="text-center space-y-2 mb-10">
             <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px] mx-auto">
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-65 mx-auto">
               {t("desc")}
             </p>
-          </div>
-
-          {/* Feature pills */}
-          <div className="flex flex-wrap gap-2 justify-center mb-10">
-            {[t("features.0"), t("features.1"), t("features.2")].map((f) => (
-              <span
-                key={f}
-                className="px-3 py-1 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border/60"
-              >
-                {f}
-              </span>
-            ))}
           </div>
 
           <Button
