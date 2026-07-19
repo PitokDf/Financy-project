@@ -102,7 +102,7 @@ jobs:
             mkdir -p ~/financy-project/clustering/data
             mkdir -p ~/financy-project/clustering/model_cache
 
-            # Create .env file 
+            # Create .env file
             cat <<EOF > .env
             DATABASE_URL=$DATABASE_URL
             JWT_SECRET=$JWT_SECRET
