@@ -1,156 +1,179 @@
 /// <reference lib="webworker" />
 import {
-    Serwist,
-    StaleWhileRevalidate,
-    CacheFirst,
-    NetworkFirst,
-    ExpirationPlugin,
-    CacheableResponsePlugin,
-    type PrecacheEntry,
-    type SerwistGlobalConfig,
+  Serwist,
+  CacheFirst,
+  NetworkFirst,
+  ExpirationPlugin,
+  CacheableResponsePlugin,
+  type PrecacheEntry,
+  type SerwistGlobalConfig,
 } from "serwist";
 
 declare const self: ServiceWorkerGlobalScope &
-    SerwistGlobalConfig & {
-        __SW_MANIFEST: (PrecacheEntry | string)[];
-    };
+  SerwistGlobalConfig & {
+    __SW_MANIFEST: (PrecacheEntry | string)[];
+  };
+
+const PAGES_CACHE = "pages-v2";
+const ASSETS_CACHE = "assets-v2";
+const API_CACHE = "api-v2";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6789/api/v1";
+const API_ORIGIN = new URL(API_BASE).origin;
+const CRITICAL_API_ROUTES = [
+  `${API_BASE}/dashboard`,
+  `${API_BASE}/categories`,
+  `${API_BASE}/budgets`,
+  `${API_BASE}/gamification/stats`,
+];
+
+const CRITICAL_PAGE_ROUTES = [
+  "/dashboard",
+  "/transactions",
+  "/budget",
+  "/analysis",
+  "/achievements",
+  "/offline",
+];
 
 const serwist = new Serwist({
-    precacheEntries: self.__SW_MANIFEST,
-    skipWaiting: true,
-    clientsClaim: true,
-    navigationPreload: true,
-    runtimeCaching: [
-        {
-            matcher: ({ request }) => request.destination === "document",
-            handler: new StaleWhileRevalidate({
-                cacheName: "pages-cache",
-                plugins: [
-                    new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 }),
-                    new CacheableResponsePlugin({ statuses: [0, 200] }),
-                ],
-            }),
-        },
-        {
-            matcher: ({ request }) =>
-                ["style", "script", "font", "image"].includes(request.destination),
-            handler: new CacheFirst({
-                cacheName: "assets-cache",
-                plugins: [
-                    new ExpirationPlugin({ maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 }),
-                    new CacheableResponsePlugin({ statuses: [0, 200] }),
-                ],
-            }),
-        },
-        {
-            matcher: ({ request, url }) => {
-                if (request.method !== "GET") return false;
-                return url.pathname.startsWith("/api/") || url.pathname.startsWith("/api/v1/");
-            },
-            handler: new NetworkFirst({
-                cacheName: "api-cache",
-                networkTimeoutSeconds: 5,
-                plugins: [
-                    new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 10 }),
-                    new CacheableResponsePlugin({ statuses: [0, 200] }),
-                ],
-            }),
-        },
-    ],
-    fallbacks: {
-        entries: [
-            // Hanya tampilkan halaman offline jika halaman tersebut benar-benar belum pernah dikunjungi (tidak ada di cache)
-            {
-                url: "/offline",
-                matcher({ request }) {
-                    return request.destination === "document";
-                },
-            },
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: false,
+  runtimeCaching: [
+    {
+      matcher: ({ request }) => request.destination === "document",
+      handler: new NetworkFirst({
+        cacheName: PAGES_CACHE,
+        networkTimeoutSeconds: 5,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24 * 3,
+          }),
+          new CacheableResponsePlugin({ statuses: [0, 200] }),
         ],
+      }),
     },
+    {
+      matcher: ({ request }) =>
+        ["style", "font", "image"].includes(request.destination),
+      handler: new CacheFirst({
+        cacheName: ASSETS_CACHE,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 120,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+          }),
+          new CacheableResponsePlugin({ statuses: [0, 200] }),
+        ],
+      }),
+    },
+    {
+      matcher: ({ url }) => url.origin === API_ORIGIN,
+      handler: new NetworkFirst({
+        cacheName: API_CACHE,
+        networkTimeoutSeconds: 5,
+        plugins: [
+          new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 30 }),
+          new CacheableResponsePlugin({ statuses: [0, 200] }),
+        ],
+      }),
+    },
+  ],
+  fallbacks: {
+    entries: [
+      {
+        url: "/offline",
+        matcher({ request }) {
+          return request.destination === "document";
+        },
+      },
+    ],
+  },
 });
 
 serwist.addEventListeners();
 
 let currentUserId: string | null = null;
 
-self.addEventListener("message", (event) => {
-    if (event.data && event.data.type === "SET_USER_ID") {
-        currentUserId = event.data.userId;
-        console.log("[SW] User ID synced:", currentUserId);
-    }
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const pageCache = await caches.open(PAGES_CACHE);
+        const apiCache = await caches.open(API_CACHE);
+        await Promise.allSettled([
+          ...CRITICAL_PAGE_ROUTES.map((route) =>
+            pageCache.add(new Request(route)).catch(() => {}),
+          ),
+          ...CRITICAL_API_ROUTES.map((route) =>
+            apiCache
+              .add(new Request(route, { credentials: "include" }))
+              .catch(() => {}),
+          ),
+        ]);
+      } catch {}
+    })(),
+  );
 });
 
-self.addEventListener('fetch', (event: FetchEvent) => {
-    const url = new URL(event.request.url);
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names.filter((n) => n.endsWith("-v1")).map((n) => caches.delete(n)),
+        ),
+      ),
+  );
+});
 
-    if (url.pathname === '/transactions' && event.request.method === 'POST') {
-        event.respondWith(
-            (async () => {
-                const formData = await event.request.formData();
-                const file = formData.get('fileCSV') as File;
-
-                if (file) {
-                    const cache = await caches.open('shared-target');
-                    await cache.put('/shared-file', new Response(file));
-
-                }
-
-                return Response.redirect('/transactions?action=import', 303)
-            })()
-        )
-    }
-})
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SET_USER_ID") {
+    currentUserId = event.data.userId;
+  }
+});
 
 self.addEventListener("push", (event) => {
-    if (!event.data) return;
-
-    try {
-        const data = event.data.json();
-
-        // Filter: Only show if userId matches or if no userId filter is provided (legacy)
-        if (data.userId && currentUserId && data.userId !== currentUserId) {
-            console.log("[SW] Skipping notification for another user:", data.userId);
-            return;
-        }
-
-        const title = data.title || "Fintrack";
-        const options: NotificationOptions = {
-            body: data.body || "",
-            icon: data.icon || "/icons/icon-192x192.png",
-            badge: data.badge || "/icons/badge-72x72.png",
-            data: data.url || "/"
-        };
-
-        event.waitUntil(self.registration.showNotification(title, options));
-    } catch {
-        event.waitUntil(
-            self.registration.showNotification("Fintrack", {
-                body: event.data.text(),
-                icon: "/icons/icon-192x192.png",
-            })
-        );
-    }
+  if (!event.data) return;
+  try {
+    const data = event.data.json();
+    if (data.userId && currentUserId && data.userId !== currentUserId) return;
+    event.waitUntil(
+      self.registration.showNotification(data.title || "FinTrack", {
+        body: data.body || "",
+        icon: "/icons/icon-192x192.png",
+        badge: "/icons/badge-72x72.png",
+        data: data.url || "/",
+      }),
+    );
+  } catch (_) {
+    event.waitUntil(
+      self.registration.showNotification("FinTrack", {
+        body: event.data.text(),
+        icon: "/icons/icon-192x192.png",
+      }),
+    );
+  }
 });
 
 self.addEventListener("notificationclick", (event) => {
-    event.notification.close();
-    const urlToOpen = event.notification.data || "/";
-
-    event.waitUntil(
-        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-            // Jika ada tab yang terbuka, navigasikan ke URL tujuan dan fokuskan
-            for (const client of clientList) {
-                if (client.url.includes(self.location.origin) && "navigate" in client) {
-                    return client.navigate(urlToOpen).then((c) => c?.focus());
-                }
-            }
-
-            // Jika tidak ada tab terbuka, buka jendela baru
-            if (self.clients.openWindow) {
-                return self.clients.openWindow(urlToOpen);
-            }
-        })
-    );
+  event.notification.close();
+  const url = event.notification.data || "/";
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        for (const c of clients) {
+          if (c.url.includes(self.location.origin) && "navigate" in c) {
+            return (c as WindowClient).navigate(url).then((w) => w?.focus());
+          }
+        }
+        return self.clients.openWindow(url);
+      }),
+  );
 });
-

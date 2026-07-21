@@ -4,13 +4,15 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'FinTrack - Manajemen Keuangan Pribadi',
         short_name: 'FinTrack',
-        description: 'Aplikasi manajemen keuangan pribadi dengan klasterisasi transaksi otomatis',
+        description: 'Aplikasi manajemen keuangan pribadi dengan klasterisasi transaksi otomatis dan akses offline',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#10b981',
         lang: 'id-ID',
+        orientation: 'portrait-primary',
+        categories: ['finance', 'productivity', 'utilities'],
         share_target: {
             action: '/transactions?action=import',
             method: 'POST',
@@ -19,7 +21,9 @@ export default function manifest(): MetadataRoute.Manifest {
                 files: [{
                     name: 'fileCSV',
                     accept: ['text/csv', '.csv']
-                }]
+                }],
+                title: 'title',
+                text: 'text',
             }
         },
         shortcuts: [
@@ -50,7 +54,21 @@ export default function manifest(): MetadataRoute.Manifest {
                 description: 'Pantau klasterisasi pengeluaran',
                 url: '/analysis',
                 icons: [{ src: '/icons/icon-analysis-192x192.png', sizes: '192x192', type: 'image/png' }],
-            }
+            },
+            {
+                name: 'Kelola Anggaran',
+                short_name: 'Anggaran',
+                description: 'Atur anggaran bulanan Anda',
+                url: '/budget',
+                icons: [{ src: '/icons/icon-dashboard-192x192.png', sizes: '192x192', type: 'image/png' }],
+            },
+            {
+                name: 'Notifikasi',
+                short_name: 'Notifikasi',
+                description: 'Lihat notifikasi terbaru',
+                url: '/notifications',
+                icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }],
+            },
         ],
         icons: [
             {

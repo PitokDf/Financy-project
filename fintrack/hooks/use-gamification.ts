@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
+import { cacheResponse, getCachedResponse } from "@/lib/offline/db";
 
 export interface UserStats {
     xp: number;
@@ -54,16 +55,32 @@ export function useGamification() {
     const getAllBadges = useQuery({
         queryKey: ['all-badges'],
         queryFn: async () => {
-            const res = await axiosClient.get("/gamification/badges/all");
-            return (res.data as Badges[]) || null;
+            try {
+                const res = await axiosClient.get("/gamification/badges/all");
+                const data = (res.data as Badges[]) || null;
+                if (data) await cacheResponse('/api/gamification/badges/all', data);
+                return data;
+            } catch (error) {
+                const cached = await getCachedResponse('/api/gamification/badges/all');
+                if (cached) return cached.data as Badges[];
+                throw error;
+            }
         },
     });
 
     const statsQuery = useQuery({
         queryKey: ['user-stats'],
         queryFn: async () => {
-            const res = await axiosClient.get("/gamification/stats");
-            return (res.data as UserStats) || null;
+            try {
+                const res = await axiosClient.get("/gamification/stats");
+                const data = (res.data as UserStats) || null;
+                if (data) await cacheResponse('/api/gamification/stats', data);
+                return data;
+            } catch (error) {
+                const cached = await getCachedResponse('/api/gamification/stats');
+                if (cached) return cached.data as UserStats;
+                throw error;
+            }
         },
         placeholderData: {
             xp: 0,
@@ -79,8 +96,16 @@ export function useGamification() {
     const badgesQuery = useQuery({
         queryKey: ['user-badges'],
         queryFn: async () => {
-            const res = await axiosClient.get("/gamification/badges");
-            return (res.data as UserBadge[]) || [];
+            try {
+                const res = await axiosClient.get("/gamification/badges");
+                const data = (res.data as UserBadge[]) || [];
+                await cacheResponse('/api/gamification/badges', data);
+                return data;
+            } catch (error) {
+                const cached = await getCachedResponse('/api/gamification/badges');
+                if (cached) return cached.data as UserBadge[];
+                throw error;
+            }
         },
         initialData: []
     });
@@ -88,8 +113,16 @@ export function useGamification() {
     const challengesQuery = useQuery({
         queryKey: ['user-challenges'],
         queryFn: async () => {
-            const res = await axiosClient.get("/gamification/challenges");
-            return (res.data as UserChallenge[]) || [];
+            try {
+                const res = await axiosClient.get("/gamification/challenges");
+                const data = (res.data as UserChallenge[]) || [];
+                await cacheResponse('/api/gamification/challenges', data);
+                return data;
+            } catch (error) {
+                const cached = await getCachedResponse('/api/gamification/challenges');
+                if (cached) return cached.data as UserChallenge[];
+                throw error;
+            }
         },
         initialData: []
     });

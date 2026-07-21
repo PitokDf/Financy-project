@@ -7,7 +7,7 @@ import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
-import { addPendingMutation } from "@/lib/offline/db";
+import { addPendingMutation, cacheResponse, getCachedResponse } from "@/lib/offline/db";
 
 export interface Transaction {
   id: string;
@@ -43,22 +43,39 @@ export function useTransactions(search?: string, type?: string) {
         ? `/transactions?cursor=${pageParam}&limit=10${searchParam}${typeParam}`
         : `/transactions?limit=10${searchParam}${typeParam}`;
 
-      const res = await axiosClient.get(url);
-      const payload = res as TransactionWithPagination;
+      try {
+        const res = await axiosClient.get(url);
+        const payload = res as TransactionWithPagination;
 
-      return {
-        data: payload.data.map((tx) => ({
-          ...tx,
-          categoryColor:
-            tx.category?.color ??
-            (tx.type === "EXPENSE" ? "#b92910" : "#059669"),
-          category: tx.category?.name || "Belum dikategorikan",
-          categoryIcon: tx.category?.icon || "",
-        })),
-        nextCursor: payload.nextCursor,
-        totalIncome: payload.totalIncome || 0,
-        totalExpense: payload.totalExpense || 0,
-      };
+        const result = {
+          data: payload.data.map((tx) => ({
+            ...tx,
+            categoryColor:
+              tx.category?.color ??
+              (tx.type === "EXPENSE" ? "#b92910" : "#059669"),
+            category: tx.category?.name || "Belum dikategorikan",
+            categoryIcon: tx.category?.icon || "",
+          })),
+          nextCursor: payload.nextCursor,
+          totalIncome: payload.totalIncome || 0,
+          totalExpense: payload.totalExpense || 0,
+        };
+
+        if (!pageParam) {
+          await cacheResponse('/api/transactions', result);
+        }
+
+        return result;
+      } catch (error) {
+        if (!pageParam) {
+          const cached = await getCachedResponse('/api/transactions');
+          if (cached) {
+            console.log('[Transactions] Serving from offline cache');
+            return cached.data;
+          }
+        }
+        throw error;
+      }
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -224,16 +241,72 @@ export function useTransactions(search?: string, type?: string) {
       id: string;
       data: Omit<Transaction, "id" | "category">;
     }) => {
+      if (!navigator.onLine) {
+        const offlineId = `upd_${id}`;
+        await addPendingMutation({
+          id: offlineId,
+          action: "UPDATE",
+          data: { id, ...data },
+          endpoint: `/transactions/${id}`,
+        });
+        return { ...data, id, isOffline: true };
+      }
       const res = await axiosClient.patch(`/transactions/${id}`, data);
       return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Transaksi berhasil diperbarui!");
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({
+        queryKey: ["transactions", search, type],
+      });
+      const previousTransactions = queryClient.getQueryData([
+        "transactions",
+        search,
+        type,
+      ]);
+
+      queryClient.setQueryData(["transactions", search, type], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((tx: any) =>
+              tx.id === id
+                ? {
+                    ...tx,
+                    ...data,
+                    categoryColor:
+                      data.type === "EXPENSE" ? "#b92910" : "#059669",
+                    category: !navigator.onLine
+                      ? "Pending sync"
+                      : tx.category,
+                    isOffline: !navigator.onLine,
+                  }
+                : tx,
+            ),
+          })),
+        };
+      });
+
+      return { previousTransactions };
     },
-    onError: (error: AxiosError<ErrorResponse>) => {
+    onSuccess: (data) => {
+      if (data && (data as any).isOffline) {
+        toast.success("Transaksi diperbarui secara offline!");
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        toast.success("Transaksi berhasil diperbarui!");
+      }
+    },
+    onError: (error: AxiosError<ErrorResponse>, _, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          ["transactions", search, type],
+          context.previousTransactions,
+        );
+      }
       toast.error(
         error.response?.data?.message || "Gagal memperbarui transaksi",
       );

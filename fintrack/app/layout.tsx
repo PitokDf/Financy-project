@@ -100,6 +100,12 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-title" content="FinTrack" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
+
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"} crossOrigin="use-credentials" />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"} />
+
+        <link rel="preload" href="/icons/icon-192x192.png" as="image" type="image/png" />
+        <link rel="preload" href="/icons/icon-512x512.png" as="image" type="image/png" />
       </head>
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages} locale={locale}>
