@@ -77,3 +77,23 @@ export const loginSchema = z.object({
 });
 
 export type LoginDTO = z.infer<typeof loginSchema>;
+
+export const forgotPasswordSchema = z.object({
+    email: z.string().nonempty({ message: "Email tidak boleh kosong" }).email({ message: "Email tidak valid" }).transform(s => s.toLowerCase()),
+});
+
+export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+    token: z.string().min(1, { message: "Token diperlukan" }),
+    password: z.string()
+        .min(8, { message: "Password minimal 8 karakter" })
+        .regex(/[A-Z]/, { message: "Password harus mengandung huruf besar" })
+        .regex(/[0-9]/, { message: "Password harus mengandung angka" }),
+    confirmPassword: z.string().min(1, { message: "Konfirmasi password diperlukan" }),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Password tidak cocok",
+    path: ["confirmPassword"],
+});
+
+export type ResetPasswordDTO = z.infer<typeof resetPasswordSchema>;

@@ -24,6 +24,17 @@ export const useAuthStore = create<AuthState>()(
                     set({ user: { ...currentUser, ...updates } });
                 }
             },
+
+            refreshUser: async () => {
+                try {
+                    const { default: axiosClient } = await import('@/lib/api/client');
+                    const res = await axiosClient.get('/users/me') as any;
+                    const userData = res?.data || res;
+                    set({ user: userData as User, isAuthenticated: true });
+                } catch {
+                    set({ user: null, isAuthenticated: false });
+                }
+            },
         }),
         {
             name: 'fintrack-auth',

@@ -160,12 +160,12 @@ function LoginContent() {
               type: "custom",
               renderCustom: () => (
                 <div className="flex justify-end">
-                  <button
-                    type="button"
+                  <Link
+                    href="/forgot-password"
                     className="text-sm text-primary font-semibold hover:underline"
                   >
                     Lupa kata sandi?
-                  </button>
+                  </Link>
                 </div>
               ),
             },

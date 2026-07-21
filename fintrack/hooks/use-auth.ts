@@ -56,6 +56,26 @@ export const useAuth = () => {
         }
     })
 
+    const forgotPassword = useMutation({
+        mutationFn: async (email: string) => {
+            const result = await axiosClient.post('/auth/forgot-password', { email });
+            return result.data;
+        },
+        onSuccess: () => {
+            toast.success('Email reset password telah dikirim!');
+        }
+    })
+
+    const resetPassword = useMutation({
+        mutationFn: async (data: { token: string; password: string; confirmPassword: string }) => {
+            const result = await axiosClient.post('/auth/reset-password', data);
+            return result.data;
+        },
+        onSuccess: () => {
+            toast.success('Password berhasil direset!');
+        }
+    })
+
     const profile = useQuery({
         queryKey: ['profile', 'me'],
         queryFn: async () => {
@@ -76,6 +96,10 @@ export const useAuth = () => {
         updateProfileMutation: updateProfile.mutateAsync,
         updateProfileLoading: updateProfile.isPending,
         changePasswordMutation: changePassword.mutateAsync,
-        changePasswordLoading: changePassword.isPending
+        changePasswordLoading: changePassword.isPending,
+        forgotPasswordMutation: forgotPassword.mutateAsync,
+        forgotPasswordLoading: forgotPassword.isPending,
+        resetPasswordMutation: resetPassword.mutateAsync,
+        resetPasswordLoading: resetPassword.isPending,
     }
 }

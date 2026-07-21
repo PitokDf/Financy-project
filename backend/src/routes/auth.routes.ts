@@ -1,7 +1,7 @@
 import { AuthController } from "@/controller/auth.controller";
 import { validateSchema } from "@/middleware/zod.middleware";
 import { UserRepository } from "@/repositories/user.repository";
-import { changePasswordSchema, loginSchema, registerSchema } from "@/schemas/user.schema";
+import { changePasswordSchema, forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from "@/schemas/user.schema";
 import { AuthService } from "@/service/auth.service";
 import { Router } from "express";
 
@@ -31,6 +31,18 @@ authRouter.put(
     '/change-password',
     validateSchema(changePasswordSchema),
     controller.changePassword
+)
+
+authRouter.post(
+    '/forgot-password',
+    validateSchema(forgotPasswordSchema),
+    controller.forgotPassword
+)
+
+authRouter.post(
+    '/reset-password',
+    validateSchema(resetPasswordSchema),
+    controller.resetPassword
 )
 
 export default authRouter

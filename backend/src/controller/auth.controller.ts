@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from "@/middleware/error.middleware";
-import { ChangePassword, LoginDTO, RegisterDTO } from '@/schemas/user.schema';
+import { ChangePassword, ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from '@/schemas/user.schema';
 import { AuthService } from '@/service/auth.service';
 import { Auth } from '@/utils/auth';
 import { ResponseUtil } from '@/utils';
@@ -37,5 +37,19 @@ export class AuthController {
         const updated = await this.authService.changePassword(req.body, req.auth_user?.email!);
 
         return ResponseUtil.success(res, updated)
+    })
+
+    public forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+        const { email } = req.body as ForgotPasswordDTO;
+        const result = await this.authService.forgotPassword(email);
+
+        return ResponseUtil.success(res, result)
+    })
+
+    public resetPassword = asyncHandler(async (req: Request, res: Response) => {
+        const { token, password } = req.body as ResetPasswordDTO;
+        const result = await this.authService.resetPassword(token, password);
+
+        return ResponseUtil.success(res, result)
     })
 }

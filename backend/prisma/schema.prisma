@@ -36,6 +36,7 @@ model User {
   userSetting       UserSetting?
   pushSubscriptions PushSubscription[]
   scheduledExpenses  ScheduledExpense[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -425,4 +426,19 @@ model PushSubscription {
 
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
