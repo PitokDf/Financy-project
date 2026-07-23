@@ -24,17 +24,8 @@ import { formatCurrency } from "@/lib/utils";
 import { CLUSTER_COLORS } from "./_components/constant";
 import { ClusterPieChart } from "./_components/cluster-pie-chart";
 import { ClusterCard } from "./_components/cluster-card";
-import axiosClient from "@/lib/api/client";
 
 type UIState = "IDLE" | "RUNNING" | "REVIEWING" | "FORECAST_REVEAL";
-
-interface NeedsReviewTx {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  category?: { name: string; color: string; icon: string };
-}
 
 export default function AnalysisLabPage() {
   const {
@@ -44,6 +35,9 @@ export default function AnalysisLabPage() {
     isConfirming,
     latestRun,
     isLoadingLatest,
+    needsReviewTxs,
+    isLoadingReview,
+    batchConfirmReview,
   } = useAnalysis();
   const { categories } = useCategories();
   const t = useTranslations("lab");
@@ -56,8 +50,6 @@ export default function AnalysisLabPage() {
     Record<number, MlClusterResponse["members"]>
   >({});
   const [forecastData, setForecastData] = useState<any>(null);
-  const [needsReviewTxs, setNeedsReviewTxs] = useState<NeedsReviewTx[]>([]);
-  const [isLoadingReview, setIsLoadingReview] = useState(true);
   const [selectedReviewIds, setSelectedReviewIds] = useState<Set<string>>(
     new Set(),
   );
@@ -69,20 +61,6 @@ export default function AnalysisLabPage() {
   useEffect(() => {
     if (latestRun?.status === "running") setUiState("RUNNING");
   }, [latestRun]);
-
-  useEffect(() => {
-    const fetchNeedsReview = async () => {
-      try {
-        const res = await axiosClient.get("/transactions/needs-review");
-        setNeedsReviewTxs(Array.isArray(res) ? res : []);
-      } catch {
-        setNeedsReviewTxs([]);
-      } finally {
-        setIsLoadingReview(false);
-      }
-    };
-    fetchNeedsReview();
-  }, []);
 
   const handleToggleReview = (id: string) => {
     setSelectedReviewIds((prev) => {
@@ -104,16 +82,10 @@ export default function AnalysisLabPage() {
   const handleConfirmReview = async () => {
     if (selectedReviewIds.size === 0) return;
     try {
-      await axiosClient.post("/transactions/batch-confirm-review", {
-        transactionIds: Array.from(selectedReviewIds),
-      });
-      setNeedsReviewTxs((prev) =>
-        prev.filter((tx) => !selectedReviewIds.has(tx.id)),
-      );
+      await batchConfirmReview(Array.from(selectedReviewIds));
       setSelectedReviewIds(new Set());
-      toast.success(`${selectedReviewIds.size} transaksi dikonfirmasi`);
     } catch {
-      toast.error("Gagal mengkonfirmasi");
+      // error toast handled by mutation
     }
   };
 

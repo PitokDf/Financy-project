@@ -74,7 +74,7 @@ export function useTransactions(search?: string, type?: string) {
           const cached = await getCachedResponse(userId, '/api/transactions');
           if (cached) {
             console.log('[Transactions] Serving from offline cache');
-            const merged = await mergePendingMutations(userId, cached.data);
+            const merged = await mergePendingMutations(userId, cached.data, "/transactions");
             return merged;
           }
         }
@@ -90,6 +90,7 @@ export function useTransactions(search?: string, type?: string) {
       const record = await saveToLocal(userId, {
         action: "CREATE",
         data,
+        endpoint: "/transactions",
       });
 
       if (checkOnlineStatus()) {

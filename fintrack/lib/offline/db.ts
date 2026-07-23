@@ -221,6 +221,7 @@ export function checkOnlineStatus(): boolean {
 export async function mergePendingMutations(
   userId: string,
   cachedData: any,
+  endpointPrefix: string,
 ): Promise<any> {
   const db = getDB(userId);
   const pending = await db.pendingMutations
@@ -228,37 +229,64 @@ export async function mergePendingMutations(
     .equals("pending")
     .toArray();
 
-  if (pending.length === 0 || !cachedData?.data) return cachedData;
+  const relevant = pending.filter(
+    (m) =>
+      m.endpoint?.startsWith(endpointPrefix) &&
+      !m.endpoint?.includes("/approve"),
+  );
 
-  let mergedData = [...cachedData.data];
+  if (relevant.length === 0) return cachedData;
 
-  for (const mutation of pending) {
+  const isArray = Array.isArray(cachedData);
+  const isObjectWithData =
+    cachedData && !Array.isArray(cachedData) && Array.isArray(cachedData.data);
+
+  let items: any[];
+  let wrapInData: boolean;
+
+  if (isArray) {
+    items = [...cachedData];
+    wrapInData = false;
+  } else if (isObjectWithData) {
+    items = [...cachedData.data];
+    wrapInData = true;
+  } else {
+    return cachedData;
+  }
+
+  const isTransactions = endpointPrefix === "/transactions";
+
+  for (const mutation of relevant) {
     switch (mutation.action) {
-      case "CREATE":
-        mergedData.unshift({
+      case "CREATE": {
+        const entry: any = {
           ...mutation.data,
           id: mutation.data.id || mutation.id,
-          categoryColor:
-            mutation.data.type === "EXPENSE" ? "#b92910" : "#059669",
-          category: "Pending sync",
-          categoryIcon: "",
           isOffline: true,
-        });
+        };
+        if (isTransactions) {
+          entry.categoryColor =
+            mutation.data.type === "EXPENSE" ? "#b92910" : "#059669";
+          entry.category = "Pending sync";
+          entry.categoryIcon = "";
+        }
+        items.unshift(entry);
         break;
+      }
       case "UPDATE":
-        mergedData = mergedData.map((tx: any) =>
-          tx.id === mutation.data?.id
-            ? { ...tx, ...mutation.data, isOffline: true, category: "Pending sync" }
-            : tx,
+        items = items.map((item: any) =>
+          item.id === mutation.data?.id
+            ? { ...item, ...mutation.data, isOffline: true }
+            : item,
         );
         break;
       case "DELETE":
-        mergedData = mergedData.filter(
-          (tx: any) => tx.id !== mutation.data?.id,
+        items = items.filter(
+          (item: any) => item.id !== mutation.data?.id,
         );
         break;
     }
   }
 
-  return { ...cachedData, data: mergedData };
+  return wrapInData ? { ...cachedData, data: items } : items;
 }

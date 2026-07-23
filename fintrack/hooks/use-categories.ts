@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
-import { saveToLocal, cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus } from "@/lib/offline/db";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface Category {
@@ -32,7 +32,8 @@ export function useCategories() {
                 const cached = await getCachedResponse(userId, '/api/categories');
                 if (cached) {
                     console.log('[Categories] Serving from offline cache');
-                    return cached.data as Category[];
+                    const merged = await mergePendingMutations(userId, cached.data, "/categories");
+                    return merged as Category[];
                 }
                 throw error;
             }

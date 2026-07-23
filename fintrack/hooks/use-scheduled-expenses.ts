@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/api/client';
 import { toast } from 'sonner';
 import { ScheduledExpense } from '@/types';
-import { saveToLocal, cacheResponse, getCachedResponse } from '@/lib/offline/db';
+import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus } from '@/lib/offline/db';
 import { useAuthStore } from '@/lib/zustand/auth-store';
 
 export function useScheduledExpenses() {
@@ -24,7 +24,8 @@ export function useScheduledExpenses() {
         const cached = await getCachedResponse(userId, '/api/scheduled-expenses');
         if (cached) {
           console.log('[ScheduledExpenses] Serving from offline cache');
-          return cached.data as ScheduledExpense[];
+          const merged = await mergePendingMutations(userId, cached.data, "/scheduled-expenses");
+          return merged as ScheduledExpense[];
         }
         throw error;
       }

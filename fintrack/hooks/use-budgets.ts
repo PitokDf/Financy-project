@@ -3,7 +3,7 @@ import { ErrorResponse } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
-import { saveToLocal, cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus } from "@/lib/offline/db";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface BudgetItem {
@@ -51,7 +51,8 @@ export function useBudgets() {
                 const cached = await getCachedResponse(userId, '/api/budgets');
                 if (cached) {
                     console.log('[Budgets] Serving from offline cache');
-                    return cached.data as BudgetItem[];
+                    const merged = await mergePendingMutations(userId, cached.data, "/budgets");
+                    return merged as BudgetItem[];
                 }
                 throw error;
             }

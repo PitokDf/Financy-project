@@ -16,7 +16,8 @@ export interface MlClusterResponse {
         description: string;
         amount: number;
         date: string;
-        reviewRequired?: boolean;   // true jika confidence AI rendah (< threshold)
+        category?: { name: string; color: string; icon: string };
+        reviewRequired?: boolean;
     }>;
 }
 
@@ -118,6 +119,30 @@ export function useAnalysis() {
         }
     });
 
+    const needsReviewQuery = useQuery({
+        queryKey: ["transactions", "needs-review"],
+        queryFn: async () => {
+            const res = await axiosClient.get("/transactions/needs-review");
+            return (Array.isArray(res) ? res : []) as MlClusterResponse["members"];
+        },
+    });
+
+    const batchConfirmReviewMutation = useMutation({
+        mutationFn: async (transactionIds: string[]) => {
+            await axiosClient.post("/transactions/batch-confirm-review", {
+                transactionIds,
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions", "needs-review"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            toast.success("Transaksi berhasil dikonfirmasi");
+        },
+        onError: () => {
+            toast.error("Gagal mengkonfirmasi transaksi");
+        },
+    });
+
     return {
         latestRun: fetchLatestRun.data,
         isLoadingLatest: fetchLatestRun.isLoading,
@@ -125,6 +150,10 @@ export function useAnalysis() {
         isRunning: runAnalysisMutation.isPending,
         confirmAnalysis: confirmAnalysisMutation.mutateAsync,
         isConfirming: confirmAnalysisMutation.isPending,
+        needsReviewTxs: needsReviewQuery.data ?? [],
+        isLoadingReview: needsReviewQuery.isLoading,
+        batchConfirmReview: batchConfirmReviewMutation.mutateAsync,
+        isConfirmingReview: batchConfirmReviewMutation.isPending,
         useStats,
         useCategoryBreakdown
     };
