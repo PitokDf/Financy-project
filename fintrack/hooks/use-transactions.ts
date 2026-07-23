@@ -7,7 +7,7 @@ import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
-import { saveToLocal, cacheResponse, getCachedResponse, checkOnlineStatus } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, checkOnlineStatus, mergePendingMutations } from "@/lib/offline/db";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface Transaction {
@@ -74,7 +74,8 @@ export function useTransactions(search?: string, type?: string) {
           const cached = await getCachedResponse(userId, '/api/transactions');
           if (cached) {
             console.log('[Transactions] Serving from offline cache');
-            return cached.data;
+            const merged = await mergePendingMutations(userId, cached.data);
+            return merged;
           }
         }
         throw error;

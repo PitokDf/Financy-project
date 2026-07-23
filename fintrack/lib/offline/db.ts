@@ -215,3 +215,50 @@ export async function pullOnLogin(
 export function checkOnlineStatus(): boolean {
   return navigator.onLine;
 }
+
+// --- Merge Pending Mutations into Cached Data ---
+
+export async function mergePendingMutations(
+  userId: string,
+  cachedData: any,
+): Promise<any> {
+  const db = getDB(userId);
+  const pending = await db.pendingMutations
+    .where("status")
+    .equals("pending")
+    .toArray();
+
+  if (pending.length === 0 || !cachedData?.data) return cachedData;
+
+  let mergedData = [...cachedData.data];
+
+  for (const mutation of pending) {
+    switch (mutation.action) {
+      case "CREATE":
+        mergedData.unshift({
+          ...mutation.data,
+          id: mutation.data.id || mutation.id,
+          categoryColor:
+            mutation.data.type === "EXPENSE" ? "#b92910" : "#059669",
+          category: "Pending sync",
+          categoryIcon: "",
+          isOffline: true,
+        });
+        break;
+      case "UPDATE":
+        mergedData = mergedData.map((tx: any) =>
+          tx.id === mutation.data?.id
+            ? { ...tx, ...mutation.data, isOffline: true, category: "Pending sync" }
+            : tx,
+        );
+        break;
+      case "DELETE":
+        mergedData = mergedData.filter(
+          (tx: any) => tx.id !== mutation.data?.id,
+        );
+        break;
+    }
+  }
+
+  return { ...cachedData, data: mergedData };
+}
