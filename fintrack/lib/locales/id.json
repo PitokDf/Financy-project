@@ -96,8 +96,8 @@
     "addTx": "Tambah transaksi"
   },
   "transactions": {
-    "income": "Pemasukan",
-    "expense": "Pengeluaran",
+    "income": "Masuk",
+    "expense": "Keluar",
     "search": "Cari transaksi...",
     "all": "Semua",
     "noTx": "Tidak ada transaksi",
