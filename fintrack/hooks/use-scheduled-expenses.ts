@@ -19,7 +19,8 @@ export function useScheduledExpenses() {
         const response = await axiosClient.get('/scheduled-expenses');
         const data = (response as any).data as ScheduledExpense[];
         await cacheResponse(userId, '/api/scheduled-expenses', data);
-        return data;
+        const merged = await mergePendingMutations(userId, data, "/scheduled-expenses");
+        return merged as ScheduledExpense[];
       } catch (error) {
         const cached = await getCachedResponse(userId, '/api/scheduled-expenses');
         if (cached) {

@@ -46,7 +46,8 @@ export function useBudgets() {
                 const res = await axiosClient.get("/budgets");
                 const data = (res.data as BudgetItem[]) || [];
                 await cacheResponse(userId, '/api/budgets', data);
-                return data;
+                const merged = await mergePendingMutations(userId, data, "/budgets");
+                return merged as BudgetItem[];
             } catch (error) {
                 const cached = await getCachedResponse(userId, '/api/budgets');
                 if (cached) {

@@ -27,7 +27,8 @@ export function useCategories() {
                 const res = await axiosClient.get("/categories");
                 const data = (res.data as Category[]) || [];
                 await cacheResponse(userId, '/api/categories', data);
-                return data;
+                const merged = await mergePendingMutations(userId, data, "/categories");
+                return merged as Category[];
             } catch (error) {
                 const cached = await getCachedResponse(userId, '/api/categories');
                 if (cached) {

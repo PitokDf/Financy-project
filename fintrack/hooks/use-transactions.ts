@@ -66,6 +66,8 @@ export function useTransactions(search?: string, type?: string) {
 
         if (!pageParam) {
           await cacheResponse(userId, '/api/transactions', result);
+          const merged = await mergePendingMutations(userId, result, "/transactions");
+          return merged;
         }
 
         return result;
