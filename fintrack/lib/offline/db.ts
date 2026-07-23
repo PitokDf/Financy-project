@@ -186,6 +186,61 @@ export async function clearExpiredCache(
   await db.cachedResponses.where("timestamp").below(cutoff).delete();
 }
 
+// --- Append to Cache on Offline Mutation ---
+
+export async function appendToCache(
+  userId: string,
+  cacheKey: string,
+  action: MutationAction,
+  item: any,
+): Promise<void> {
+  const db = getDB(userId);
+  const cached = await db.cachedResponses.get(cacheKey);
+  if (!cached) return;
+
+  const isArray = Array.isArray(cached.data);
+  const isObjectWithData =
+    !isArray && cached.data && Array.isArray(cached.data.data);
+
+  if (isArray) {
+    let items = [...cached.data];
+    switch (action) {
+      case "CREATE":
+        items.unshift(item);
+        break;
+      case "UPDATE":
+        items = items.map((i: any) =>
+          i.id === item.id ? { ...i, ...item, isOffline: true } : i,
+        );
+        break;
+      case "DELETE":
+        items = items.filter((i: any) => i.id !== item.id);
+        break;
+    }
+    await db.cachedResponses.put({ ...cached, data: items, timestamp: Date.now() });
+  } else if (isObjectWithData) {
+    let items = [...cached.data.data];
+    switch (action) {
+      case "CREATE":
+        items.unshift(item);
+        break;
+      case "UPDATE":
+        items = items.map((i: any) =>
+          i.id === item.id ? { ...i, ...item, isOffline: true } : i,
+        );
+        break;
+      case "DELETE":
+        items = items.filter((i: any) => i.id !== item.id);
+        break;
+    }
+    await db.cachedResponses.put({
+      ...cached,
+      data: { ...cached.data, data: items },
+      timestamp: Date.now(),
+    });
+  }
+}
+
 // --- Pull on Login ---
 
 export async function pullOnLogin(

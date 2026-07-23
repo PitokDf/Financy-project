@@ -17,4 +17,16 @@ export class CategoryController {
         const result = await this.categoryService.create(userId, req.body);
         return ResponseUtil.success(res, result, 201);
     });
+
+    public update = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        const result = await this.categoryService.updateCategory(userId, req.params.id as string, req.body);
+        return ResponseUtil.success(res, result);
+    });
+
+    public delete = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.auth_user!.user_id;
+        await this.categoryService.deleteCategory(userId, req.params.id as string);
+        return ResponseUtil.success(res, null, 204);
+    });
 }

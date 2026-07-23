@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/api/client';
 import { toast } from 'sonner';
 import { ScheduledExpense } from '@/types';
-import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus } from '@/lib/offline/db';
+import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus, appendToCache } from '@/lib/offline/db';
 import { useAuthStore } from '@/lib/zustand/auth-store';
 
 export function useScheduledExpenses() {
@@ -44,6 +44,13 @@ export function useScheduledExpenses() {
         action: "CREATE",
         data,
         endpoint: "/scheduled-expenses",
+      });
+
+      await appendToCache(userId, "/api/scheduled-expenses", "CREATE", {
+        ...data,
+        id: record.id,
+        isActive: true,
+        isOffline: !navigator.onLine,
       });
 
       if (navigator.onLine) {
@@ -111,6 +118,8 @@ export function useScheduledExpenses() {
         endpoint: `/scheduled-expenses/${id}`,
       });
 
+      await appendToCache(userId, "/api/scheduled-expenses", "UPDATE", { id, ...data });
+
       if (navigator.onLine) {
         try {
           const res = await axiosClient.put(`/scheduled-expenses/${id}`, data);
@@ -162,6 +171,8 @@ export function useScheduledExpenses() {
         data: { id },
         endpoint: `/scheduled-expenses/${id}`,
       });
+
+      await appendToCache(userId, "/api/scheduled-expenses", "DELETE", { id });
 
       if (navigator.onLine) {
         try {

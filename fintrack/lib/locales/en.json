@@ -117,7 +117,15 @@
     "scheduledDeleteTitle": "Delete Scheduled Expense?",
     "scheduledDeleteDesc": "This expense won't appear next month.",
     "scheduledActive": "active",
-    "scheduledDay": "Day"
+    "scheduledDay": "Day",
+    "categorySheetTitle": "Manage Categories",
+    "categorySheetDesc": "Edit or delete transaction categories",
+    "expenseCategories": "Expenses",
+    "incomeCategories": "Income",
+    "noCategories": "No categories yet",
+    "deleteCategoryTitle": "Delete Category",
+    "deleteCategoryDesc": "Delete \"{name}\"? Transactions using this category will be uncategorized.",
+    "newCategoryPlaceholder": "Category name..."
   },
   "help": {
     "title": "FinTrack Help Center",
@@ -185,10 +193,14 @@
     "budgetAmount": "Budget Amount",
     "enterBudgetAmount": "Enter budget amount",
     "newBudgetTitle": "Set New Budget",
+    "editBudgetTitle": "Edit Budget",
     "saveBudget": "Save Budget",
     "saving": "Saving...",
     "validationCategory": "Category must be selected",
-    "validationAmount": "Minimum budget is Rp 1,000"
+    "validationAmount": "Minimum budget is Rp 1,000",
+    "deleteBudgetTitle": "Delete Budget",
+    "deleteBudgetDescription": "Delete budget for {name}?",
+    "delete": "Delete"
   },
   "lab": {
     "title": "AI Analysis",

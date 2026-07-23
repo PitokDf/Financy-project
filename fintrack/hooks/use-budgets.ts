@@ -3,7 +3,7 @@ import { ErrorResponse } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
-import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, mergePendingMutations, checkOnlineStatus, appendToCache } from "@/lib/offline/db";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface BudgetItem {
@@ -66,6 +66,21 @@ export function useBudgets() {
                 action: "CREATE",
                 data,
                 endpoint: "/budgets",
+            });
+
+            await appendToCache(userId, "/api/budgets", "CREATE", {
+                ...data,
+                id: record.id,
+                spentAmount: 0,
+                month: new Date().getMonth() + 1,
+                year: new Date().getFullYear(),
+                category: {
+                    id: data.categoryId,
+                    name: !navigator.onLine ? "Pending sync" : "Memuat...",
+                    color: "#6b7280",
+                    icon: null,
+                },
+                isOffline: !navigator.onLine,
             });
 
             if (navigator.onLine) {
@@ -133,6 +148,8 @@ export function useBudgets() {
                 endpoint: `/budgets/${id}`,
             });
 
+            await appendToCache(userId, "/api/budgets", "UPDATE", { id, ...data });
+
             if (navigator.onLine) {
                 try {
                     const res = await axiosClient.put(`/budgets/${id}`, data);
@@ -184,6 +201,8 @@ export function useBudgets() {
                 data: { id },
                 endpoint: `/budgets/${id}`,
             });
+
+            await appendToCache(userId, "/api/budgets", "DELETE", { id });
 
             if (navigator.onLine) {
                 try {

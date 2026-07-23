@@ -3,20 +3,24 @@
 import { useState, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Target, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2 } from 'lucide-react';
+import { Plus, Target, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, Trash2 } from 'lucide-react';
 import { BudgetCard } from './_components/budget-card';
 import { getBudgetStatus } from './_components/utils';
 import { cn, formatCurrency } from '@/lib/utils';
 import { BudgetPageSkeleton } from './_components/skeleton';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
-import { useBudgets } from '@/hooks/use-budgets';
+import { useBudgets, BudgetItem } from '@/hooks/use-budgets';
 import { AddBudgetDialog } from './_components/add-budget-dialog';
+import { EditBudgetDialog } from './_components/edit-budget-dialog';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 
 function BudgetContent() {
-    const { budgets, isLoading, updateBudget } = useBudgets();
+    const { budgets, isLoading, updateBudget, deleteBudget } = useBudgets();
     const [showAddForm, setShowAddForm] = useState(false);
+    const [editingBudget, setEditingBudget] = useState<BudgetItem | null>(null);
+    const [deletingBudget, setDeletingBudget] = useState<BudgetItem | null>(null);
     const searchParams = useSearchParams();
     const budgetAlertId = searchParams.get('budgetAlert')
     const locale = useLocale();
@@ -102,7 +106,12 @@ function BudgetContent() {
                     budgets?.map((budget) => <div id={budget.id} key={budget.id} className={cn({
                         'animate-border-glow': budget.id === budgetAlertId, 'rounded-xl bg-red-500 border-2 border-red-500': budget.id === budgetAlertId
                     })}>
-                        <BudgetCard budget={budget} onUpdate={async (values) => await updateBudget.mutateAsync({ id: budget.id, data: { amount: values.amount } })} />
+                        <BudgetCard
+                            budget={budget}
+                            onUpdate={async (values) => await updateBudget.mutateAsync({ id: budget.id, data: { amount: values.amount } })}
+                            onEdit={() => setEditingBudget(budget)}
+                            onDelete={() => setDeletingBudget(budget)}
+                        />
                     </div>
                     )
                 )}
@@ -125,6 +134,28 @@ function BudgetContent() {
             <AddBudgetDialog
                 isOpen={showAddForm}
                 onOpenChange={setShowAddForm}
+            />
+
+            <EditBudgetDialog
+                isOpen={!!editingBudget}
+                onOpenChange={(open) => { if (!open) setEditingBudget(null); }}
+                budget={editingBudget}
+            />
+
+            <ConfirmDialog
+                open={!!deletingBudget}
+                onOpenChange={(open) => { if (!open) setDeletingBudget(null); }}
+                title={t('deleteBudgetTitle')}
+                description={t('deleteBudgetDescription', { name: deletingBudget?.category.name ?? '' })}
+                icon={<Trash2 className="w-6 h-6 text-red-500" />}
+                confirmLabel={t('delete')}
+                confirmVariant="destructive"
+                onConfirm={async () => {
+                    if (deletingBudget) {
+                        await deleteBudget.mutateAsync(deletingBudget.id);
+                        setDeletingBudget(null);
+                    }
+                }}
             />
         </div>
     );

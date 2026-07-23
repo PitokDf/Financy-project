@@ -12,12 +12,15 @@ import {
   Trash2,
   Import,
   Loader2,
+  Settings,
+  Calendar,
 } from "lucide-react";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
 import { TransactionForm } from "./_components/transaction-form";
 import { TransactionCard } from "@/components/shared/transaction-card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImportCsvModal } from "./_components/import-csv-modal";
+import { CategorySheet } from "./_components/category-sheet";
 import {
   DisplayTransaction,
   useTransactionsPage,
@@ -29,7 +32,6 @@ import { useSecureMode } from "@/hooks/use-secure";
 import { useSearchParams } from "next/navigation";
 import { Transaction } from "@/hooks/use-transactions";
 import { ScheduledExpenseTab } from "./_components/scheduled-expense-tab";
-import { Calendar } from "lucide-react";
 
 type FlatItem =
   | { type: "header"; date: string; count: number }
@@ -44,6 +46,7 @@ function TransactionsContent() {
 
   const [editData, setEditData] = useState<Transaction | null>(null);
   const [showScheduled, setShowScheduled] = useState(false);
+  const [showCategorySheet, setShowCategorySheet] = useState(false);
   const t = useTranslations("transactions");
 
   const {
@@ -165,6 +168,12 @@ function TransactionsContent() {
           >
             <Calendar className="w-3.5 h-3.5" />
             {t("scheduledExpense")}
+          </button>
+          <button
+            onClick={() => setShowCategorySheet(true)}
+            className="px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 bg-muted text-muted-foreground hover:bg-muted/80"
+          >
+            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -301,6 +310,11 @@ function TransactionsContent() {
       <ImportCsvModal
         isOpen={showImportModal}
         onOpenChange={setShowImportModal}
+      />
+
+      <CategorySheet
+        open={showCategorySheet}
+        onClose={() => setShowCategorySheet(false)}
       />
     </div>
   );

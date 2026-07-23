@@ -13,5 +13,7 @@ const categoryRouter = Router();
 categoryRouter.use(authMiddleware);
 categoryRouter.get("/", controller.getAll);
 categoryRouter.post("/", controller.create);
+categoryRouter.put("/:id", controller.update);
+categoryRouter.delete("/:id", controller.delete);
 
 export default categoryRouter;

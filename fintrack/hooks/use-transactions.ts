@@ -7,7 +7,7 @@ import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
-import { saveToLocal, cacheResponse, getCachedResponse, checkOnlineStatus, mergePendingMutations } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, checkOnlineStatus, mergePendingMutations, appendToCache } from "@/lib/offline/db";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface Transaction {
@@ -93,6 +93,15 @@ export function useTransactions(search?: string, type?: string) {
         action: "CREATE",
         data,
         endpoint: "/transactions",
+      });
+
+      await appendToCache(userId, "/api/transactions", "CREATE", {
+        ...data,
+        id: record.id,
+        categoryColor: data.type === "EXPENSE" ? "#b92910" : "#059669",
+        category: !checkOnlineStatus() ? "Pending sync" : "Menganalisis Kategori (AI)...",
+        categoryIcon: "",
+        isOffline: !checkOnlineStatus(),
       });
 
       if (checkOnlineStatus()) {
@@ -194,6 +203,8 @@ export function useTransactions(search?: string, type?: string) {
         endpoint: `/transactions/${id}`,
       });
 
+      await appendToCache(userId, "/api/transactions", "DELETE", { id });
+
       if (checkOnlineStatus()) {
         try {
           await axiosClient.delete(`/transactions/${id}`);
@@ -264,6 +275,14 @@ export function useTransactions(search?: string, type?: string) {
         action: "UPDATE",
         data: { id, ...data },
         endpoint: `/transactions/${id}`,
+      });
+
+      await appendToCache(userId, "/api/transactions", "UPDATE", {
+        id,
+        ...data,
+        categoryColor: data.type === "EXPENSE" ? "#b92910" : "#059669",
+        category: !checkOnlineStatus() ? "Pending sync" : undefined,
+        isOffline: !checkOnlineStatus(),
       });
 
       if (checkOnlineStatus()) {

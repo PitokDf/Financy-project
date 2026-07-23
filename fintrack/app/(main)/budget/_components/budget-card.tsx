@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
-import { MoveHorizontal } from "lucide-react";
+import { MoveHorizontal, Pencil, Trash2 } from "lucide-react";
 import { getBudgetStatus, getProgressColor, STATUS_CONFIG } from "./utils";
 import * as LucideIcon from 'lucide-react'
 import z from 'zod';
@@ -17,7 +17,15 @@ const updateBudgetSchema = z.object({
 
 type UpdateBudgetValues = z.infer<typeof updateBudgetSchema>;
 
-export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: BudgetItem, isBudgetAlert?: boolean, onUpdate: (data: UpdateBudgetValues) => void }) {
+interface BudgetCardProps {
+    budget: BudgetItem;
+    isBudgetAlert?: boolean;
+    onUpdate: (data: UpdateBudgetValues) => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+export function BudgetCard({ budget, isBudgetAlert, onUpdate, onEdit, onDelete }: BudgetCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const t = useTranslations('budget');
     const status = getBudgetStatus(budget.spentAmount, budget.amount);
@@ -50,9 +58,17 @@ export function BudgetCard({ budget, isBudgetAlert, onUpdate }: { budget: Budget
                     <div className="flex-1">
                         <div className="flex items-center justify-between mb-0.5">
                             <p className="font-semibold text-sm text-foreground">{budget.category.name}</p>
-                            <button onClick={() => setIsEditing(!isEditing)} className={cn("p-0.5 rounded-lg transition-colors", isEditing ? "bg-red-500" : 'bg-muted')}>
-                                {isEditing ? <LucideIcon.X className="w-4 h-4 text-white" /> : <MoveHorizontal className="w-4 h-4 text-muted-foreground" />}
-                            </button>
+                            <div className="flex items-center gap-0.5">
+                                <button onClick={onEdit} className="p-0.5 rounded-lg transition-colors bg-muted hover:bg-muted/80">
+                                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                                <button onClick={() => setIsEditing(!isEditing)} className={cn("p-0.5 rounded-lg transition-colors", isEditing ? "bg-red-500" : 'bg-muted')}>
+                                    {isEditing ? <LucideIcon.X className="w-4 h-4 text-white" /> : <MoveHorizontal className="w-3.5 h-3.5 text-muted-foreground" />}
+                                </button>
+                                <button onClick={onDelete} className="p-0.5 rounded-lg transition-colors bg-muted hover:bg-red-500/10">
+                                    <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-red-500" />
+                                </button>
+                            </div>
                         </div>
                         <div className="flex items-center justify-between">
                             <Badge

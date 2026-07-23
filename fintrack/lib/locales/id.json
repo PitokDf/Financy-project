@@ -117,7 +117,15 @@
     "scheduledDeleteTitle": "Hapus Pengeluaran Terjadwal?",
     "scheduledDeleteDesc": "Pengeluaran ini tidak akan muncul lagi bulan depan.",
     "scheduledActive": "aktif",
-    "scheduledDay": "Tgl"
+    "scheduledDay": "Tgl",
+    "categorySheetTitle": "Kelola Kategori",
+    "categorySheetDesc": "Edit atau hapus kategori transaksi",
+    "expenseCategories": "Pengeluaran",
+    "incomeCategories": "Pemasukan",
+    "noCategories": "Belum ada kategori",
+    "deleteCategoryTitle": "Hapus Kategori",
+    "deleteCategoryDesc": "Hapus \"{name}\"? Transaksi yang menggunakan kategori ini akan dikosongkan kategorinya.",
+    "newCategoryPlaceholder": "Nama kategori..."
   },
   "help": {
     "title": "Pusat Bantuan FinTrack",
@@ -185,10 +193,14 @@
     "budgetAmount": "Jumlah Anggaran",
     "enterBudgetAmount": "Masukkan jumlah anggaran",
     "newBudgetTitle": "Atur Anggaran Baru",
+    "editBudgetTitle": "Edit Anggaran",
     "saveBudget": "Simpan Anggaran",
     "saving": "Menyimpan...",
     "validationCategory": "Kategori harus dipilih",
-    "validationAmount": "Anggaran minimal Rp 1.000"
+    "validationAmount": "Anggaran minimal Rp 1.000",
+    "deleteBudgetTitle": "Hapus Anggaran",
+    "deleteBudgetDescription": "Hapus anggaran untuk {name}?",
+    "delete": "Hapus"
   },
   "lab": {
     "title": "Analisis AI",

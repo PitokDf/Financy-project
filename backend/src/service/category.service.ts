@@ -1,6 +1,8 @@
 import { CategoryRepository } from "@/repositories/category.repository";
 import { TransactionType } from "@/generated/prisma/enums";
 import { GamificationQueue } from "@/queue/gamification.queue";
+import { AppError } from "@/errors/app-error";
+import { HttpStatus } from "@/constants/http-status";
 
 export class CategoryService {
     constructor(private readonly categoryRepo: CategoryRepository) { }
@@ -26,5 +28,24 @@ export class CategoryService {
         });
 
         return category;
+    }
+
+    public updateCategory = async (userId: string, id: string, data: { name?: string, color?: string, icon?: string }) => {
+        const existing = await this.categoryRepo.findById(userId, id);
+        if (!existing) {
+            throw new AppError("Kategori tidak ditemukan", HttpStatus.NOT_FOUND);
+        }
+
+        return this.categoryRepo.update(userId, id, data);
+    }
+
+    public deleteCategory = async (userId: string, id: string) => {
+        const existing = await this.categoryRepo.findById(userId, id);
+        if (!existing) {
+            throw new AppError("Kategori tidak ditemukan", HttpStatus.NOT_FOUND);
+        }
+
+        await this.categoryRepo.setNullOnTransactions(userId, id);
+        await this.categoryRepo.delete(id);
     }
 }
