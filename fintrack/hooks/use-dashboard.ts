@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
 import { cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface DashboardCategory {
   name: string;
@@ -32,6 +33,9 @@ export interface DashboardResponse {
 }
 
 export function useDashboard() {
+  const { user } = useAuthStore();
+  const userId = user?.id || "guest";
+
   const query = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
@@ -39,11 +43,11 @@ export function useDashboard() {
         const res = await axiosClient.get("/dashboard");
         const data = (res.data as DashboardResponse) || null;
         if (data) {
-          await cacheResponse("/api/dashboard", data);
+          await cacheResponse(userId, "/api/dashboard", data);
         }
         return data;
       } catch (error) {
-        const cached = await getCachedResponse("/api/dashboard");
+        const cached = await getCachedResponse(userId, "/api/dashboard");
         if (cached) {
           console.log("[Dashboard] Serving from offline cache");
           return cached.data as DashboardResponse;

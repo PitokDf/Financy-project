@@ -221,6 +221,7 @@ function TransactionsContent() {
                       }
                       categoryIcon={(item.transaction as any).categoryIcon}
                       categoryId={(item.transaction as any).categoryId}
+                      isPendingSync={item.transaction.isPendingSync || (item.transaction as any).isOffline}
                       onDelete={(trxID) => {
                         setShowDeleteModal(true);
                         setIdToDelete(trxID);

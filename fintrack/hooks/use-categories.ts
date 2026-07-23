@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
-import { addPendingMutation, cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface Category {
     id: string;
@@ -16,6 +17,8 @@ export interface Category {
 
 export function useCategories() {
     const queryClient = useQueryClient();
+    const { user } = useAuthStore();
+    const userId = user?.id || "guest";
 
     const query = useQuery({
         queryKey: ['categories'],
@@ -23,10 +26,10 @@ export function useCategories() {
             try {
                 const res = await axiosClient.get("/categories");
                 const data = (res.data as Category[]) || [];
-                await cacheResponse('/api/categories', data);
+                await cacheResponse(userId, '/api/categories', data);
                 return data;
             } catch (error) {
-                const cached = await getCachedResponse('/api/categories');
+                const cached = await getCachedResponse(userId, '/api/categories');
                 if (cached) {
                     console.log('[Categories] Serving from offline cache');
                     return cached.data as Category[];
@@ -39,18 +42,24 @@ export function useCategories() {
 
     const createMutation = useMutation({
         mutationFn: async (data: { name: string, type: 'EXPENSE' | 'INCOME', icon?: string }) => {
-            if (!navigator.onLine) {
-                const offlineId = `offline_cat_${Date.now()}`;
-                await addPendingMutation({
-                    id: offlineId,
-                    action: "CREATE",
-                    data,
-                    endpoint: "/categories",
-                });
-                return { ...data, id: offlineId, isOffline: true } as any;
+            const record = await saveToLocal(userId, {
+                action: "CREATE",
+                data,
+                endpoint: "/categories",
+            });
+
+            if (navigator.onLine) {
+                try {
+                    const res = await axiosClient.post("/categories", data);
+                    const { updateRecordStatus } = await import("@/lib/offline/db");
+                    await updateRecordStatus(userId, record.id, "synced");
+                    return res.data;
+                } catch {
+                    return { ...data, id: record.id, isPending: true } as any;
+                }
             }
-            const res = await axiosClient.post("/categories", data);
-            return res.data;
+
+            return { ...data, id: record.id, isPending: true } as any;
         },
         onMutate: async (newCategory) => {
             await queryClient.cancelQueries({ queryKey: ['categories'] });
@@ -77,7 +86,7 @@ export function useCategories() {
             return { previousCategories };
         },
         onSuccess: (data) => {
-            if (data && (data as any).isOffline) {
+            if (data && (data as any).isPending) {
                 // Silent success for offline
             } else {
                 queryClient.invalidateQueries({ queryKey: ['categories'] });

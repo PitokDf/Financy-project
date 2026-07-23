@@ -4,10 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/api/client';
 import { toast } from 'sonner';
 import { ScheduledExpense } from '@/types';
-import { addPendingMutation, cacheResponse, getCachedResponse } from '@/lib/offline/db';
+import { saveToLocal, cacheResponse, getCachedResponse } from '@/lib/offline/db';
+import { useAuthStore } from '@/lib/zustand/auth-store';
 
 export function useScheduledExpenses() {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const userId = user?.id || "guest";
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ['scheduled-expenses'],
@@ -15,10 +18,10 @@ export function useScheduledExpenses() {
       try {
         const response = await axiosClient.get('/scheduled-expenses');
         const data = (response as any).data as ScheduledExpense[];
-        await cacheResponse('/api/scheduled-expenses', data);
+        await cacheResponse(userId, '/api/scheduled-expenses', data);
         return data;
       } catch (error) {
-        const cached = await getCachedResponse('/api/scheduled-expenses');
+        const cached = await getCachedResponse(userId, '/api/scheduled-expenses');
         if (cached) {
           console.log('[ScheduledExpenses] Serving from offline cache');
           return cached.data as ScheduledExpense[];
@@ -35,18 +38,24 @@ export function useScheduledExpenses() {
       dayOfMonth: number;
       categoryId?: string | null;
     }) => {
-      if (!navigator.onLine) {
-        const offlineId = `offline_sched_${Date.now()}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "CREATE",
-          data,
-          endpoint: "/scheduled-expenses",
-        });
-        return { ...data, id: offlineId, isOffline: true } as any;
+      const record = await saveToLocal(userId, {
+        action: "CREATE",
+        data,
+        endpoint: "/scheduled-expenses",
+      });
+
+      if (navigator.onLine) {
+        try {
+          const res = await axiosClient.post('/scheduled-expenses', data);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return (res as any).data as ScheduledExpense;
+        } catch {
+          return { ...data, id: record.id, isPending: true } as any;
+        }
       }
-      const res = await axiosClient.post('/scheduled-expenses', data);
-      return (res as any).data as ScheduledExpense;
+
+      return { ...data, id: record.id, isPending: true } as any;
     },
     onMutate: async (newExpense) => {
       await queryClient.cancelQueries({ queryKey: ['scheduled-expenses'] });
@@ -70,7 +79,7 @@ export function useScheduledExpenses() {
       return { previousExpenses };
     },
     onSuccess: (data) => {
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success('Pengeluaran terjadwal disimpan secara offline!');
       } else {
         queryClient.invalidateQueries({ queryKey: ['scheduled-expenses'] });
@@ -94,18 +103,24 @@ export function useScheduledExpenses() {
       categoryId?: string | null;
       isActive?: boolean;
     }) => {
-      if (!navigator.onLine) {
-        const offlineId = `upd_sched_${id}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "UPDATE",
-          data: { id, ...data },
-          endpoint: `/scheduled-expenses/${id}`,
-        });
-        return { ...data, id, isOffline: true } as any;
+      const record = await saveToLocal(userId, {
+        action: "UPDATE",
+        data: { id, ...data },
+        endpoint: `/scheduled-expenses/${id}`,
+      });
+
+      if (navigator.onLine) {
+        try {
+          const res = await axiosClient.put(`/scheduled-expenses/${id}`, data);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return (res as any).data as ScheduledExpense;
+        } catch {
+          return { ...data, id, isPending: true } as any;
+        }
       }
-      const res = await axiosClient.put(`/scheduled-expenses/${id}`, data);
-      return (res as any).data as ScheduledExpense;
+
+      return { ...data, id, isPending: true } as any;
     },
     onMutate: async ({ id, ...data }) => {
       await queryClient.cancelQueries({ queryKey: ['scheduled-expenses'] });
@@ -123,7 +138,7 @@ export function useScheduledExpenses() {
       return { previousExpenses };
     },
     onSuccess: (data) => {
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success('Pengeluaran terjadwal diperbarui secara offline!');
       } else {
         queryClient.invalidateQueries({ queryKey: ['scheduled-expenses'] });
@@ -140,18 +155,24 @@ export function useScheduledExpenses() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!navigator.onLine) {
-        const offlineId = `del_sched_${id}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "DELETE",
-          data: { id },
-          endpoint: `/scheduled-expenses/${id}`,
-        });
-        return { id, isOffline: true };
+      const record = await saveToLocal(userId, {
+        action: "DELETE",
+        data: { id },
+        endpoint: `/scheduled-expenses/${id}`,
+      });
+
+      if (navigator.onLine) {
+        try {
+          await axiosClient.delete(`/scheduled-expenses/${id}`);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return { id };
+        } catch {
+          return { id, isPending: true };
+        }
       }
-      await axiosClient.delete(`/scheduled-expenses/${id}`);
-      return { id };
+
+      return { id, isPending: true };
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['scheduled-expenses'] });
@@ -165,7 +186,7 @@ export function useScheduledExpenses() {
       return { previousExpenses };
     },
     onSuccess: (data) => {
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success('Pengeluaran terjadwal dihapus secara offline!');
       } else {
         queryClient.invalidateQueries({ queryKey: ['scheduled-expenses'] });
@@ -182,21 +203,27 @@ export function useScheduledExpenses() {
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!navigator.onLine) {
-        const offlineId = `approve_sched_${id}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "CREATE",
-          data: { id, action: 'approve' },
-          endpoint: `/scheduled-expenses/${id}/approve`,
-        });
-        return { id, isOffline: true };
+      const record = await saveToLocal(userId, {
+        action: "CREATE",
+        data: { id, action: 'approve' },
+        endpoint: `/scheduled-expenses/${id}/approve`,
+      });
+
+      if (navigator.onLine) {
+        try {
+          const res = await axiosClient.post(`/scheduled-expenses/${id}/approve`);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return res;
+        } catch {
+          return { id, isPending: true };
+        }
       }
-      const res = await axiosClient.post(`/scheduled-expenses/${id}/approve`);
-      return res;
+
+      return { id, isPending: true };
     },
     onSuccess: (data) => {
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success('Persetujuan disimpan secara offline!');
       } else {
         queryClient.invalidateQueries({ queryKey: ['scheduled-expenses'] });

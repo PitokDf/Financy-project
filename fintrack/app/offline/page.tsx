@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Wifi, WifiOff, RefreshCw, Database, Clock } from "lucide-react";
 import { getSyncQueueStatus } from "@/lib/offline/db";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export default function OfflinePage() {
     const router = useRouter();
@@ -13,10 +14,14 @@ export default function OfflinePage() {
         failed: 0,
         total: 0,
     });
+    const { user } = useAuthStore();
+    const userId = user?.id || "";
 
     useEffect(() => {
-        getSyncQueueStatus().then(setSyncStatus).catch(() => {});
-    }, []);
+        if (userId) {
+            getSyncQueueStatus(userId).then(setSyncStatus).catch(() => {});
+        }
+    }, [userId]);
 
     const handleRetry = async () => {
         setIsRetrying(true);

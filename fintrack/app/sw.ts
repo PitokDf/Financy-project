@@ -138,6 +138,53 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// Background Sync handler
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-transactions") {
+    event.waitUntil(syncPendingFromSW());
+  }
+});
+
+async function syncPendingFromSW(): Promise<void> {
+  if (!currentUserId) {
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({ type: "SYNC_REQUESTED" });
+    }
+    return;
+  }
+
+  try {
+    const dbRequest = indexedDB.open(`fintrack_db_${currentUserId}`, 1);
+
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      dbRequest.onsuccess = () => resolve(dbRequest.result);
+      dbRequest.onerror = () => reject(dbRequest.error);
+    });
+
+    const tx = db.transaction("pendingMutations", "readonly");
+    const store = tx.objectStore("pendingMutations");
+    const index = store.index("status");
+    const pendingRequest = index.getAll("pending");
+
+    const pending = await new Promise<any[]>((resolve, reject) => {
+      pendingRequest.onsuccess = () => resolve(pendingRequest.result);
+      pendingRequest.onerror = () => reject(pendingRequest.error);
+    });
+
+    db.close();
+
+    if (pending.length === 0) return;
+
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({ type: "SYNC_REQUESTED" });
+    }
+  } catch (error) {
+    console.error("[SW] Background sync failed:", error);
+  }
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   try {

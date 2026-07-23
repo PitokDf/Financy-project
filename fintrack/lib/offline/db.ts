@@ -1,12 +1,20 @@
+import Dexie, { type Table } from "dexie";
+
+// --- Types ---
+
+export type SyncStatus = "pending" | "synced" | "failed";
+export type MutationAction = "CREATE" | "UPDATE" | "DELETE";
+
 export interface PendingMutation {
   id: string;
-  action: 'CREATE' | 'DELETE' | 'UPDATE';
+  action: MutationAction;
   data: any;
-  timestamp: number;
-  syncStatus?: 'pending' | 'syncing' | 'failed';
-  retryCount?: number;
-  lastError?: string;
   endpoint?: string;
+  status: SyncStatus;
+  retryCount: number;
+  lastError?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface CachedResponse {
@@ -16,235 +24,194 @@ export interface CachedResponse {
 }
 
 export interface SyncMetadata {
-  mutationId: string;
-  status: 'pending' | 'syncing' | 'failed' | 'completed';
-  retryCount: number;
-  lastError?: string;
-  lastAttempt?: number;
+  id?: number;
+  lastSyncAt: number;
 }
 
-const DB_NAME = 'fintrack-offline';
-const DB_VERSION = 2;
-const MUTATIONS_STORE = 'pending_mutations';
-const CACHE_STORE = 'cached_responses';
-const SYNC_STORE = 'sync_metadata';
+// --- Database Class ---
 
-export async function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+class FintrackDB extends Dexie {
+  pendingMutations!: Table<PendingMutation, string>;
+  cachedResponses!: Table<CachedResponse, string>;
+  syncMetadata!: Table<SyncMetadata, number>;
 
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      const oldVersion = event.oldVersion;
+  constructor(userId: string) {
+    super(`fintrack_db_${userId}`);
 
-      if (oldVersion < 1) {
-        if (!db.objectStoreNames.contains(MUTATIONS_STORE)) {
-          db.createObjectStore(MUTATIONS_STORE, { keyPath: 'id' });
-        }
-      }
-
-      if (oldVersion < 2) {
-        if (!db.objectStoreNames.contains(MUTATIONS_STORE)) {
-          db.createObjectStore(MUTATIONS_STORE, { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains(CACHE_STORE)) {
-          db.createObjectStore(CACHE_STORE, { keyPath: 'key' });
-        }
-        if (!db.objectStoreNames.contains(SYNC_STORE)) {
-          const syncStore = db.createObjectStore(SYNC_STORE, { keyPath: 'mutationId' });
-          syncStore.createIndex('status', 'status', { unique: false });
-        }
-      }
-    };
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-export async function addPendingMutation(mutation: Omit<PendingMutation, 'timestamp'>) {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction([MUTATIONS_STORE, SYNC_STORE], 'readwrite');
-    const mutationsStore = transaction.objectStore(MUTATIONS_STORE);
-    const syncStore = transaction.objectStore(SYNC_STORE);
-
-    const mutationData = {
-      ...mutation,
-      timestamp: Date.now(),
-      syncStatus: 'pending' as const,
-      retryCount: 0,
-    };
-
-    mutationsStore.add(mutationData);
-    syncStore.add({
-      mutationId: mutation.id,
-      status: 'pending',
-      retryCount: 0,
+    this.version(1).stores({
+      pendingMutations: "id, status, createdAt, action",
+      cachedResponses: "key, timestamp",
+      syncMetadata: "++id, lastSyncAt",
     });
-
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
+  }
 }
 
-export async function getPendingMutations(): Promise<PendingMutation[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(MUTATIONS_STORE, 'readonly');
-    const store = transaction.objectStore(MUTATIONS_STORE);
-    const request = store.getAll();
+// --- Database Management ---
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+const DB_INSTANCES = new Map<string, FintrackDB>();
+const MAX_RETRIES = 5;
+
+export function getDB(userId: string): FintrackDB {
+  if (!DB_INSTANCES.has(userId)) {
+    const db = new FintrackDB(userId);
+    DB_INSTANCES.set(userId, db);
+  }
+  return DB_INSTANCES.get(userId)!;
 }
 
-export async function removePendingMutation(id: string) {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction([MUTATIONS_STORE, SYNC_STORE], 'readwrite');
-    const mutationsStore = transaction.objectStore(MUTATIONS_STORE);
-    const syncStore = transaction.objectStore(SYNC_STORE);
-
-    mutationsStore.delete(id);
-    syncStore.delete(id);
-
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
+export function closeDB(userId: string): void {
+  const db = DB_INSTANCES.get(userId);
+  if (db) {
+    db.close();
+    DB_INSTANCES.delete(userId);
+  }
 }
 
-export async function updateMutationStatus(
+export async function deleteDB(userId: string): Promise<void> {
+  closeDB(userId);
+  await Dexie.delete(`fintrack_db_${userId}`);
+}
+
+// --- Pending Mutations ---
+
+export async function saveToLocal(
+  userId: string,
+  data: Omit<
+    PendingMutation,
+    "id" | "status" | "retryCount" | "createdAt" | "updatedAt"
+  >,
+): Promise<PendingMutation> {
+  const db = getDB(userId);
+  const now = Date.now();
+  const record: PendingMutation = {
+    ...data,
+    id:
+      data.data.id ||
+      `offline_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    status: "pending",
+    retryCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.pendingMutations.put(record);
+  return record;
+}
+
+export async function getPendingRecords(
+  userId: string,
+): Promise<PendingMutation[]> {
+  const db = getDB(userId);
+  return db.pendingMutations
+    .where("status")
+    .equals("pending")
+    .sortBy("createdAt");
+}
+
+export async function updateRecordStatus(
+  userId: string,
   id: string,
-  status: SyncMetadata['status'],
-  error?: string
-) {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction([MUTATIONS_STORE, SYNC_STORE], 'readwrite');
-    const mutationsStore = transaction.objectStore(MUTATIONS_STORE);
-    const syncStore = transaction.objectStore(SYNC_STORE);
+  status: SyncStatus,
+  error?: string,
+): Promise<void> {
+  const db = getDB(userId);
+  const record = await db.pendingMutations.get(id);
+  if (!record) return;
 
-    const mutationsReq = mutationsStore.get(id);
-    mutationsReq.onsuccess = () => {
-      const mutation = mutationsReq.result;
-      if (mutation) {
-        mutation.syncStatus = status === 'completed' ? 'pending' : status;
-        mutation.retryCount = (mutation.retryCount || 0) + (status === 'failed' ? 1 : 0);
-        mutation.lastError = error;
-        mutationsStore.put(mutation);
-      }
-    };
+  const updates: Partial<PendingMutation> = {
+    status,
+    updatedAt: Date.now(),
+  };
 
-    const syncReq = syncStore.get(id);
-    syncReq.onsuccess = () => {
-      const sync = syncReq.result;
-      if (sync) {
-        sync.status = status;
-        sync.retryCount = (sync.retryCount || 0) + (status === 'failed' ? 1 : 0);
-        sync.lastError = error;
-        sync.lastAttempt = Date.now();
-        syncStore.put(sync);
-      } else {
-        syncStore.add({
-          mutationId: id,
-          status,
-          retryCount: status === 'failed' ? 1 : 0,
-          lastError: error,
-          lastAttempt: Date.now(),
-        });
-      }
-    };
+  if (status === "failed") {
+    updates.retryCount = record.retryCount + 1;
+    updates.lastError = error;
+  }
 
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
+  await db.pendingMutations.update(id, updates);
 }
 
-export async function getFailedMutations(): Promise<PendingMutation[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(MUTATIONS_STORE, 'readonly');
-    const store = transaction.objectStore(MUTATIONS_STORE);
-    const request = store.getAll();
-
-    request.onsuccess = () => {
-      const mutations = request.result.filter(
-        (m: PendingMutation) => m.syncStatus === 'failed' && (m.retryCount || 0) < 3
-      );
-      resolve(mutations);
-    };
-    request.onerror = () => reject(request.error);
-  });
+export async function removeRecord(userId: string, id: string): Promise<void> {
+  const db = getDB(userId);
+  await db.pendingMutations.delete(id);
 }
 
-export async function cacheResponse(key: string, data: any) {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(CACHE_STORE, 'readwrite');
-    const store = transaction.objectStore(CACHE_STORE);
-    store.put({ key, data, timestamp: Date.now() });
-
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
+export async function getFailedRecords(
+  userId: string,
+): Promise<PendingMutation[]> {
+  const db = getDB(userId);
+  const all = await db.pendingMutations.toArray();
+  return all.filter((r) => r.status === "failed" && r.retryCount < MAX_RETRIES);
 }
 
-export async function getCachedResponse(key: string): Promise<CachedResponse | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(CACHE_STORE, 'readonly');
-    const store = transaction.objectStore(CACHE_STORE);
-    const request = store.get(key);
-
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-export async function clearExpiredCache(maxAgeMs: number = 24 * 60 * 60 * 1000) {
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(CACHE_STORE, 'readwrite');
-    const store = transaction.objectStore(CACHE_STORE);
-    const request = store.openCursor();
-    const cutoff = Date.now() - maxAgeMs;
-
-    request.onsuccess = () => {
-      const cursor = request.result;
-      if (cursor) {
-        if (cursor.value.timestamp < cutoff) {
-          cursor.delete();
-        }
-        cursor.continue();
-      }
-    };
-
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-}
-
-export async function getSyncQueueStatus(): Promise<{
+export async function getSyncQueueStatus(userId: string): Promise<{
   pending: number;
   failed: number;
   total: number;
 }> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(SYNC_STORE, 'readonly');
-    const store = transaction.objectStore(SYNC_STORE);
-    const request = store.getAll();
+  const db = getDB(userId);
+  const all = await db.pendingMutations.toArray();
+  return {
+    pending: all.filter((r) => r.status === "pending").length,
+    failed: all.filter((r) => r.status === "failed").length,
+    total: all.length,
+  };
+}
 
-    request.onsuccess = () => {
-      const items = request.result as SyncMetadata[];
-      resolve({
-        pending: items.filter((i) => i.status === 'pending').length,
-        failed: items.filter((i) => i.status === 'failed').length,
-        total: items.length,
+// --- Cache ---
+
+export async function cacheResponse(
+  userId: string,
+  key: string,
+  data: any,
+): Promise<void> {
+  const db = getDB(userId);
+  await db.cachedResponses.put({ key, data, timestamp: Date.now() });
+}
+
+export async function getCachedResponse(
+  userId: string,
+  key: string,
+): Promise<CachedResponse | null> {
+  const db = getDB(userId);
+  const result = await db.cachedResponses.get(key);
+  return result || null;
+}
+
+export async function clearExpiredCache(
+  userId: string,
+  maxAgeMs: number = 24 * 60 * 60 * 1000,
+): Promise<void> {
+  const db = getDB(userId);
+  const cutoff = Date.now() - maxAgeMs;
+  await db.cachedResponses.where("timestamp").below(cutoff).delete();
+}
+
+// --- Pull on Login ---
+
+export async function pullOnLogin(
+  userId: string,
+  fetchFn: (url: string) => Promise<any>,
+): Promise<void> {
+  const db = getDB(userId);
+
+  try {
+    const transactions = await fetchFn("/transactions?limit=1000");
+    if (transactions?.data) {
+      await db.cachedResponses.put({
+        key: "/api/transactions",
+        data: transactions,
+        timestamp: Date.now(),
       });
-    };
-    request.onerror = () => reject(request.error);
-  });
+    }
+  } catch (error) {
+    console.error("[OfflineDB] Pull on login failed:", error);
+  }
+
+  await db.syncMetadata.put({ lastSyncAt: Date.now() });
+}
+
+// --- Check Online Status ---
+
+export function checkOnlineStatus(): boolean {
+  return navigator.onLine;
 }

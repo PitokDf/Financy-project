@@ -323,7 +323,7 @@ export default function DashboardPage() {
           icon={<Trash2 className="text-red-500" />}
           title={t("deleteTxTitle")}
           description={t("deleteTxDesc")}
-          onConfirm={async () => await deleteTransaction(idToDelete)}
+          onConfirm={async () => { await deleteTransaction(idToDelete); }}
           onCancel={() => {
             setIdToDelete("");
           }}

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthState, User } from '@/types';
+import { closeDB, deleteDB, pullOnLogin, getDB } from '@/lib/offline/db';
 
 export const useAuthStore = create<AuthState>()(
     persist(
@@ -12,9 +13,22 @@ export const useAuthStore = create<AuthState>()(
 
             setAuth: (user: User) => {
                 set({ user, isAuthenticated: true });
+
+                // Initialize DB and pull data on login
+                if (user?.id) {
+                    getDB(user.id);
+                    pullOnLogin(user.id, async (url) => {
+                        const { default: axiosClient } = await import('@/lib/api/client');
+                        return axiosClient.get(url);
+                    }).catch(console.error);
+                }
             },
 
-            logout: () => {
+            logout: async () => {
+                const currentUser = get().user;
+                if (currentUser?.id) {
+                    await deleteDB(currentUser.id).catch(console.error);
+                }
                 set({ user: null, isAuthenticated: false });
             },
 

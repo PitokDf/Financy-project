@@ -16,6 +16,7 @@ export interface DisplayTransaction {
     category: string;
     categoryColor: string;
     categoryIcon: string;
+    isPendingSync?: boolean;
 }
 
 const GROUP_BY_DATE = (transactions: DisplayTransaction[]) => {

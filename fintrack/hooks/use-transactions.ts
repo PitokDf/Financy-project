@@ -7,7 +7,8 @@ import axiosClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/types";
-import { addPendingMutation, cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { saveToLocal, cacheResponse, getCachedResponse, checkOnlineStatus } from "@/lib/offline/db";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface Transaction {
   id: string;
@@ -33,6 +34,8 @@ interface TransactionWithPagination {
 
 export function useTransactions(search?: string, type?: string) {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const userId = user?.id || "guest";
 
   const transactionsQuery = useInfiniteQuery({
     queryKey: ["transactions", search, type],
@@ -62,13 +65,13 @@ export function useTransactions(search?: string, type?: string) {
         };
 
         if (!pageParam) {
-          await cacheResponse('/api/transactions', result);
+          await cacheResponse(userId, '/api/transactions', result);
         }
 
         return result;
       } catch (error) {
         if (!pageParam) {
-          const cached = await getCachedResponse('/api/transactions');
+          const cached = await getCachedResponse(userId, '/api/transactions');
           if (cached) {
             console.log('[Transactions] Serving from offline cache');
             return cached.data;
@@ -83,17 +86,23 @@ export function useTransactions(search?: string, type?: string) {
 
   const createMutation = useMutation({
     mutationFn: async (data: Omit<Transaction, "id" | "category">) => {
-      if (!navigator.onLine) {
-        const offlineId = `offline_${Date.now()}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "CREATE",
-          data: data,
-        });
-        return { ...data, id: offlineId, isOffline: true };
+      const record = await saveToLocal(userId, {
+        action: "CREATE",
+        data,
+      });
+
+      if (checkOnlineStatus()) {
+        try {
+          const res = await axiosClient.post("/transactions", data);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return { ...data, id: (res as any)?.data?.id || record.id };
+        } catch {
+          return { ...data, id: record.id, isPending: true };
+        }
       }
-      const res = await axiosClient.post("/transactions", data);
-      return res.data;
+
+      return { ...data, id: record.id, isPending: true };
     },
     onMutate: async (newTx) => {
       await queryClient.cancelQueries({
@@ -116,12 +125,12 @@ export function useTransactions(search?: string, type?: string) {
         categoryColor: newTx.type === "EXPENSE" ? "#b92910" : "#059669",
         category: newTx.categoryId
           ? "Memuat..."
-          : !navigator.onLine
+          : !checkOnlineStatus()
             ? "Pending sync"
             : "Menganalisis Kategori (AI)...",
         categoryIcon: "",
         isOptimistic: true,
-        isOffline: !navigator.onLine,
+        isOffline: !checkOnlineStatus(),
       };
 
       queryClient.setQueryData(["transactions", search, type], (old: any) => {
@@ -151,8 +160,7 @@ export function useTransactions(search?: string, type?: string) {
       return { previousTransactions };
     },
     onSuccess: (data) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success("Transaksi disimpan secara offline!");
       } else {
         queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -176,16 +184,24 @@ export function useTransactions(search?: string, type?: string) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!navigator.onLine) {
-        await addPendingMutation({
-          id: `del_${id}`,
-          action: "DELETE",
-          data: { id },
-        });
-        return { id, isOffline: true };
+      const record = await saveToLocal(userId, {
+        action: "DELETE",
+        data: { id },
+        endpoint: `/transactions/${id}`,
+      });
+
+      if (checkOnlineStatus()) {
+        try {
+          await axiosClient.delete(`/transactions/${id}`);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return { id };
+        } catch {
+          return { id, isPending: true };
+        }
       }
-      const res = await axiosClient.delete(`/transactions/${id}`);
-      return res.data;
+
+      return { id, isPending: true };
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({
@@ -213,8 +229,7 @@ export function useTransactions(search?: string, type?: string) {
       return { previousTransactions };
     },
     onSuccess: (data) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success("Transaksi dihapus secara offline!");
       } else {
         queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -241,18 +256,24 @@ export function useTransactions(search?: string, type?: string) {
       id: string;
       data: Omit<Transaction, "id" | "category">;
     }) => {
-      if (!navigator.onLine) {
-        const offlineId = `upd_${id}`;
-        await addPendingMutation({
-          id: offlineId,
-          action: "UPDATE",
-          data: { id, ...data },
-          endpoint: `/transactions/${id}`,
-        });
-        return { ...data, id, isOffline: true };
+      const record = await saveToLocal(userId, {
+        action: "UPDATE",
+        data: { id, ...data },
+        endpoint: `/transactions/${id}`,
+      });
+
+      if (checkOnlineStatus()) {
+        try {
+          await axiosClient.patch(`/transactions/${id}`, data);
+          const { updateRecordStatus } = await import("@/lib/offline/db");
+          await updateRecordStatus(userId, record.id, "synced");
+          return { ...data, id };
+        } catch {
+          return { ...data, id, isPending: true };
+        }
       }
-      const res = await axiosClient.patch(`/transactions/${id}`, data);
-      return res.data;
+
+      return { ...data, id, isPending: true };
     },
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({
@@ -277,10 +298,10 @@ export function useTransactions(search?: string, type?: string) {
                     ...data,
                     categoryColor:
                       data.type === "EXPENSE" ? "#b92910" : "#059669",
-                    category: !navigator.onLine
+                    category: !checkOnlineStatus()
                       ? "Pending sync"
                       : tx.category,
-                    isOffline: !navigator.onLine,
+                    isOffline: !checkOnlineStatus(),
                   }
                 : tx,
             ),
@@ -291,7 +312,7 @@ export function useTransactions(search?: string, type?: string) {
       return { previousTransactions };
     },
     onSuccess: (data) => {
-      if (data && (data as any).isOffline) {
+      if (data && (data as any).isPending) {
         toast.success("Transaksi diperbarui secara offline!");
       } else {
         queryClient.invalidateQueries({ queryKey: ["transactions"] });

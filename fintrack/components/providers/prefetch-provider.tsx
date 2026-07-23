@@ -5,11 +5,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
 
 const PREFETCH_ROUTES: Record<string, string[]> = {
-  "/dashboard": ["/dashboard", "/categories", "/gamification/stats"],
+  "/dashboard": ["/dashboard", "/categories"],
   "/transactions": ["/transactions?limit=10", "/categories"],
   "/budget": ["/budgets", "/categories"],
-  "/analysis": ["/analysis/latest"],
-  "/achievements": ["/gamification/badges/all", "/gamification/stats", "/gamification/badges", "/gamification/challenges"],
+  "/analysis": [],
+  "/achievements": ["/gamification/badges/all", "/gamification/badges", "/gamification/challenges"],
   "/notifications": ["/notifications", "/notifications/unread-count"],
   "/scheduled-expenses": ["/scheduled-expenses"],
 };

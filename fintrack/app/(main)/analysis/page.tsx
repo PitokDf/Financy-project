@@ -101,7 +101,7 @@ export default function AnalysisDashboardPage() {
             <AiLabCard
                 isPendingConfirmation={isPendingConfirmation}
                 isRunning={isRunning}
-                clusterCount={latestRun?.clusters.length}
+                clusterCount={latestRun?.clusters?.length}
                 transactionCount={latestRun?.totalTransactions}
             />
             {/* AI Lab Banner */}

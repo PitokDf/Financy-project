@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axiosClient from "@/lib/api/client";
 import { cacheResponse, getCachedResponse } from "@/lib/offline/db";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 export interface UserStats {
     xp: number;
@@ -52,16 +53,19 @@ export interface Badges {
 }
 
 export function useGamification() {
+    const { user } = useAuthStore();
+    const userId = user?.id || "guest";
+
     const getAllBadges = useQuery({
         queryKey: ['all-badges'],
         queryFn: async () => {
             try {
                 const res = await axiosClient.get("/gamification/badges/all");
-                const data = (res.data as Badges[]) || null;
-                if (data) await cacheResponse('/api/gamification/badges/all', data);
+                const data = (res.data as Badges[]) || [];
+                await cacheResponse(userId, '/api/gamification/badges/all', data);
                 return data;
             } catch (error) {
-                const cached = await getCachedResponse('/api/gamification/badges/all');
+                const cached = await getCachedResponse(userId, '/api/gamification/badges/all');
                 if (cached) return cached.data as Badges[];
                 throw error;
             }
@@ -73,13 +77,17 @@ export function useGamification() {
         queryFn: async () => {
             try {
                 const res = await axiosClient.get("/gamification/stats");
-                const data = (res.data as UserStats) || null;
-                if (data) await cacheResponse('/api/gamification/stats', data);
-                return data;
+                const data = res.data as UserStats;
+                if (data) {
+                    try { await cacheResponse(userId, '/api/gamification/stats', data); } catch {}
+                }
+                return data ?? { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0, totalIncome: 0, totalExpense: 0 };
             } catch (error) {
-                const cached = await getCachedResponse('/api/gamification/stats');
-                if (cached) return cached.data as UserStats;
-                throw error;
+                try {
+                    const cached = await getCachedResponse(userId, '/api/gamification/stats');
+                    if (cached) return cached.data as UserStats;
+                } catch {}
+                return { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0, totalIncome: 0, totalExpense: 0 };
             }
         },
         placeholderData: {
@@ -99,10 +107,10 @@ export function useGamification() {
             try {
                 const res = await axiosClient.get("/gamification/badges");
                 const data = (res.data as UserBadge[]) || [];
-                await cacheResponse('/api/gamification/badges', data);
+                await cacheResponse(userId, '/api/gamification/badges', data);
                 return data;
             } catch (error) {
-                const cached = await getCachedResponse('/api/gamification/badges');
+                const cached = await getCachedResponse(userId, '/api/gamification/badges');
                 if (cached) return cached.data as UserBadge[];
                 throw error;
             }
@@ -116,10 +124,10 @@ export function useGamification() {
             try {
                 const res = await axiosClient.get("/gamification/challenges");
                 const data = (res.data as UserChallenge[]) || [];
-                await cacheResponse('/api/gamification/challenges', data);
+                await cacheResponse(userId, '/api/gamification/challenges', data);
                 return data;
             } catch (error) {
-                const cached = await getCachedResponse('/api/gamification/challenges');
+                const cached = await getCachedResponse(userId, '/api/gamification/challenges');
                 if (cached) return cached.data as UserChallenge[];
                 throw error;
             }

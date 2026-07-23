@@ -63,7 +63,7 @@ export function useAnalysis() {
         queryKey: ["analysis", "latest"],
         queryFn: async () => {
             const res = await axiosClient.get("/analysis/latest");
-            return res.data as AnalysisRunResult || null;
+            return (res.data as AnalysisRunResult) ?? null;
         },
         retry: false
     });
