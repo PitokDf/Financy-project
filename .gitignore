@@ -25,7 +25,7 @@ temp/
 .github/copilot*.md
 demo
 .rtk
-docs
+/docs
 skills-lock.json
 CLAUDE*
 .agents
@@ -33,5 +33,5 @@ CLAUDE*
 !README.md
 /*.csv
 *pdf
-*txt
+/*txt
 /data/*
