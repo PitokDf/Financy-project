@@ -1,0 +1,49 @@
+# FinTrack - Personal Finance Management App
+
+> FinTrack is a Progressive Web App (PWA) for personal finance management, designed primarily for Indonesian users. It leverages AI-powered transaction categorization and expense forecasting to help users track, analyze, and plan their finances.
+
+## Core Features
+
+- **Transaction Management**: Record income and expenses with automatic category assignment based on transaction descriptions. Supports CSV import for bulk data entry. Voice recording supported via Web Speech API with Indonesian language NLP for automatic amount parsing.
+- **AI Smart Categorization**: Uses SBERT (multilingual-e5-large) embeddings + Logistic Regression to automatically categorize transactions into 17 expense categories, with confidence scoring for low-confidence predictions.
+- **AI Forecast**: Predicts the top 3 expense categories for next month using Simple Moving Average (SMA) algorithm.
+- **Budget Management**: Set monthly, weekly, or yearly budgets per category with real-time tracking and threshold alerts.
+- **Financial Analysis**: Interactive charts showing spending patterns, cash flow trends, category breakdowns, and daily spending patterns.
+- **Export Reports**: Download financial reports in CSV, Excel (XLSX), or PDF formats.
+- **Smart Notifications**: Push notifications for budget alerts, achievement milestones, and daily transaction reminders (20:00 WIB).
+- **Offline Support**: Full offline capability with automatic data sync when connection is restored. Built as a PWA with Serwist service worker.
+- **Gamification**: XP system, levels, streaks, weekly challenges, and badge achievements to encourage consistent financial tracking.
+- **Scheduled Expenses**: Set up recurring monthly expenses that auto-generate on specified dates.
+- **Internationalization**: Supports Indonesian (id) and English (en) languages via next-intl.
+
+## Technology Stack
+
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS v4, shadcn/ui
+- **State Management**: Zustand (auth), TanStack React Query (server state)
+- **Database**: IndexedDB via Dexie (offline storage)
+- **AI/ML**: SBERT (multilingual-e5-large) + Logistic Regression for transaction categorization, Simple Moving Average for expense forecasting
+- **PWA**: Serwist (service worker, caching, precaching)
+- **Internationalization**: next-intl (Indonesian/English)
+- **Forms**: react-hook-form + Zod validation
+- **Charts**: Recharts
+
+## Key Information
+
+- **Target Audience**: Indonesian personal finance users
+- **Currency**: Indonesian Rupiah (IDR)
+- **Platform**: Web (PWA) - works on desktop and mobile browsers
+- **Pricing**: Free
+- **Author**: Pito Desri Pauzi
+- **Website**: https://fintrack.pitok.my.id
+- **Contact**: pitokfauzi@pitok.my.id
+
+## Documentation
+
+- Main docs: https://fintrack.pitok.my.id/docs
+- Features guide: https://fintrack.pitok.my.id/docs/features
+- FAQ: https://fintrack.pitok.my.id/docs/faq
+
+## API
+
+The backend API is expected at the URL configured via NEXT_PUBLIC_API_URL environment variable. The API uses JWT-based authentication with token refresh. All API responses follow the format: { data: T, message: string, success: boolean }.
