@@ -82,7 +82,7 @@ export default function DocsPage() {
     name: 'FinTrack',
     url: 'https://fintrack.pitok.my.id',
     description:
-      'Aplikasi manajemen keuangan pribadi yang memanfaatkan klasterisasi transaksi otomatis dan asisten AI untuk mempermudah monitoring pengeluaran.',
+      'Aplikasi manajemen keuangan pribadi yang memanfaatkan klasterisasi transaksi otomatis dan analisis AI untuk mempermudah monitoring pengeluaran.',
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Web (PWA)',
     offers: {

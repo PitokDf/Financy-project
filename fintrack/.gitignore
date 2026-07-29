@@ -44,3 +44,9 @@ certificates
 AGENTS*
 package-lock.json
 bun.lock
+
+# playwright
+playwright-report/
+test-results/
+.auth/
+/lampiran

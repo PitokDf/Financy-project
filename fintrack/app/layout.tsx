@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s | FinTrack",
   },
   description:
-    "Aplikasi manajemen keuangan pribadi yang memanfaatkan klasterisasi transaksi otomatis dan asisten AI untuk mempermudah monitoring pengeluaran.",
+    "Aplikasi manajemen keuangan pribadi yang memanfaatkan klasterisasi transaksi otomatis dan analisis AI untuk mempermudah monitoring pengeluaran.",
   metadataBase: new URL("https://fintrack.pitok.my.id"),
   keywords: [
     "Manajemen Keuangan",
