@@ -235,7 +235,18 @@
     "others": "Others",
     "categoryDefaultName": "Category {num}",
     "excludeToast": "{count} transactions excluded to Others",
-    "moveToast": "{count} transactions moved to {target}"
+    "moveToast": "{count} transactions moved to {target}",
+    "reviewSectionTitle": "Needs Review",
+    "reviewSectionDesc": "AI wasn't fully confident about these categories. Pick the right one for more accurate results.",
+    "reviewItemDesc": "AI isn't sure about this category. Choose the correct one:",
+    "reviewSelectCategory": "Select correct category",
+    "reviewConfirm": "Save & Confirm",
+    "reviewSkip": "Leave as is",
+    "reviewEmpty": "Everything is categorized correctly!",
+    "reviewAiGuess": "AI prediction",
+    "reviewBadge": "Needs review",
+    "reviewBadgeDesc": "Click to fix category",
+    "reviewNeedsAttention": "{count} transactions need review"
   },
   "form": {
     "addTx": "Add Transaction",

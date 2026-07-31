@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +38,8 @@ export default function AnalysisLabPage() {
     needsReviewTxs,
     isLoadingReview,
     batchConfirmReview,
+    confirmReviewWithCategories,
+    isConfirmingReviewWithCategories,
   } = useAnalysis();
   const { categories } = useCategories();
   const t = useTranslations("lab");
@@ -53,6 +55,14 @@ export default function AnalysisLabPage() {
   const [selectedReviewIds, setSelectedReviewIds] = useState<Set<string>>(
     new Set(),
   );
+  const [reviewCategoryMap, setReviewCategoryMap] = useState<
+    Record<string, string>
+  >({});
+
+  const expenseCategories = useMemo(
+    () => (categories || []).filter((c: any) => c.type === "EXPENSE"),
+    [categories],
+  );
 
   useEffect(() => {
     if (latestRun?.status === "waiting_confirmation") loadResult(latestRun);
@@ -61,6 +71,16 @@ export default function AnalysisLabPage() {
   useEffect(() => {
     if (latestRun?.status === "running") setUiState("RUNNING");
   }, [latestRun]);
+
+  useEffect(() => {
+    if (needsReviewTxs.length > 0) {
+      const initial: Record<string, string> = {};
+      needsReviewTxs.forEach((tx: any) => {
+        initial[tx.id] = tx.categoryId || "";
+      });
+      setReviewCategoryMap(initial);
+    }
+  }, [needsReviewTxs]);
 
   const handleToggleReview = (id: string) => {
     setSelectedReviewIds((prev) => {
@@ -80,6 +100,24 @@ export default function AnalysisLabPage() {
   };
 
   const handleConfirmReview = async () => {
+    if (selectedReviewIds.size === 0) return;
+    try {
+      const ids = Array.from(selectedReviewIds);
+      const items = ids.map((id) => ({
+        id,
+        categoryId: reviewCategoryMap[id] || undefined,
+      }));
+
+      await confirmReviewWithCategories(items);
+
+      setSelectedReviewIds(new Set());
+      toast.success(`${ids.length} transaksi berhasil dikonfirmasi`);
+    } catch {
+      // error toast handled by mutation
+    }
+  };
+
+  const handleSkipReview = async () => {
     if (selectedReviewIds.size === 0) return;
     try {
       await batchConfirmReview(Array.from(selectedReviewIds));
@@ -220,15 +258,16 @@ export default function AnalysisLabPage() {
           {/* Needs Review Section */}
           {!isLoadingReview && needsReviewTxs.length > 0 && (
             <div className="space-y-3">
+              {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center">
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">Perlu Review</p>
+                    <p className="text-sm font-semibold">{t("reviewSectionTitle")}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {needsReviewTxs.length} transaksi kategori otomatis
+                      {t("reviewNeedsAttention", { count: needsReviewTxs.length })}
                     </p>
                   </div>
                 </div>
@@ -244,55 +283,113 @@ export default function AnalysisLabPage() {
                 </Button>
               </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {needsReviewTxs.map((tx) => (
+              {/* Explanation */}
+              <div className="flex items-start gap-2.5 p-3 bg-amber-500/6 border border-amber-500/15 rounded-xl">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {t("reviewSectionDesc")}
+                </p>
+              </div>
+
+              {/* Transaction list with category dropdown */}
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {needsReviewTxs.map((tx: any) => (
                   <div
                     key={tx.id}
                     onClick={() => handleToggleReview(tx.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                    className={`p-3 rounded-xl border cursor-pointer transition-colors ${
                       selectedReviewIds.has(tx.id)
                         ? "bg-amber-500/10 border-amber-500/30"
                         : "bg-muted/50 border-border/40 hover:bg-muted"
                     }`}
                   >
-                    <div
-                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                        selectedReviewIds.has(tx.id)
-                          ? "bg-amber-500 border-amber-500"
-                          : "border-muted-foreground/30"
-                      }`}
-                    >
-                      {selectedReviewIds.has(tx.id) && (
-                        <CheckCircle2 className="w-3 h-3 text-white" />
-                      )}
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox */}
+                      <div
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                          selectedReviewIds.has(tx.id)
+                            ? "bg-amber-500 border-amber-500"
+                            : "border-muted-foreground/30"
+                        }`}
+                      >
+                        {selectedReviewIds.has(tx.id) && (
+                          <CheckCircle2 className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-2">
+                        {/* Description & amount */}
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium truncate">
+                            {tx.description}
+                          </p>
+                          <p className="text-sm font-bold text-red-500 shrink-0">
+                            -{formatCurrency(tx.amount)}
+                          </p>
+                        </div>
+
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(tx.date).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+
+                        {/* Category dropdown - only show when selected */}
+                        {selectedReviewIds.has(tx.id) && (
+                          <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+                            <p className="text-[10px] font-medium text-amber-600">
+                              {t("reviewItemDesc")}
+                            </p>
+                            <select
+                              value={reviewCategoryMap[tx.id] || ""}
+                              onChange={(e) =>
+                                setReviewCategoryMap((prev) => ({
+                                  ...prev,
+                                  [tx.id]: e.target.value,
+                                }))
+                              }
+                              className="w-full h-8 text-xs bg-background border border-border/60 rounded-lg px-2.5 outline-none focus:border-amber-500/50 transition-colors"
+                            >
+                              <option value="">{t("reviewSelectCategory")}</option>
+                              {expenseCategories.map((cat: any) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {tx.description}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {tx.category?.name || "Belum dikategorikan"} ·{" "}
-                        {new Date(tx.date).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </p>
-                    </div>
-                    <p className="text-sm font-bold text-red-500 shrink-0">
-                      -{formatCurrency(tx.amount)}
-                    </p>
                   </div>
                 ))}
               </div>
 
+              {/* Action buttons */}
               {selectedReviewIds.size > 0 && (
-                <Button
-                  onClick={handleConfirmReview}
-                  className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm border-0"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Konfirmasi {selectedReviewIds.size} Transaksi
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    onClick={handleConfirmReview}
+                    disabled={isConfirmingReviewWithCategories}
+                    className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm border-0"
+                  >
+                    {isConfirmingReviewWithCategories ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                    )}
+                    {t("reviewConfirm")} ({selectedReviewIds.size})
+                  </Button>
+                  <Button
+                    onClick={handleSkipReview}
+                    variant="ghost"
+                    className="w-full h-9 rounded-xl text-xs text-muted-foreground"
+                  >
+                    {t("reviewSkip")}
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -519,6 +616,10 @@ export default function AnalysisLabPage() {
                   id: c.id,
                   name: c.name,
                 }))}
+                reviewCategoryMap={reviewCategoryMap}
+                onReviewCategoryChange={(txId, categoryId) =>
+                  setReviewCategoryMap((prev) => ({ ...prev, [txId]: categoryId }))
+                }
                 onExcludeTransactions={(txIds) => {
                   setAssignments((prev) => {
                     const updated = { ...prev };

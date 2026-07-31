@@ -10,6 +10,7 @@ export const useAuthStore = create<AuthState>()(
         (set, get) => ({
             user: null,
             isAuthenticated: false,
+            loading: false,
 
             setAuth: (user: User) => {
                 set({ user, isAuthenticated: true });
@@ -40,13 +41,14 @@ export const useAuthStore = create<AuthState>()(
             },
 
             refreshUser: async () => {
+                set({ loading: true });
                 try {
                     const { default: axiosClient } = await import('@/lib/api/client');
                     const res = await axiosClient.get('/users/me') as any;
                     const userData = res?.data || res;
-                    set({ user: userData as User, isAuthenticated: true });
+                    set({ user: userData as User, isAuthenticated: true, loading: false });
                 } catch {
-                    set({ user: null, isAuthenticated: false });
+                    set({ user: null, isAuthenticated: false, loading: false });
                 }
             },
         }),

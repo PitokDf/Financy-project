@@ -235,7 +235,18 @@
     "others": "Lain-lain",
     "categoryDefaultName": "Kategori {num}",
     "excludeToast": "{count} transaksi dikeluarkan ke Lain-lain",
-    "moveToast": "{count} transaksi dipindahkan ke {target}"
+    "moveToast": "{count} transaksi dipindahkan ke {target}",
+    "reviewSectionTitle": "Perlu Dicek",
+    "reviewSectionDesc": "Beberapa transaksi ini kurang yakin dengan kategorinya. Pilih kategori yang tepat agar hasilnya lebih akurat.",
+    "reviewItemDesc": "AI kurang yakin dengan kategori ini. Pilih yang sesuai:",
+    "reviewSelectCategory": "Pilih kategori yang benar",
+    "reviewConfirm": "Simpan & Konfirmasi",
+    "reviewSkip": "Biarkan Saja",
+    "reviewEmpty": "Semua sudah terkategorikan dengan baik!",
+    "reviewAiGuess": "Prediksi AI",
+    "reviewBadge": "Perlu dicek",
+    "reviewBadgeDesc": "Klik untuk koreksi kategori",
+    "reviewNeedsAttention": "{count} transaksi perlu dicek"
   },
   "form": {
     "addTx": "Tambah Transaksi",

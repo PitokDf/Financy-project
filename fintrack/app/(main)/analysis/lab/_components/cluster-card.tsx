@@ -10,12 +10,14 @@ interface ExistingCategory { id: string; name: string; }
 
 export function ClusterCard({
     cluster, index, color, mapping, onNameChange, transactions,
-    onExcludeTransactions, onMoveTransactions, clusterOptions, existingCategories = []
+    onExcludeTransactions, onMoveTransactions, clusterOptions, existingCategories = [],
+    reviewCategoryMap, onReviewCategoryChange
 }: {
     cluster: MlClusterResponse; index: number; color: string; mapping: string;
     onNameChange: (v: string) => void; transactions: MlClusterResponse['members'];
     onExcludeTransactions: (ids: string[]) => void; onMoveTransactions: (ids: string[], targetIndex: number) => void;
     clusterOptions: { index: number; name: string }[]; existingCategories?: ExistingCategory[];
+    reviewCategoryMap?: Record<string, string>; onReviewCategoryChange?: (txId: string, categoryId: string) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -310,6 +312,21 @@ export function ClusterCard({
                                                 </>
                                             )}
                                         </p>
+                                        {/* Inline category dropdown for reviewRequired */}
+                                        {t.reviewRequired && onReviewCategoryChange && (
+                                            <div className="mt-1.5" onClick={e => e.stopPropagation()}>
+                                                <select
+                                                    value={reviewCategoryMap?.[t.id] || ""}
+                                                    onChange={e => onReviewCategoryChange(t.id, e.target.value)}
+                                                    className="w-full h-7 text-[10px] bg-amber-500/6 border border-amber-500/20 rounded-lg px-2 outline-none focus:border-amber-500/40 transition-colors text-foreground"
+                                                >
+                                                    <option value="">Pilih kategori yang benar</option>
+                                                    {existingCategories.map(cat => (
+                                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>

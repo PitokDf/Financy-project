@@ -7,6 +7,7 @@ interface AiLabCardProps {
     isRunning: boolean;
     clusterCount?: number;
     transactionCount?: number;
+    needsReviewCount?: number;
 }
 
 export function AiLabCard({
@@ -14,6 +15,7 @@ export function AiLabCard({
     isRunning,
     clusterCount = 14,
     transactionCount = 62,
+    needsReviewCount = 0,
 }: AiLabCardProps) {
     const t = useTranslations('analysis');
 
@@ -231,6 +233,15 @@ export function AiLabCard({
                     <p className="text-[12px] text-white/60 mt-0.5 max-w-[190px]">
                         {t('aiPredictionDesc')}
                     </p>
+
+                    {needsReviewCount > 0 && (
+                        <div className="flex items-center gap-2 mt-2.5 px-2.5 py-1.5 rounded-xl bg-amber-400/20 border border-amber-300/30 w-fit">
+                            <AlertTriangle className="w-3 h-3 text-amber-200" />
+                            <span className="text-[11px] font-semibold text-amber-100">
+                                {t('reviewNeedsAttention', { count: needsReviewCount })}
+                            </span>
+                        </div>
+                    )}
 
                     <div className="flex items-center justify-between mt-3.5">
                         <button className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold bg-white/22 text-white active:bg-white/30">

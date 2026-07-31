@@ -79,7 +79,8 @@ function TransactionsContent() {
       })),
     ]);
   }, [grouped]);
-  if (isInitialLoading) return <TransactionsSkeleton />;
+
+  if (isInitialLoading && !isSearching) return <TransactionsSkeleton />;
 
   return (
     <div className="animate-fade-in flex flex-col h-screen">

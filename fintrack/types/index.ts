@@ -13,9 +13,11 @@ export interface User {
 export interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
+    loading: boolean;
     setAuth: (user: User) => void;
     logout: () => void;
     updateUser: (user: Partial<User>) => void;
+    refreshUser: () => Promise<void>;
 }
 
 export interface LoginCredentials {

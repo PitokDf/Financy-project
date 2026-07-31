@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, memo, Ref } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowDownRight, ArrowUpRight, Trash2, Pencil, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrencyWithSecure } from "@/lib/utils";
@@ -45,6 +46,7 @@ export const TransactionCard = memo(
     }: TransactionCardProps) {
         const [translateX, setTranslateX] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
+        const router = useRouter();
 
         const IconName = categoryIcon as keyof typeof LucideIcon;
         const IconComponent = (IconName && LucideIcon[IconName]) ? (LucideIcon[IconName] as LucideIcon.LucideIcon) : null;
@@ -144,10 +146,14 @@ export const TransactionCard = memo(
                                     <div className="flex items-center gap-1.5">
                                         <p className="text-xs text-muted-foreground">{category}</p>
                                         {needsReview && (
-                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full px-1.5 py-0.5">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); router.push('/analysis/lab'); }}
+                                                className="inline-flex items-center gap-0.5 text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full px-1.5 py-0.5 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                                                title="Klik untuk koreksi kategori"
+                                            >
                                                 <AlertTriangle className="w-2.5 h-2.5" />
-                                                Review
-                                            </span>
+                                                Perlu dicek
+                                            </button>
                                         )}
                                         {isPendingSync && (
                                             <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 rounded-full px-1.5 py-0.5">

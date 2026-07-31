@@ -143,6 +143,25 @@ export function useAnalysis() {
         },
     });
 
+    const confirmReviewWithCategoriesMutation = useMutation({
+        mutationFn: async (items: { id: string; categoryId?: string }[]) => {
+            await Promise.all(
+                items.map((item) =>
+                    axiosClient.patch(`/transactions/${item.id}`, {
+                        categoryId: item.categoryId || undefined,
+                    })
+                )
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions", "needs-review"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        },
+        onError: () => {
+            toast.error("Gagal memperbarui kategori transaksi");
+        },
+    });
+
     return {
         latestRun: fetchLatestRun.data,
         isLoadingLatest: fetchLatestRun.isLoading,
@@ -154,6 +173,8 @@ export function useAnalysis() {
         isLoadingReview: needsReviewQuery.isLoading,
         batchConfirmReview: batchConfirmReviewMutation.mutateAsync,
         isConfirmingReview: batchConfirmReviewMutation.isPending,
+        confirmReviewWithCategories: confirmReviewWithCategoriesMutation.mutateAsync,
+        isConfirmingReviewWithCategories: confirmReviewWithCategoriesMutation.isPending,
         useStats,
         useCategoryBreakdown
     };

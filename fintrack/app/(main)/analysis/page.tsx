@@ -53,7 +53,7 @@ export default function AnalysisDashboardPage() {
 
     const dateRange = getDateRange(activeRange);
 
-    const { useStats, useCategoryBreakdown, latestRun, isLoadingLatest } = useAnalysis();
+    const { useStats, useCategoryBreakdown, latestRun, isLoadingLatest, needsReviewTxs } = useAnalysis();
 
     const { data: stats, isLoading: isLoadingStats } = useStats(dateRange.start, dateRange.end);
     const { data: categories, isLoading: isLoadingCats } = useCategoryBreakdown(dateRange.start, dateRange.end);
@@ -103,6 +103,7 @@ export default function AnalysisDashboardPage() {
                 isRunning={isRunning}
                 clusterCount={latestRun?.clusters?.length}
                 transactionCount={latestRun?.totalTransactions}
+                needsReviewCount={needsReviewTxs.length}
             />
             {/* AI Lab Banner */}
             {/* <Link href="/analysis/lab">
