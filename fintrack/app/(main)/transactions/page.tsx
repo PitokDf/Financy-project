@@ -80,7 +80,7 @@ function TransactionsContent() {
     ]);
   }, [grouped]);
 
-  if (isInitialLoading && !isSearching) return <TransactionsSkeleton />;
+  if (isInitialLoading && !search) return <TransactionsSkeleton />;
 
   return (
     <div className="animate-fade-in flex flex-col h-screen">
@@ -187,91 +187,95 @@ function TransactionsContent() {
       )}
 
       {/* List */}
-      {!showScheduled && (flatItems.length === 0 && !isSearching ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-            <Search className="w-7 h-7 text-muted-foreground" />
-          </div>
-          <p className="font-semibold text-foreground">{t("noTx")}</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("noTxDesc")}
-          </p>
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0">
-          {isSearching && (
-            <div className="h-0.5 w-full overflow-hidden bg-muted">
-              <div className="h-full w-1/3 bg-primary rounded-full animate-[loading_1s_ease-in-out_infinite]" />
+      {!showScheduled &&
+        (flatItems.length === 0 && !isSearching ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <Search className="w-7 h-7 text-muted-foreground" />
             </div>
-          )}
-          <Virtuoso
-            data={flatItems}
-            endReached={() => {
-              if (hasMore) loadMore();
-            }}
-            style={{ height: "100%" }}
-            itemContent={(index, item) => {
-              return (
-                <div className="py-0.5">
-                  {item.type === "header" ? (
-                    <div className="flex items-center gap-2 py-1">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                        {formatDate(item.date)}
-                      </p>
-                      <div className="flex-1 h-px bg-border" />
-                      <p className="text-xs text-muted-foreground">
-                        {t("txCount", { count: item.count })}
-                      </p>
-                    </div>
-                  ) : (
-                    <TransactionCard
-                      {...item.transaction}
-                      categoryColor={
-                        (item.transaction as any).categoryColor ?? "#6b7280"
-                      }
-                      categoryIcon={(item.transaction as any).categoryIcon}
-                      categoryId={(item.transaction as any).categoryId}
-                      isPendingSync={item.transaction.isPendingSync || (item.transaction as any).isOffline}
-                      onDelete={(trxID) => {
-                        setShowDeleteModal(true);
-                        setIdToDelete(trxID);
-                      }}
-                      onEdit={(data) => {
-                        setEditData(data);
-                        setShowAddModal(true);
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            }}
-          />
-        </div>
-      ))}
+            <p className="font-semibold text-foreground">{t("noTx")}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("noTxDesc")}
+            </p>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0">
+            {isSearching && (
+              <div className="h-0.5 w-full overflow-hidden bg-muted">
+                <div className="h-full w-1/3 bg-primary rounded-full animate-[loading_1s_ease-in-out_infinite]" />
+              </div>
+            )}
+            <Virtuoso
+              data={flatItems}
+              endReached={() => {
+                if (hasMore) loadMore();
+              }}
+              style={{ height: "100%" }}
+              itemContent={(index, item) => {
+                return (
+                  <div className="py-0.5">
+                    {item.type === "header" ? (
+                      <div className="flex items-center gap-2 py-1">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                          {formatDate(item.date)}
+                        </p>
+                        <div className="flex-1 h-px bg-border" />
+                        <p className="text-xs text-muted-foreground">
+                          {t("txCount", { count: item.count })}
+                        </p>
+                      </div>
+                    ) : (
+                      <TransactionCard
+                        {...item.transaction}
+                        categoryColor={
+                          (item.transaction as any).categoryColor ?? "#6b7280"
+                        }
+                        categoryIcon={(item.transaction as any).categoryIcon}
+                        categoryId={(item.transaction as any).categoryId}
+                        isPendingSync={
+                          item.transaction.isPendingSync ||
+                          (item.transaction as any).isOffline
+                        }
+                        onDelete={(trxID) => {
+                          setShowDeleteModal(true);
+                          setIdToDelete(trxID);
+                        }}
+                        onEdit={(data) => {
+                          setEditData(data);
+                          setShowAddModal(true);
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              }}
+            />
+          </div>
+        ))}
 
       {/* FAB */}
       {!showScheduled && (
-      <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
-        <Button
-          size="icon"
-          onClick={() => setShowImportModal(true)}
-          className="w-12 h-12 rounded-2xl bg-secondary text-foreground/70 hover:text-foreground hover:bg-secondary/80 active:scale-95 transition-all duration-200 shadow-none border-0 ml-auto"
-          aria-label={t("importCsv")}
-        >
-          <Import className="w-4.5 h-4.5" strokeWidth={2} />
-        </Button>
-        <Button
-          size="icon"
-          className="w-12 h-12 rounded-2xl shadow-lg shadow-primary/30 border-0"
-          style={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-          }}
-          onClick={() => setShowAddModal(true)}
-          aria-label={t("addTx")}
-        >
-          <Plus className="w-6 h-6 text-white" />
-        </Button>
-      </div>
+        <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
+          <Button
+            size="icon"
+            onClick={() => setShowImportModal(true)}
+            className="w-12 h-12 rounded-2xl bg-secondary text-foreground/70 hover:text-foreground hover:bg-secondary/80 active:scale-95 transition-all duration-200 shadow-none border-0 ml-auto"
+            aria-label={t("importCsv")}
+          >
+            <Import className="w-4.5 h-4.5" strokeWidth={2} />
+          </Button>
+          <Button
+            size="icon"
+            className="w-12 h-12 rounded-2xl shadow-lg shadow-primary/30 border-0"
+            style={{
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            }}
+            onClick={() => setShowAddModal(true)}
+            aria-label={t("addTx")}
+          >
+            <Plus className="w-6 h-6 text-white" />
+          </Button>
+        </div>
       )}
 
       <ConfirmDialog

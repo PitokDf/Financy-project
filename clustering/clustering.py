@@ -17,7 +17,7 @@ MODEL_NAME = "intfloat/multilingual-e5-large"
 
 
 class ClassifierService:
-    def __init__(self, model_filename: str = "classifier_model.joblib"):
+    def __init__(self, model_filename: str = "classifier_model-2.joblib"):
         model_path = os.path.join(DATA_DIR, model_filename)
         if not os.path.exists(model_path):
             model_path = os.path.join(BASE_DIR, model_filename)

@@ -1,92 +1,110 @@
 import { config } from "@/config";
 
 export const App = {
-    NAME: config.SERVICE,
-    VERSION: '1.0.0',
-    API_PREFIX: '/api/v1',
-    DEFAULT_LANGUAGE: 'id',
+  NAME: config.SERVICE,
+  VERSION: "1.0.0",
+  API_PREFIX: "/api/v1",
+  DEFAULT_LANGUAGE: "id",
 };
 
 export const Categories = [
-    { name: "Perbaikan & Maintenance", icon: "Wrench", color: "#F97316" },
-    { name: "Biaya Darurat", icon: "TriangleAlert", color: "#EF4444" },
-    { name: "Tagihan", icon: "ReceiptText", color: "#EAB308" },
-    { name: "Asuransi", icon: "ShieldCheck", color: "#3B82F6" },
-    { name: "Perawatan Diri", icon: "Sparkles", color: "#EC4899" },
-    { name: "Kebersihan & Toiletries", icon: "SoapDispenser", color: "#06B6D4" },
-    { name: "Jasa Profesional", icon: "BriefcaseBusiness", color: "#64748B" },
-    { name: "Transportasi", icon: "Car", color: "#6366F1" },
-    { name: "Pendidikan", icon: "GraduationCap", color: "#8B5CF6" },
-    { name: "Biaya Admin & Bank", icon: "Landmark", color: "#10B981" },
-    { name: "Parkir & Tol", icon: "ParkingCircle", color: "#F59E0B" },
-    { name: "Donasi/Zakat", icon: "HandHeart", color: "#F43F5E" },
-    { name: "Langganan Digital", icon: "RefreshCcw", color: "#0EA5E9" },
-    { name: "Keluarga", icon: "Users", color: "#14B8A6" },
-    { name: "Cicilan & Utang", icon: "CreditCard", color: "#DC2626" },
-    { name: "Pajak", icon: "FileText", color: "#EA580C" },
-    { name: "Belanja Harian", icon: "ShoppingCart", color: "#22C55E" },
-    { name: "Perlengkapan Rumah", icon: "House", color: "#84CC16" },
-    { name: "Gadget & Elektronik", icon: "Smartphone", color: "#2563EB" },
-    { name: "ATK & Percetakan", icon: "Printer", color: "#6B7280" },
-    { name: "Pakaian", icon: "Shirt", color: "#D946EF" },
-    { name: "Tempat Tinggal", icon: "Building2", color: "#78716C" },
-    { name: "Pulsa & Data", icon: "Wifi", color: "#0284C7" },
-    { name: "Makanan & Minuman", icon: "UtensilsCrossed", color: "#FB923C" },
-    { name: "Hewan Peliharaan", icon: "PawPrint", color: "#D97706" },
-    { name: "Pendapatan", icon: "Wallet", color: "#059669" },
-    { name: "Olahraga & Fitness", icon: "Dumbbell", color: "#F43F5E" },
-    { name: "Transfer & Topup", icon: "ArrowLeftRight", color: "#0891B2" },
-    { name: "Kesehatan", icon: "HeartPulse", color: "#E11D48" },
-    { name: "Hiburan", icon: "Film", color: "#A855F7" },
-    { name: "Gaming", icon: "Gamepad2", color: "#7C3AED" },
-    { name: "Hadiah", icon: "Gift", color: "#DB2777" },
-    { name: "Hobi", icon: "Palette", color: "#818CF8" },
-    { name: "Tabungan & Investasi", icon: "PiggyBank", color: "#16A34A" },
-    { name: "Liburan", icon: "Plane", color: "#60A5FA" },
-    { name: "Administrasi & Dokumen", icon: "FolderOpen", color: "#CA8A04" },
-    { name: "Pengiriman", icon: "Package", color: "#F97316" },
-    { name: "Bisnis & Usaha", icon: "Store", color: "#34D399" },
-    { name: "Kendaraan", icon: "Truck", color: "#475569" },
-    { name: "Pernikahan & Event", icon: "CalendarHeart", color: "#FB7185" },
-    { name: "Investasi Properti", icon: "Building", color: "#57534E" },
-    { name: "Sosial & Komunitas", icon: "UsersRound", color: "#0F766E" },
-    { name: "Donasi / Zakat", icon: "HandHeart", color: "#F43F5E" },
-    { name: "Lain-lain", icon: "Ellipsis", color: "#9CA3AF" },
+  { name: "Makanan & Minuman", icon: "UtensilsCrossed", color: "#F59E0B" },
+  { name: "Transportasi", icon: "Car", color: "#3B82F6" },
+  { name: "Belanja Bulanan", icon: "ShoppingCart", color: "#22C55E" },
+  { name: "Tagihan & Utilitas", icon: "Receipt", color: "#EF4444" },
+  { name: "Internet & Pulsa", icon: "Wifi", color: "#06B6D4" },
+  { name: "Langganan Digital", icon: "Repeat", color: "#8B5CF6" },
+  { name: "Kesehatan", icon: "HeartPulse", color: "#F43F5E" },
+  { name: "Pendidikan", icon: "GraduationCap", color: "#6366F1" },
+  { name: "Hiburan", icon: "Popcorn", color: "#EC4899" },
+  { name: "Pakaian & Aksesoris", icon: "Shirt", color: "#14B8A6" },
+  { name: "Perawatan Diri & Kecantikan", icon: "Sparkles", color: "#D946EF" },
+  { name: "Sosial & Donasi", icon: "HandHeart", color: "#F97316" },
+  { name: "Perbaikan & Perawatan", icon: "Wrench", color: "#64748B" },
+  { name: "Peralatan & Elektronik", icon: "Cpu", color: "#0EA5E9" },
+  { name: "Perjalanan & Liburan", icon: "Plane", color: "#A855F7" },
+  { name: "Cicilan & Utang", icon: "CreditCard", color: "#EAB308" },
+  { name: "Asuransi", icon: "ShieldCheck", color: "#10B981" },
+  { name: "Hewan Peliharaan", icon: "PawPrint", color: "#84CC16" },
+  { name: "Pajak", icon: "Landmark", color: "#B45309" },
+  { name: "Keluarga", icon: "Users", color: "#78716C" },
+  { name: "Hobi", icon: "Palette", color: "#71717A" },
+  { name: "Lain-lain", icon: "MoreHorizontal", color: "#0F766E" },
 ] as const;
 
-export type CategoryType = (typeof Categories)[number]["name"]
+export type CategoryType = (typeof Categories)[number]["name"];
 
 export const CategoryMap = Object.fromEntries(
-    Categories.map((item) => [item.name, item])
+  Categories.map((item) => [item.name, item]),
 );
 
 export const HEADER_SYNONYMS = {
-    TYPE: [
-        'tipe', 'type', 'kategori', 'category', 'kind', 'status',
-        'transaction type', 'jenis', 'jenis transaksi', 'flow'
-    ],
-    AMOUNT: [
-        'nominal', 'amount', 'jumlah', 'value', 'harga', 'total',
-        'credit', 'debit', 'mutasi', 'saldo', 'pembayaran', 'price'
-    ],
-    DESCRIPTION: [
-        'catatan', 'deskripsi', 'description', 'keterangan', 'memo',
-        'note', 'narasi', 'detail', 'transaksi', 'remarks'
-    ],
-    DATE: [
-        'tanggal', 'date', 'waktu', 'datetime', 'timestamp',
-        'tgl', 'transaction date', 'tanggal transaksi'
-    ]
+  TYPE: [
+    "tipe",
+    "type",
+    "kategori",
+    "category",
+    "kind",
+    "status",
+    "transaction type",
+    "jenis",
+    "jenis transaksi",
+    "flow",
+  ],
+  AMOUNT: [
+    "nominal",
+    "amount",
+    "jumlah",
+    "value",
+    "harga",
+    "total",
+    "credit",
+    "debit",
+    "mutasi",
+    "saldo",
+    "pembayaran",
+    "price",
+  ],
+  DESCRIPTION: [
+    "catatan",
+    "deskripsi",
+    "description",
+    "keterangan",
+    "memo",
+    "note",
+    "narasi",
+    "detail",
+    "transaksi",
+    "remarks",
+  ],
+  DATE: [
+    "tanggal",
+    "date",
+    "waktu",
+    "datetime",
+    "timestamp",
+    "tgl",
+    "transaction date",
+    "tanggal transaksi",
+  ],
 };
 
 export const INCOME_KEYWORDS = [
-    'INCOME', 'PEMASUKAN', 'PENDAPATAN', 'MASUK', 'GAJI',
-    'EARNING', 'DEPOSIT', 'CREDIT', 'SALDO MASUK', 'UNFOLD'
+  "INCOME",
+  "PEMASUKAN",
+  "PENDAPATAN",
+  "MASUK",
+  "GAJI",
+  "EARNING",
+  "DEPOSIT",
+  "CREDIT",
+  "SALDO MASUK",
+  "UNFOLD",
 ];
 
 export const getHeaderSynonimVal = (row: any, synonyms: string[]) => {
-    const targetKey = Object.keys(row).find(k =>
-        synonyms.includes(k.toLowerCase().trim())
-    );
-    return targetKey ? row[targetKey] : null;
+  const targetKey = Object.keys(row).find((k) =>
+    synonyms.includes(k.toLowerCase().trim()),
+  );
+  return targetKey ? row[targetKey] : null;
 };
