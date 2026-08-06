@@ -280,6 +280,7 @@
     "cashFlowTrend": "Tren Arus Kas",
     "chartBar": "Batang",
     "chartArea": "Tren",
+    "reviewNeedsAttention": "Perlu Dicek",
     "spendingBreakdown": "Breakdown Pengeluaran",
     "total": "Total",
     "noExpenseData": "Belum ada data pengeluaran",

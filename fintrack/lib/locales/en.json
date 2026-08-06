@@ -280,6 +280,7 @@
     "cashFlowTrend": "Cash Flow Trend",
     "chartBar": "Bar",
     "chartArea": "Trend",
+    "reviewNeedsAttention": "Need Review",
     "spendingBreakdown": "Spending Breakdown",
     "total": "Total",
     "noExpenseData": "No expense data yet",

@@ -34,7 +34,7 @@ export function TransactionForm({
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [formType, setFormType] = useState<"EXPENSE" | "INCOME">("EXPENSE");
-  const t = useTranslations('txForm');
+  const t = useTranslations("txForm");
 
   initialValues && console.log("Form Initial Values:", initialValues);
 
@@ -44,14 +44,18 @@ export function TransactionForm({
       jumlah: initialValues?.jumlah || 0,
       type: initialValues?.type || ("EXPENSE" as const),
       category: initialValues?.category || "",
-      date: initialValues?.date || new Date().toLocaleDateString('en-CA'),
+      date: initialValues?.date || new Date().toLocaleDateString("en-CA"),
     }),
     [initialValues],
   );
 
   const formFields = useMemo(
     () =>
-      getTransactionFormFields(categories, () => setShowCategoryDialog(true), t),
+      getTransactionFormFields(
+        categories,
+        () => setShowCategoryDialog(true),
+        t,
+      ),
     [categories, t],
   );
 
@@ -71,8 +75,8 @@ export function TransactionForm({
     <>
       <ReusableForm<TransactionValues>
         defaultValues={defaultValues}
-        dialogTitle={t('addTx')}
-        submitText={t('saveTx')}
+        dialogTitle={t("addTx")}
+        submitText={t("saveTx")}
         schema={transactionSchema}
         withDialog
         fields={formFields}
@@ -90,13 +94,13 @@ export function TransactionForm({
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
         <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
-            <DialogTitle>{t('createCategory')}</DialogTitle>
+            <DialogTitle>{t("createCategory")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateCategory} className="space-y-4 pt-4">
             <div className="space-y-2 flex flex-col">
-              <label className="text-sm font-medium">{t('notes')}</label>
+              <label className="text-sm font-medium">{t("notes")}</label>
               <Input
-                placeholder={t('notesPlaceholder')}
+                placeholder={t("notesPlaceholder")}
                 className="h-11"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
@@ -111,10 +115,10 @@ export function TransactionForm({
                 onClick={() => setShowCategoryDialog(false)}
                 disabled={isCreating}
               >
-                {t('cancel')}
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isCreating || !newCatName.trim()}>
-                {isCreating ? t('importing') : t('saveTx')}
+                {isCreating ? t("importing") : t("saveTx")}
               </Button>
             </DialogFooter>
           </form>

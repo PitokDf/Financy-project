@@ -29,7 +29,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { TransactionsSkeleton } from "./_components/skeleton";
 import { useSecureMode } from "@/hooks/use-secure";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Transaction } from "@/hooks/use-transactions";
 import { ScheduledExpenseTab } from "./_components/scheduled-expense-tab";
 
@@ -40,6 +40,8 @@ type FlatItem =
 function TransactionsContent() {
   const searchParams = useSearchParams();
   const action = searchParams.get("action");
+  const pathname = usePathname();
+  const router = useRouter();
 
   const { isSecure } = useSecureMode();
   const [showImportModal, setShowImportModal] = useState(action === "import");
@@ -211,7 +213,7 @@ function TransactionsContent() {
                 if (hasMore) loadMore();
               }}
               style={{ height: "100%" }}
-              itemContent={(index, item) => {
+              itemContent={(_, item) => {
                 return (
                   <div className="py-0.5">
                     {item.type === "header" ? (
@@ -258,7 +260,10 @@ function TransactionsContent() {
         <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
           <Button
             size="icon"
-            onClick={() => setShowImportModal(true)}
+            onClick={() => {
+              setShowImportModal(true);
+              router.push(`${pathname}?action=import`);
+            }}
             className="w-12 h-12 rounded-2xl bg-secondary text-foreground/70 hover:text-foreground hover:bg-secondary/80 active:scale-95 transition-all duration-200 shadow-none border-0 ml-auto"
             aria-label={t("importCsv")}
           >
@@ -270,7 +275,10 @@ function TransactionsContent() {
             style={{
               background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
             }}
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setShowAddModal(true);
+              router.push(`${pathname}?action=add`);
+            }}
             aria-label={t("addTx")}
           >
             <Plus className="w-6 h-6 text-white" />
@@ -296,7 +304,10 @@ function TransactionsContent() {
         isOpen={showAddModal}
         onOpenChange={(open) => {
           setShowAddModal(open);
-          if (!open) setEditData(null);
+          if (!open) {
+            setEditData(null);
+            router.push(pathname);
+          }
         }}
         onSubmit={(values) => handleCreateTransaction(values, editData?.id)}
         defaultValues={
@@ -314,7 +325,10 @@ function TransactionsContent() {
 
       <ImportCsvModal
         isOpen={showImportModal}
-        onOpenChange={setShowImportModal}
+        onOpenChange={(open) => {
+          setShowImportModal(open);
+          if (!open) router.push(pathname);
+        }}
       />
 
       <CategorySheet

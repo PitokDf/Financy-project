@@ -38,7 +38,7 @@ export default defineConfig({
     },
     {
       name: "mobile-chrome",
-      use: { ...devices["iPhone 14 Pro Max"] },
+      use: { ...devices["Pixel 7"] },
       dependencies: ["setup"],
     },
   ],
