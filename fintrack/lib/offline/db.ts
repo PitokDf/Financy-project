@@ -325,7 +325,10 @@ export async function mergePendingMutations(
           entry.category = "Pending sync";
           entry.categoryIcon = "";
         }
-        items.unshift(entry);
+        const alreadyExists = items.some((item: any) => item.id === entry.id);
+        if (!alreadyExists) {
+          items.unshift(entry);
+        }
         break;
       }
       case "UPDATE":

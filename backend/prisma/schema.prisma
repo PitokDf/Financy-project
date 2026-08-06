@@ -14,11 +14,11 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  password String? // hashed with bcrypt, null for Google OAuth users
-  name     String
-  avatar   String? // URL to avatar image
+  id       String  @id @default(uuid()) @db.Uuid
+  email    String  @unique @db.VarChar(255)
+  password String? @db.VarChar(255) // hashed with bcrypt, null for Google OAuth users
+  name     String  @db.VarChar(255)
+  avatar   String? @db.VarChar(255) // URL to avatar image
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -42,8 +42,8 @@ model User {
 }
 
 model UserStats {
-  id     String @id @default(uuid())
-  userId String @unique @map("user_id")
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
 
   // XP and Level
   xp    Int @default(0)
@@ -74,13 +74,13 @@ model UserStats {
 }
 
 model Badge {
-  id          String @id @default(uuid())
-  name        String @unique
-  description String
-  icon        String // Icon name (e.g., "Star", "Flame", "Trophy")
-  condition   String // Condition code (e.g., "streak_7", "transactions_50")
+  id          String @id @default(uuid()) @db.Uuid
+  name        String @unique @db.VarChar(255)
+  description String @db.Text
+  icon        String @db.VarChar(255) // Icon name (e.g., "Star", "Flame", "Trophy")
+  condition   String @db.VarChar(255) // Condition code (e.g., "streak_7", "transactions_50")
   xpReward    Int    @default(0) @map("xp_reward")
-  color       String @default("#FFD700") // Badge color
+  color       String @default("#FFD700") @db.VarChar(7) // Badge color
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -92,9 +92,9 @@ model Badge {
 }
 
 model UserBadge {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  badgeId    String   @map("badge_id")
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  badgeId    String   @map("badge_id") @db.Uuid
   unlockedAt DateTime @default(now()) @map("unlocked_at")
 
   // Relations
@@ -106,9 +106,9 @@ model UserBadge {
 }
 
 model Challenge {
-  id          String        @id @default(uuid())
-  title       String
-  description String
+  id          String        @id @default(uuid()) @db.Uuid
+  title       String @db.VarChar(255)
+  description String @db.Text
   target      Int // Target number to achieve
   xpReward    Int           @default(50) @map("xp_reward")
   type        ChallengeType @default(WEEKLY_TRANSACTIONS)
@@ -123,9 +123,9 @@ model Challenge {
 }
 
 model UserChallenge {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  challengeId String    @map("challenge_id")
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  challengeId String    @map("challenge_id") @db.Uuid
   current     Int       @default(0) // Current progress
   isCompleted Boolean   @default(false) @map("is_completed")
   completedAt DateTime? @map("completed_at")
@@ -154,18 +154,18 @@ enum ChallengeType {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  userId      String          @map("user_id")
-  description String
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  description String @db.Text
   amount      Int // Amount in IDR (smallest unit)
   type        TransactionType
   date        DateTime        @db.Date
 
   // Optional category
-  categoryId String? @map("category_id")
+  categoryId String? @map("category_id") @db.Uuid
 
   // Clustering
-  clusterId String? @map("cluster_id")
+  clusterId String? @map("cluster_id") @db.Uuid
 
   // Source tracking
   source      TransactionSource @default(MANUAL) @map("source")
@@ -190,11 +190,11 @@ model Transaction {
 }
 
 model ScheduledExpense {
-  id              String    @id @default(uuid())
-  userId          String    @map("user_id")
-  description     String
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  description     String @db.Text
   amount          Int
-  categoryId      String?   @map("category_id")
+  categoryId      String?   @map("category_id") @db.Uuid
   dayOfMonth      Int       @map("day_of_month") // 1-31
   isActive        Boolean   @default(true) @map("is_active")
   lastProcessedAt DateTime? @map("last_processed_at") // last month-year this was executed
@@ -223,11 +223,11 @@ enum TransactionSource {
 }
 
 model Category {
-  id              String          @id @default(uuid())
-  userId          String          @map("user_id")
-  name            String
-  color           String          @default("#888888")
-  icon            String? // Icon name
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  name            String @db.VarChar(255)
+  color           String          @default("#888888") @db.VarChar(7)
+  icon            String? @db.VarChar(255) // Icon name
   type            TransactionType @default(EXPENSE)
   isAutoGenerated Boolean         @default(false) @map("is_auto_generated")
 
@@ -251,9 +251,9 @@ model Category {
 }
 
 model BudgetGoal {
-  id         String       @id @default(uuid())
-  userId     String       @map("user_id")
-  categoryId String       @map("category_id")
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  categoryId String       @map("category_id") @db.Uuid
   amount     Int // Budget limit in IDR
   period     BudgetPeriod @default(MONTHLY)
 
@@ -281,9 +281,9 @@ enum BudgetPeriod {
 }
 
 model Cluster {
-  id            String  @id @default(uuid())
-  userId        String  @map("user_id")
-  analysisRunId String  @map("analysis_run_id")
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @map("user_id") @db.Uuid
+  analysisRunId String  @map("analysis_run_id") @db.Uuid
   name          String
   suggestedName String? @map("suggested_name") // AI suggested name
   color         String  @default("#888888")
@@ -304,15 +304,15 @@ model Cluster {
 }
 
 model Notification {
-  id      String           @id @default(uuid())
-  userId  String           @map("user_id")
-  title   String
-  message String
+  id      String           @id @default(uuid()) @db.Uuid
+  userId  String           @map("user_id") @db.Uuid
+  title   String @db.VarChar(255)
+  message String @db.Text
   type    NotificationType
   isRead  Boolean          @default(false) @map("is_read")
 
   // Additional data (JSON for flexibility)
-  metadata Json? // e.g., { transactionId, categoryId, badgeId, etc. }
+  metadata Json? @db.JsonB // e.g., { transactionId, categoryId, badgeId, etc. }
 
   // Timestamps
   createdAt DateTime  @default(now()) @map("created_at")
@@ -339,9 +339,9 @@ enum NotificationType {
 
 
 model Forecast {
-  id              String  @id @default(uuid())
-  userId          String  @map("user_id")
-  categoryId      String  @map("category_id")
+  id              String  @id @default(uuid()) @db.Uuid
+  userId          String  @map("user_id") @db.Uuid
+  categoryId      String  @map("category_id") @db.Uuid
   targetMonth     Int     @map("target_month") // 1-12
   targetYear      Int     @map("target_year")
   predictedAmount Decimal @map("predicted_amount")
@@ -358,15 +358,15 @@ model Forecast {
 }
 
 model AnalysisRun {
-  id                String  @id @default(uuid())
-  userId            String  @map("user_id")
-  status            String  @default("running")
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  status            String  @default("running") @db.VarChar(255)
   totalTransactions Int     @map("total_transactions")
   kOptimal          Int?    @map("k_optimal") // Optimal number of clusters
   silhouetteScore   Float?  @map("silhouette_score")
-  wcssValues        Json?   @map("wcss_values") // Within-cluster sum of squares values
+  wcssValues        Json?   @map("wcss_values") @db.JsonB // Within-cluster sum of squares values
   durationMs        Int?    @map("duration_ms") // Analysis duration in milliseconds
-  errorMessage      String? @map("error_message")
+  errorMessage      String? @map("error_message") @db.Text
 
   // Timestamps
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -380,8 +380,8 @@ model AnalysisRun {
 }
 
 model UserSetting {
-  id     String @id @default(uuid())
-  userId String @unique @map("user_id")
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
 
   // Notification preferences
   pushNotifications Boolean @default(true) @map("push_notifications")
@@ -411,11 +411,11 @@ model UserSetting {
   @@map("user_settings")
 }
 model PushSubscription {
-  id       String @id @default(uuid())
-  userId   String @map("user_id")
-  endpoint String
-  p256dh   String
-  auth     String
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @map("user_id") @db.Uuid
+  endpoint String @db.Text
+  p256dh   String @db.Text
+  auth     String @db.Text
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -429,9 +429,9 @@ model PushSubscription {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   token     String   @unique
-  userId    String   @map("user_id")
+  userId    String   @map("user_id") @db.Uuid
   expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
