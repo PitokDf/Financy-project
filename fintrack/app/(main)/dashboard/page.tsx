@@ -303,7 +303,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="sticky bottom-24 right-4 z-30 flex flex-col items-end gap-3">
-        <VoiceTransactionButton />
+        {navigator.onLine && <VoiceTransactionButton />}
         <Link href="/transactions?action=add">
           <Button
             size="icon"
@@ -323,7 +323,9 @@ export default function DashboardPage() {
           icon={<Trash2 className="text-red-500" />}
           title={t("deleteTxTitle")}
           description={t("deleteTxDesc")}
-          onConfirm={async () => { await deleteTransaction(idToDelete); }}
+          onConfirm={async () => {
+            await deleteTransaction(idToDelete);
+          }}
           onCancel={() => {
             setIdToDelete("");
           }}
