@@ -16,8 +16,8 @@ datasource db {
 model User {
   id       String  @id @default(uuid()) @db.Uuid
   email    String  @unique @db.VarChar(255)
-  password String? @db.VarChar(255) // hashed with bcrypt, null for Google OAuth users
-  name     String  @db.VarChar(255)
+  password String? @db.VarChar(125) // hashed with bcrypt, null for Google OAuth users
+  name     String  @db.VarChar(125)
   avatar   String? @db.VarChar(255) // URL to avatar image
 
   // Timestamps
@@ -77,8 +77,8 @@ model Badge {
   id          String @id @default(uuid()) @db.Uuid
   name        String @unique @db.VarChar(255)
   description String @db.Text
-  icon        String @db.VarChar(255) // Icon name (e.g., "Star", "Flame", "Trophy")
-  condition   String @db.VarChar(255) // Condition code (e.g., "streak_7", "transactions_50")
+  icon        String @db.VarChar(50) // Icon name (e.g., "Star", "Flame", "Trophy")
+  condition   String @db.VarChar(100) // Condition code (e.g., "streak_7", "transactions_50")
   xpReward    Int    @default(0) @map("xp_reward")
   color       String @default("#FFD700") @db.VarChar(7) // Badge color
 
@@ -225,7 +225,7 @@ enum TransactionSource {
 model Category {
   id              String          @id @default(uuid()) @db.Uuid
   userId          String          @map("user_id") @db.Uuid
-  name            String @db.VarChar(255)
+  name            String @db.VarChar(125)
   color           String          @default("#888888") @db.VarChar(7)
   icon            String? @db.VarChar(255) // Icon name
   type            TransactionType @default(EXPENSE)
