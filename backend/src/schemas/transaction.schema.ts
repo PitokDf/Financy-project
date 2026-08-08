@@ -16,7 +16,6 @@ export const CreateTransactionSchema = z.object({
     categoryId: z.string().optional(),
     clusterId: z.string().optional(),
     source: TransactionSource.optional(),
-    csvImportId: z.string().optional(),
 });
 
 export const UpdateTransactionSchema = CreateTransactionSchema.partial().extend({

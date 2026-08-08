@@ -2,7 +2,7 @@
 
 import { MlClusterResponse } from "@/hooks/use-analysis";
 import { cn, formatCurrency } from "@/lib/utils";
-import { ChevronDown, ChevronUp, FolderInput, Trash2, Check, AlertCircle, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronUp, FolderInput, Trash2, Check, AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { CATEGORIES } from "./constant";
 
@@ -33,6 +33,12 @@ export function ClusterCard({
         cat.name.toLowerCase().includes(mapping.toLowerCase()) &&
         cat.name.toLowerCase() !== mapping.toLowerCase()
     ).slice(0, 5);
+
+    const resolvedSuggestions = (tx: MlClusterResponse['members'][number]) =>
+        (tx.suggestions ?? [])
+            .map(s => ({ ...s, matched: existingCategories.find(c => c.name.toLowerCase() === s.category.toLowerCase()) }))
+            .filter(x => x.matched)
+            .slice(0, 2);
 
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -314,7 +320,32 @@ export function ClusterCard({
                                         </p>
                                         {/* Inline category dropdown for reviewRequired */}
                                         {t.reviewRequired && onReviewCategoryChange && (
-                                            <div className="mt-1.5" onClick={e => e.stopPropagation()}>
+                                            <div className="mt-1.5 space-y-1.5" onClick={e => e.stopPropagation()}>
+                                                {/* AI suggestions */}
+                                                {resolvedSuggestions(t).length > 0 && (
+                                                    <div className="flex items-center flex-wrap gap-1">
+                                                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-primary/70">
+                                                            <Sparkles className="w-2.5 h-2.5" />
+                                                            AI
+                                                        </span>
+                                                        {resolvedSuggestions(t).map(s => (
+                                                            <button
+                                                                key={s.matched!.id}
+                                                                type="button"
+                                                                onClick={() => onReviewCategoryChange(t.id, s.matched!.id)}
+                                                                className={cn(
+                                                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-medium transition-colors",
+                                                                    reviewCategoryMap?.[t.id] === s.matched!.id
+                                                                        ? "bg-primary/15 border-primary/40 text-primary"
+                                                                        : "bg-muted/40 border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                {s.matched!.name}
+                                                                <span className="opacity-60">{Math.round(s.confidence * 100)}%</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 <select
                                                     value={reviewCategoryMap?.[t.id] || ""}
                                                     onChange={e => onReviewCategoryChange(t.id, e.target.value)}

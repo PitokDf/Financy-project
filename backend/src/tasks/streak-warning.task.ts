@@ -1,11 +1,12 @@
 import { GamificationRepository } from "@/repositories/gamification.repository";
 import { PushService } from "@/service/push.service";
-import { startOfDay } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { NotificationRepository } from "@/repositories/notification.repository";
 import frameworkLogger from "@/utils/winston.logger";
 
 const WIB_TIMEZONE = 'Asia/Jakarta';
+const DEFAULT_REMINDER_TIME = '20:00';
 
 export class TaskManager {
     public async streakWarning() {
@@ -17,13 +18,19 @@ export class TaskManager {
         const now = new Date();
         const zonedNow = toZonedTime(now, WIB_TIMEZONE)
         const todayStart = startOfDay(zonedNow)
+        const currentTime = format(zonedNow, 'HH:mm')
+
+        const usersToNotify = usersWithStreak.filter((stats) => {
+            const reminderTime = stats.user?.userSetting?.reminderTime || DEFAULT_REMINDER_TIME;
+            return reminderTime === currentTime;
+        });
 
         const existingNotification = await NotificationRepository.getExistingNotification(todayStart);
         const notifiedUserIds = new Set(existingNotification.map(n => n.userId));
 
         let notifiedCount = 0;
 
-        const tasks = usersWithStreak.map(async (stats) => {
+        const tasks = usersToNotify.map(async (stats) => {
             try {
                 const lastTx = stats.lastTransactionAt;
 
@@ -54,6 +61,6 @@ export class TaskManager {
         })
 
         await Promise.allSettled(tasks)
-        frameworkLogger.info(`[Task] Streak Warning Task completed. Notified ${notifiedCount}/${usersWithStreak.length} users.`)
+        frameworkLogger.info(`[Task] Streak Warning Task completed. Notified ${notifiedCount}/${usersToNotify.length} users.`)
     }
 }

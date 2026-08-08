@@ -18,6 +18,7 @@ export interface MlClusterResponse {
         date: string;
         category?: { name: string; color: string; icon: string };
         reviewRequired?: boolean;
+        suggestions?: Array<{ category: string; confidence: number }>;
     }>;
 }
 
@@ -123,7 +124,15 @@ export function useAnalysis() {
         queryKey: ["transactions", "needs-review"],
         queryFn: async () => {
             const res = await axiosClient.get("/transactions/needs-review");
-            return (Array.isArray(res) ? res : []) as MlClusterResponse["members"];
+            const data = Array.isArray(res) ? res : [];
+            return (data as any[]).map((tx) => ({
+                ...tx,
+                suggestions:
+                    (tx.aiSuggestions ?? []) as Array<{
+                        category: string;
+                        confidence: number;
+                    }>,
+            })) as MlClusterResponse["members"];
         },
     });
 

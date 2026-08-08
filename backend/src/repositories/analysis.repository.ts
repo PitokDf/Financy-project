@@ -61,7 +61,6 @@ export class AnalysisRepository {
         color?: string;
         index?: number;
         silhouetteScore?: number | null;
-        wcss?: number | null;
     }) => {
         return prisma.cluster.create({
             data: {
@@ -72,7 +71,6 @@ export class AnalysisRepository {
                 color: data.color || "#888888",
                 index: data.index ?? 0,
                 silhouetteScore: data.silhouetteScore ?? null,
-                wcss: data.wcss ?? null,
             },
         });
     }

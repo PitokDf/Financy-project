@@ -9,8 +9,6 @@ export interface UserStats {
     streak: number;
     longestStreak: number;
     totalTransactions: number;
-    totalIncome: number;
-    totalExpense: number;
     lastTransactionAt?: string;
 }
 
@@ -81,13 +79,13 @@ export function useGamification() {
                 if (data) {
                     try { await cacheResponse(userId, '/api/gamification/stats', data); } catch {}
                 }
-                return data ?? { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0, totalIncome: 0, totalExpense: 0 };
+                return data ?? { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0 };
             } catch (error) {
                 try {
                     const cached = await getCachedResponse(userId, '/api/gamification/stats');
                     if (cached) return cached.data as UserStats;
                 } catch {}
-                return { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0, totalIncome: 0, totalExpense: 0 };
+                return { xp: 0, level: 1, streak: 0, longestStreak: 0, totalTransactions: 0 };
             }
         },
         placeholderData: {
@@ -95,9 +93,7 @@ export function useGamification() {
             level: 1,
             streak: 0,
             longestStreak: 0,
-            totalTransactions: 0,
-            totalIncome: 0,
-            totalExpense: 0
+            totalTransactions: 0
         }
     });
 

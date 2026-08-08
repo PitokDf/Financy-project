@@ -83,7 +83,12 @@ export class GamificationRepository {
             include: {
                 user: {
                     select: {
-                        name: true
+                        name: true,
+                        userSetting: {
+                            select: {
+                                reminderTime: true
+                            }
+                        }
                     }
                 }
             }

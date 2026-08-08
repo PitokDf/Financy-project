@@ -9,9 +9,10 @@ import { toast } from "sonner";
 interface LanguageDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onLanguageChange?: (locale: string) => void;
 }
 
-export function LanguageDialog({ isOpen, onClose }: LanguageDialogProps) {
+export function LanguageDialog({ isOpen, onClose, onLanguageChange }: LanguageDialogProps) {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("profile");
@@ -21,6 +22,7 @@ export function LanguageDialog({ isOpen, onClose }: LanguageDialogProps) {
   const handleSelectLanguage = (newLocale: string) => {
     if (newLocale !== locale) {
       document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+      onLanguageChange?.(newLocale);
       if (newLocale === "en") {
         toast.success("Language changed to English");
       } else {

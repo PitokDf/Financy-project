@@ -180,7 +180,7 @@ export class TransactionService {
                 if (isAutoCategorizeEnabled && data.description) {
                     const mlResult = await AnalysisMLService.runPipelineV2(
                         [{ id: "temp-id", description: data.description }],
-                        1,
+                        3,
                         0.5
                     );
 
@@ -203,6 +203,7 @@ export class TransactionService {
 
                         if (pred.reviewRequired) {
                             (data as any).needsReview = true;
+                            (data as any).aiSuggestions = pred.alternatives;
                         }
                     }
                 }
@@ -234,6 +235,7 @@ export class TransactionService {
     public update = async (userId: string, trxId: string, data: any) => {
         if (data.categoryId) {
             data.needsReview = false;
+            data.aiSuggestions = null;
         }
         const transaction = await this.repo.update(userId, trxId, data);
         redisClient?.del(`dashboard:${userId}`);

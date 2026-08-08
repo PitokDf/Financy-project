@@ -18,7 +18,6 @@ model User {
   email    String  @unique @db.VarChar(255)
   password String? @db.VarChar(125) // hashed with bcrypt, null for Google OAuth users
   name     String  @db.VarChar(125)
-  avatar   String? @db.VarChar(255) // URL to avatar image
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -56,8 +55,6 @@ model UserStats {
 
   // Stats
   totalTransactions Int @default(0) @map("total_transactions")
-  totalIncome       Int @default(0) @map("total_income")
-  totalExpense      Int @default(0) @map("total_expense")
 
   // Gamification flags
   hasExported Boolean @default(false) @map("has_exported")
@@ -169,10 +166,12 @@ model Transaction {
 
   // Source tracking
   source      TransactionSource @default(MANUAL) @map("source")
-  csvImportId String?           @map("csv_import_id")
 
   // AI review flag
   needsReview Boolean @default(false) @map("needs_review")
+
+  // AI suggestion: alternatif kategori (top_k) saat needsReview
+  aiSuggestions Json? @map("ai_suggestions")
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -291,7 +290,6 @@ model Cluster {
 
   // Clustering metrics
   silhouetteScore Float? @map("silhouette_score")
-  wcss            Float? // Within-cluster sum of squares
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -388,8 +386,6 @@ model UserSetting {
   budgetAlerts      Boolean @default(true) @map("budget_alerts")
   dailyReminder     Boolean @default(true) @map("daily_reminder")
   reminderTime      String  @default("20:00") @map("reminder_time") // HH:MM format
-  reminderDays      String[] @default(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]) @map("reminder_days")
-  lastReminderAt    DateTime? @map("last_reminder_at")
 
   // Display preferences
   currency String @default("IDR")

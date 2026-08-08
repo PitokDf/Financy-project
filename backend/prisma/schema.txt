@@ -18,7 +18,6 @@ model User {
   email    String  @unique
   password String // hashed with bcrypt
   name     String
-  avatar   String? // URL to avatar image
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -54,8 +53,6 @@ model UserStats {
 
   // Stats
   totalTransactions Int @default(0) @map("total_transactions")
-  totalIncome       Int @default(0) @map("total_income")
-  totalExpense      Int @default(0) @map("total_expense")
 
   // Gamification flags
   hasExported Boolean @default(false) @map("has_exported")
@@ -167,7 +164,6 @@ model Transaction {
 
   // Source tracking
   source      TransactionSource @default(MANUAL) @map("source")
-  csvImportId String?           @map("csv_import_id")
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -261,7 +257,6 @@ model Cluster {
 
   // Clustering metrics
   silhouetteScore Float? @map("silhouette_score")
-  wcss            Float? // Within-cluster sum of squares
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")

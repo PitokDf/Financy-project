@@ -3,6 +3,7 @@
 import { useAuthStore } from "@/lib/zustand/auth-store";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LocaleSync } from "@/components/layout/locale-sync";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,5 +47,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <LocaleSync />
+      {children}
+    </>
+  );
 }

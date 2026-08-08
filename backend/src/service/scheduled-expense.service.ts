@@ -73,7 +73,7 @@ export class ScheduledExpenseService {
                 if (isAutoCategorizeEnabled) {
                     const mlResult = await AnalysisMLService.runPipelineV2(
                         [{ id: transactionId, description }],
-                        1,
+                        3,
                         0.5
                     );
 
@@ -95,6 +95,7 @@ export class ScheduledExpenseService {
                         const updateData: any = { categoryId: category.id };
                         if (pred.reviewRequired) {
                             updateData.needsReview = true;
+                            updateData.aiSuggestions = pred.alternatives;
                         }
                         await this.txRepo.update(userId, transactionId, updateData);
                     }

@@ -2,7 +2,6 @@ export interface User {
     id: string;
     email: string;
     name: string;
-    avatar?: string;
     createdAt: string;
     level?: number;
     streak?: number;
@@ -88,8 +87,6 @@ export interface UserStats {
     streak: number;
     longestStreak: number;
     totalTransactions: number;
-    totalIncome: number;
-    totalExpense: number;
 }
 
 export interface DashboardSummary {
@@ -175,7 +172,6 @@ export interface UserResponse {
     email: string;
     password: string;
     id: string;
-    avatar: string | null;
     createdAt: Date;
     updatedAt: Date;
 }

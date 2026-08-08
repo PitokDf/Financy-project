@@ -224,7 +224,6 @@ export class AnalysisService {
           color: cluster.index === -1 ? "#9CA3AF" : "#888888",
           index: cluster.index,
           silhouetteScore: mlResult.silhouette_score,
-          wcss: null,
         });
 
         const transactionIds = cluster.members.map(
@@ -317,6 +316,8 @@ export class AnalysisService {
       startDate,
       endDate,
     );
+
+    console.log(transactions);
     if (transactions.length < 1) {
       throw new AppError(
         `Minimal 1 transaksi (tanpa kategori) diperlukan. Saat ini: ${transactions.length}`,
@@ -392,7 +393,6 @@ export class AnalysisService {
             : (CategoryMap[categoryName]?.color ?? "#888888"),
           index: clusterIndex,
           silhouetteScore: avgConfidence,
-          wcss: null,
         });
 
         const transactionIds = members.map((m: any) => m.transactionId);
@@ -401,11 +401,17 @@ export class AnalysisService {
           createdCluster.id,
         );
 
-        // Buat lookup: transactionId → reviewRequired (confidence rendah)
+        // Buat lookup: transactionId → reviewRequired (confidence rendah) & suggestions
         const reviewFlagMap = new Map(
           members.map((m: any) => [
             m.transactionId,
             m.reviewRequired as boolean,
+          ]),
+        );
+        const suggestionsMap = new Map(
+          members.map((m: any) => [
+            m.transactionId,
+            (m.alternatives ?? []) as Array<{ category: string; confidence: number }>,
           ]),
         );
 
@@ -417,6 +423,7 @@ export class AnalysisService {
             amount: Number(t?.amount ?? 0),
             date: t?.date ? toIsoDate(t.date) : "",
             reviewRequired: reviewFlagMap.get(id) ?? false,
+            suggestions: suggestionsMap.get(id) ?? [],
           };
         });
 
@@ -578,7 +585,6 @@ export class AnalysisService {
         category.id,
       );
 
-
       const totalAmount = transactionIds.reduce((sum: number, id: string) => {
         const t = transactionMap.get(id);
         return sum + Math.abs(Number(t?.amount ?? 0));
@@ -606,7 +612,6 @@ export class AnalysisService {
     });
 
     cacheManager.delPattern(`dashboard:${payload.userId}`);
-
 
     try {
       const gamificationQueue = new GamificationQueue();

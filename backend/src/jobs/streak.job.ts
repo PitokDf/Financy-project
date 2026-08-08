@@ -21,12 +21,14 @@ export class StreakJob {
             await queue.removeRepeatableByKey(job.key)
         }
 
+        // Run every minute so the task can dispatch to users whose custom
+        // reminderTime matches the current time (WIB).
         await this.streakQueue.add('streak-job', {}, {
             repeat: {
-                pattern: '0 20 * * *',
+                pattern: '* * * * *',
                 tz: 'Asia/Jakarta'
             }
         });
-        frameworkLogger.info("[StreakJob] Repeatable job registered for '0 20 * * *'")
+        frameworkLogger.info("[StreakJob] Repeatable job registered for '* * * * *'")
     }
 }

@@ -127,6 +127,18 @@ export default function AnalysisLabPage() {
     }
   };
 
+  const resolveReviewSuggestions = (tx: MlClusterResponse["members"][number]) =>
+    (tx.suggestions ?? [])
+      .map((s) => ({
+        id: expenseCategories.find(
+          (c) => c.name.toLowerCase() === s.category.toLowerCase(),
+        )?.id,
+        name: s.category,
+        confidence: s.confidence,
+      }))
+      .filter((x): x is { id: string; name: string; confidence: number } => !!x.id)
+      .slice(0, 2);
+
   const loadResult = (result: AnalysisRunResult) => {
     setAnalysisResult(result);
     const initialMappings: Record<number, string> = {};
@@ -342,6 +354,37 @@ export default function AnalysisLabPage() {
                             <p className="text-[10px] font-medium text-amber-600">
                               {t("reviewItemDesc")}
                             </p>
+                            {/* AI suggestions */}
+                            {resolveReviewSuggestions(tx).length > 0 && (
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-primary/70">
+                                  <Sparkles className="w-2.5 h-2.5" />
+                                  AI
+                                </span>
+                                {resolveReviewSuggestions(tx).map((s) => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onClick={() =>
+                                      setReviewCategoryMap((prev) => ({
+                                        ...prev,
+                                        [tx.id]: s.id,
+                                      }))
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium transition-colors ${
+                                      reviewCategoryMap[tx.id] === s.id
+                                        ? "bg-primary/15 border-primary/40 text-primary"
+                                        : "bg-muted/40 border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                                    }`}
+                                  >
+                                    {s.name}
+                                    <span className="opacity-60">
+                                      {Math.round(s.confidence * 100)}%
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                             <select
                               value={reviewCategoryMap[tx.id] || ""}
                               onChange={(e) =>
