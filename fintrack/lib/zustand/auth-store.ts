@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { AuthState, User } from "@/types";
 import { deleteDB, pullOnLogin, getDB } from "@/lib/offline/db";
+import { clearQueryCache } from "@/lib/query-cache";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -13,6 +14,7 @@ export const useAuthStore = create<AuthState>()(
       loading: false,
 
       setAuth: (user: User) => {
+        clearQueryCache();
         set({ user, isAuthenticated: true });
 
         // Initialize DB and pull data on login
@@ -27,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         const currentUser = get().user;
+        clearQueryCache();
         if (currentUser?.id) {
           await deleteDB(currentUser.id).catch(console.error);
         }

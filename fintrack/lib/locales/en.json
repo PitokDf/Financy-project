@@ -39,6 +39,7 @@
     "title": "User Profile",
     "account": "Account",
     "editProfile": "Edit Profile",
+    "joined": "Joined on {date}",
     "editProfileDesc": "Change name and email address",
     "security": "Security",
     "securityDesc": "Change password & authentication",

@@ -1,7 +1,8 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { registerQueryClient } from "@/lib/query-cache";
 import { OfflineSyncProvider } from "./offline-sync-provider";
 import { PrefetchProvider } from "./prefetch-provider";
 
@@ -65,6 +66,10 @@ export function QueryClientLayout({
                 },
             })
     );
+
+    useEffect(() => {
+        registerQueryClient(client);
+    }, [client]);
 
     return (
         <QueryClientProvider client={client}>

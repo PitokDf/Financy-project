@@ -44,7 +44,7 @@ export default function ProfilePage() {
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString(
         locale === "id" ? "id-ID" : "en-US",
-        { month: "long", year: "numeric" },
+        { day: "numeric", month: "long", year: "numeric" },
       )
     : t("justNow");
 
@@ -95,7 +95,7 @@ export default function ProfilePage() {
           <div className="gradient-primary h-20 z-0 relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           </div>
-          <CardContent className="px-4 pb-4 z-1 -mt-14">
+          <CardContent className="px-4 pb-4 z-1 -mt-11">
             <div className="flex items-end gap-3">
               <div className="relative">
                 <Avatar className="w-16 h-16 border-3 border-background shadow-lg ring-2 ring-primary/20">
@@ -113,6 +113,9 @@ export default function ProfilePage() {
                   {user?.name ?? (locale === "id" ? "Pengguna" : "User")}
                 </h2>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("joined", { date: joinDate })}
+                </p>
               </div>
             </div>
 

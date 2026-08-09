@@ -39,6 +39,7 @@
     "title": "Profil Pengguna",
     "account": "Akun",
     "editProfile": "Edit Profil",
+    "joined": "Bergabung sejak {date}",
     "editProfileDesc": "Ubah nama dan alamat email",
     "security": "Keamanan",
     "securityDesc": "Ubah kata sandi & autentikasi",
