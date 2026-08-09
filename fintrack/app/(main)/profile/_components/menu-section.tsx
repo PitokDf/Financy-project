@@ -157,7 +157,7 @@ export function MenuSection() {
               value={settings?.reminderTime ?? "20:00"}
               onChange={(e) => updateSetting("reminderTime", e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              className="h-9 rounded-md border border-border/50 bg-muted px-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-9 rounded-md max-w-32 border border-border/50 bg-muted px-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
           ),
         },
