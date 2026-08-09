@@ -81,6 +81,12 @@ export class TransactionRepository {
     });
   };
 
+  public findById = async (userId: string, trxId: string) => {
+    return prisma.transaction.findFirst({
+      where: { userId, id: trxId },
+    });
+  };
+
   public findForAnalysis = async (
     userId: string,
     startDate: Date,

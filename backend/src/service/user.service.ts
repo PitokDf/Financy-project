@@ -3,6 +3,7 @@ import { HttpStatus } from "@/constants/http-status";
 import { Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
 import { UserRepository } from "@/repositories/user.repository";
+import { UserSettingService } from "@/service/user-setting.service";
 import { CreateUserInput, UpdateUserInput } from "@/schemas/user.schema";
 import { BcryptUtil } from "@/utils";
 import { cacheManager } from "@/utils/cache";
@@ -79,6 +80,8 @@ export class UserService {
 
         if (!user) throw new AppError(Messages.NOT_FOUND, HttpStatus.NOT_FOUND);
 
+        const settings = await UserSettingService.getSettings(userId);
+
         return {
             id: user.id,
             email: user.email,
@@ -89,6 +92,7 @@ export class UserService {
             streak: user.userStats?.streak ?? 0,
             badgeCount: user._count?.userBadges ?? 0,
             hasPassword: !!user.password,
+            language: settings.language,
         };
     }
 

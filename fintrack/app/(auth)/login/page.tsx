@@ -7,6 +7,7 @@ import { TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 import { ReusableForm } from "@/components/ui/reuseable-form";
 import { useAuth } from "@/hooks/use-auth";
+import { setLocaleCookie } from "@/lib/locale-cookie";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
@@ -47,6 +48,7 @@ function LoginContent() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const user = await loginMutation(data);
+      setLocaleCookie(user.language || "id");
       setAuth(user);
 
       router.push(redirectUrl ?? "/dashboard");

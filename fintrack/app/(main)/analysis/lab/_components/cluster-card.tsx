@@ -1,6 +1,6 @@
 'use client';
 
-import { MlClusterResponse } from "@/hooks/use-analysis";
+import { MlClusterResponse, ReviewSelection } from "@/hooks/use-analysis";
 import { cn, formatCurrency } from "@/lib/utils";
 import { ChevronDown, ChevronUp, FolderInput, Trash2, Check, AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
@@ -17,7 +17,7 @@ export function ClusterCard({
     onNameChange: (v: string) => void; transactions: MlClusterResponse['members'];
     onExcludeTransactions: (ids: string[]) => void; onMoveTransactions: (ids: string[], targetIndex: number) => void;
     clusterOptions: { index: number; name: string }[]; existingCategories?: ExistingCategory[];
-    reviewCategoryMap?: Record<string, string>; onReviewCategoryChange?: (txId: string, categoryId: string) => void;
+    reviewCategoryMap?: Record<string, ReviewSelection>; onReviewCategoryChange?: (txId: string, selection: ReviewSelection) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -36,8 +36,11 @@ export function ClusterCard({
 
     const resolvedSuggestions = (tx: MlClusterResponse['members'][number]) =>
         (tx.suggestions ?? [])
-            .map(s => ({ ...s, matched: existingCategories.find(c => c.name.toLowerCase() === s.category.toLowerCase()) }))
-            .filter(x => x.matched)
+            .map(s => ({
+                ...s,
+                matched: existingCategories.find(c => c.name.toLowerCase() === s.category.toLowerCase()),
+                isNew: !existingCategories.some(c => c.name.toLowerCase() === s.category.toLowerCase()),
+            }))
             .slice(0, 2);
 
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -330,25 +333,34 @@ export function ClusterCard({
                                                         </span>
                                                         {resolvedSuggestions(t).map(s => (
                                                             <button
-                                                                key={s.matched!.id}
+                                                                key={s.matched?.id ?? `new-${s.category}`}
                                                                 type="button"
-                                                                onClick={() => onReviewCategoryChange(t.id, s.matched!.id)}
+                                                                onClick={() => s.isNew
+                                                                    ? onReviewCategoryChange(t.id, { categoryName: s.category })
+                                                                    : onReviewCategoryChange(t.id, { categoryId: s.matched!.id })}
                                                                 className={cn(
                                                                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-medium transition-colors",
-                                                                    reviewCategoryMap?.[t.id] === s.matched!.id
+                                                                    (s.isNew
+                                                                        ? reviewCategoryMap?.[t.id]?.categoryName === s.category
+                                                                        : reviewCategoryMap?.[t.id]?.categoryId === s.matched!.id)
                                                                         ? "bg-primary/15 border-primary/40 text-primary"
                                                                         : "bg-muted/40 border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                                                                 )}
                                                             >
-                                                                {s.matched!.name}
+                                                                {s.category}
+                                                                {s.isNew && (
+                                                                    <span className="px-1 py-px rounded bg-primary/15 text-primary text-[8px] font-bold uppercase tracking-wide">
+                                                                        Baru
+                                                                    </span>
+                                                                )}
                                                                 <span className="opacity-60">{Math.round(s.confidence * 100)}%</span>
                                                             </button>
                                                         ))}
                                                     </div>
                                                 )}
                                                 <select
-                                                    value={reviewCategoryMap?.[t.id] || ""}
-                                                    onChange={e => onReviewCategoryChange(t.id, e.target.value)}
+                                                    value={reviewCategoryMap?.[t.id]?.categoryId || ""}
+                                                    onChange={e => onReviewCategoryChange(t.id, { categoryId: e.target.value || undefined })}
                                                     className="w-full h-7 text-[10px] bg-amber-500/6 border border-amber-500/20 rounded-lg px-2 outline-none focus:border-amber-500/40 transition-colors text-foreground"
                                                 >
                                                     <option value="">Pilih kategori yang benar</option>

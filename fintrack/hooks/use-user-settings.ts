@@ -79,6 +79,7 @@ export function useUserSettings() {
     return {
         settings: query.data,
         isLoading: query.isLoading,
+        isFetching: query.isFetching,
         isUpdating: mutation.isPending,
         updateSetting,
         updateSettingsMutation: mutation,

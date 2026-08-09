@@ -3,6 +3,7 @@ import { HttpStatus } from "@/constants/http-status";
 import { Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
 import { UserRepository } from "@/repositories/user.repository";
+import { UserSettingService } from "@/service/user-setting.service";
 import { ChangePassword, LoginDTO, RegisterDTO } from "@/schemas/user.schema";
 import { BcryptUtil, JwtUtil } from "@/utils";
 import prisma from "@/config/prisma";
@@ -27,7 +28,7 @@ export class AuthService {
 
     const token = JwtUtil.generate({ ...user, user_id: user.id }, "3d");
 
-    return { user, token };
+    return { user: { ...user, language: "id" }, token };
   };
 
   public changePassword = async (data: ChangePassword, email: string) => {
@@ -84,7 +85,16 @@ export class AuthService {
 
     const token = JwtUtil.generate({ ...user, user_id: user.id }, "3d");
 
-    return { user, token };
+    const settings = await UserSettingService.getSettings(user.id);
+    const { password, ...userData } = user;
+    return {
+      user: {
+        ...userData,
+        hasPasword: !!password,
+        language: settings.language,
+      },
+      token,
+    };
   };
 
   public forgotPassword = async (email: string) => {

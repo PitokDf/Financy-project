@@ -45,6 +45,17 @@ export interface ClusterMapping {
     transactionIds?: string[];
 }
 
+export interface ReviewOverride {
+    transactionId: string;
+    categoryId?: string;
+    categoryName?: string;
+}
+
+export interface ReviewSelection {
+    categoryId?: string;
+    categoryName?: string;
+}
+
 export interface FinancialStat {
     date: string;
     income: number;
@@ -84,7 +95,7 @@ export function useAnalysis() {
     });
 
     const confirmAnalysisMutation = useMutation({
-        mutationFn: async (payload: { runId: string, clusterMappings: ClusterMapping[] }) => {
+        mutationFn: async (payload: { runId: string, clusterMappings: ClusterMapping[], reviewOverrides?: ReviewOverride[] }) => {
             const res = await axiosClient.post("/analysis/confirm", payload);
             return res.data;
         },
@@ -153,11 +164,12 @@ export function useAnalysis() {
     });
 
     const confirmReviewWithCategoriesMutation = useMutation({
-        mutationFn: async (items: { id: string; categoryId?: string }[]) => {
+        mutationFn: async (items: { id: string; categoryId?: string; categoryName?: string }[]) => {
             await Promise.all(
                 items.map((item) =>
                     axiosClient.patch(`/transactions/${item.id}`, {
                         categoryId: item.categoryId || undefined,
+                        categoryName: item.categoryName || undefined,
                     })
                 )
             );

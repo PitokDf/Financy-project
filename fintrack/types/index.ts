@@ -7,6 +7,7 @@ export interface User {
     streak?: number;
     badgeCount?: number;
     hasPassword?: boolean;
+    language?: string;
 }
 
 export interface AuthState {

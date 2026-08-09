@@ -249,7 +249,8 @@
     "reviewAiGuess": "AI prediction",
     "reviewBadge": "Needs review",
     "reviewBadgeDesc": "Click to fix category",
-    "reviewNeedsAttention": "{count} transactions need review"
+    "reviewNeedsAttention": "{count} transactions need review",
+    "newCategory": "New"
   },
   "form": {
     "addTx": "Add Transaction",

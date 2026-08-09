@@ -20,7 +20,6 @@ import {
   AlarmClock,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { NotificationPermissionDialog } from "@/components/notification-permission-dialog";
@@ -28,9 +27,10 @@ import { ExportDialog } from "./export-dialog";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ConfirmDeleteData } from "./confirm-delete-data";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { LanguageDialog } from "./language-dialog";
-import { TimePicker } from "@/components/ui/time-picker";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthStore } from "@/lib/zustand/auth-store";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -42,11 +42,13 @@ interface MenuItem {
   href?: string;
   isDanger?: boolean;
   leftContent?: React.ReactNode;
+  disabled?: boolean;
 }
 
 export function MenuSection() {
   const { theme, setTheme } = useTheme();
   const { settings, updateSetting } = useUserSettings();
+  const { user } = useAuthStore();
   const { isSubscribed, subscribeUser, unsubscribeUser } =
     usePushNotifications();
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
@@ -55,7 +57,6 @@ export function MenuSection() {
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const router = useRouter();
   const mounted = true;
-  const locale = useLocale();
   const t = useTranslations("profile");
   const tCommon = useTranslations("common");
 
@@ -97,6 +98,7 @@ export function MenuSection() {
           icon: Shield,
           label: t("security"),
           description: t("securityDesc"),
+          disabled: user?.hasPassword ? false : true,
           action: () => router.push("/profile/change-password"),
         },
       ],
@@ -145,13 +147,17 @@ export function MenuSection() {
         },
         {
           icon: AlarmClock,
+          disabled: !settings?.dailyReminder,
           label: t("reminderTime"),
           description: t("reminderTimeDesc"),
           leftContent: (
-            <TimePicker
+            <input
+              type="time"
+              disabled={!settings?.dailyReminder}
               value={settings?.reminderTime ?? "20:00"}
-              onValueChange={(v) => updateSetting("reminderTime", v)}
-              className="h-9 w-27.5 px-3"
+              onChange={(e) => updateSetting("reminderTime", e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="h-9 rounded-md border border-border/50 bg-muted px-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
           ),
         },
@@ -239,12 +245,16 @@ export function MenuSection() {
               return (
                 <div
                   key={idx}
-                  onClick={item.action}
+                  aria-disabled={item.disabled}
+                  onClick={!item.disabled ? item.action : undefined}
                   className={cn(
                     "w-full flex items-center gap-3 p-4 transition-colors text-left",
                     item.action && "hover:bg-muted/50 cursor-pointer",
                     idx === 0 && "rounded-t-lg",
                     idx === section.items.length - 1 && "rounded-b-lg",
+                    item.disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer",
                   )}
                 >
                   <div

@@ -249,7 +249,8 @@
     "reviewAiGuess": "Prediksi AI",
     "reviewBadge": "Perlu dicek",
     "reviewBadgeDesc": "Klik untuk koreksi kategori",
-    "reviewNeedsAttention": "{count} transaksi perlu dicek"
+    "reviewNeedsAttention": "{count} transaksi perlu dicek",
+    "newCategory": "Baru"
   },
   "form": {
     "addTx": "Tambah Transaksi",

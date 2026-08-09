@@ -7,6 +7,7 @@ import {
   useAnalysis,
   AnalysisRunResult,
   MlClusterResponse,
+  ReviewSelection,
 } from "@/hooks/use-analysis";
 import { useCategories } from "@/hooks/use-categories";
 import {
@@ -56,7 +57,7 @@ export default function AnalysisLabPage() {
     new Set(),
   );
   const [reviewCategoryMap, setReviewCategoryMap] = useState<
-    Record<string, string>
+    Record<string, ReviewSelection>
   >({});
 
   const expenseCategories = useMemo(
@@ -74,9 +75,9 @@ export default function AnalysisLabPage() {
 
   useEffect(() => {
     if (needsReviewTxs.length > 0) {
-      const initial: Record<string, string> = {};
+      const initial: Record<string, ReviewSelection> = {};
       needsReviewTxs.forEach((tx: any) => {
-        initial[tx.id] = tx.categoryId || "";
+        initial[tx.id] = { categoryId: tx.categoryId || undefined };
       });
       setReviewCategoryMap(initial);
     }
@@ -105,7 +106,8 @@ export default function AnalysisLabPage() {
       const ids = Array.from(selectedReviewIds);
       const items = ids.map((id) => ({
         id,
-        categoryId: reviewCategoryMap[id] || undefined,
+        categoryId: reviewCategoryMap[id]?.categoryId || undefined,
+        categoryName: reviewCategoryMap[id]?.categoryName || undefined,
       }));
 
       await confirmReviewWithCategories(items);
@@ -129,14 +131,17 @@ export default function AnalysisLabPage() {
 
   const resolveReviewSuggestions = (tx: MlClusterResponse["members"][number]) =>
     (tx.suggestions ?? [])
-      .map((s) => ({
-        id: expenseCategories.find(
+      .map((s) => {
+        const matched = expenseCategories.find(
           (c) => c.name.toLowerCase() === s.category.toLowerCase(),
-        )?.id,
-        name: s.category,
-        confidence: s.confidence,
-      }))
-      .filter((x): x is { id: string; name: string; confidence: number } => !!x.id)
+        );
+        return {
+          id: matched?.id,
+          name: s.category,
+          confidence: s.confidence,
+          isNew: !matched,
+        };
+      })
       .slice(0, 2);
 
   const loadResult = (result: AnalysisRunResult) => {
@@ -184,9 +189,17 @@ export default function AnalysisLabPage() {
       };
     });
     try {
+      const reviewOverrides = Object.entries(reviewCategoryMap)
+        .filter(([, sel]) => sel.categoryId || sel.categoryName)
+        .map(([transactionId, sel]) => ({
+          transactionId,
+          categoryId: sel.categoryId,
+          categoryName: sel.categoryName,
+        }));
       const res = await confirmAnalysis({
         runId: analysisResult.runId,
         clusterMappings,
+        reviewOverrides,
       });
       setForecastData(res.topForecasts);
       setUiState("FORECAST_REVEAL");
@@ -363,21 +376,31 @@ export default function AnalysisLabPage() {
                                 </span>
                                 {resolveReviewSuggestions(tx).map((s) => (
                                   <button
-                                    key={s.id}
+                                    key={s.id || `new-${s.name}`}
                                     type="button"
                                     onClick={() =>
                                       setReviewCategoryMap((prev) => ({
                                         ...prev,
-                                        [tx.id]: s.id,
+                                        [tx.id]: s.isNew
+                                          ? { categoryName: s.name }
+                                          : { categoryId: s.id },
                                       }))
                                     }
                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium transition-colors ${
-                                      reviewCategoryMap[tx.id] === s.id
+                                      reviewCategoryMap[tx.id]?.categoryId ===
+                                        s.id ||
+                                      reviewCategoryMap[tx.id]?.categoryName ===
+                                        s.name
                                         ? "bg-primary/15 border-primary/40 text-primary"
                                         : "bg-muted/40 border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                                     }`}
                                   >
                                     {s.name}
+                                    {s.isNew && (
+                                      <span className="px-1 py-px rounded bg-primary/15 text-primary text-[8px] font-bold uppercase tracking-wide">
+                                        {t("newCategory")}
+                                      </span>
+                                    )}
                                     <span className="opacity-60">
                                       {Math.round(s.confidence * 100)}%
                                     </span>
@@ -386,11 +409,13 @@ export default function AnalysisLabPage() {
                               </div>
                             )}
                             <select
-                              value={reviewCategoryMap[tx.id] || ""}
+                              value={reviewCategoryMap[tx.id]?.categoryId || ""}
                               onChange={(e) =>
                                 setReviewCategoryMap((prev) => ({
                                   ...prev,
-                                  [tx.id]: e.target.value,
+                                  [tx.id]: {
+                                    categoryId: e.target.value || undefined,
+                                  },
                                 }))
                               }
                               className="w-full h-8 text-xs bg-background border border-border/60 rounded-lg px-2.5 outline-none focus:border-amber-500/50 transition-colors"
@@ -660,8 +685,11 @@ export default function AnalysisLabPage() {
                   name: c.name,
                 }))}
                 reviewCategoryMap={reviewCategoryMap}
-                onReviewCategoryChange={(txId, categoryId) =>
-                  setReviewCategoryMap((prev) => ({ ...prev, [txId]: categoryId }))
+                onReviewCategoryChange={(txId, selection) =>
+                  setReviewCategoryMap((prev) => ({
+                    ...prev,
+                    [txId]: selection,
+                  }))
                 }
                 onExcludeTransactions={(txIds) => {
                   setAssignments((prev) => {

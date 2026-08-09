@@ -33,12 +33,23 @@ export const runAnalysisSchema = z.object({
     path: ["kMin"],
 });
 
+const reviewOverrideSchema = z.object({
+    transactionId: z.string({ message: "transactionId dibutuhkan" }),
+    categoryId: z.string().optional(),
+    categoryName: z.string().optional(),
+}).refine((data) => data.categoryId || data.categoryName, {
+    message: "categoryId atau categoryName wajib diisi salah satu",
+    path: ["categoryId"],
+});
+
 export const confirmAnalysisSchema = z.object({
     userId: z.string({ message: "userId dibutuhkan" }),
     runId: z.string({ message: "runId dibutuhkan" }),
     clusterMappings: z.array(clusterMappingSchema, { message: "clusterMappings dibutuhkan" }),
+    reviewOverrides: z.array(reviewOverrideSchema).optional(),
 });
 
 export type RunAnalysisInput = z.infer<typeof runAnalysisSchema>;
 export type ConfirmAnalysisInput = z.infer<typeof confirmAnalysisSchema>;
 export type ClusterMappingInput = z.infer<typeof clusterMappingSchema>;
+export type ReviewOverrideInput = z.infer<typeof reviewOverrideSchema>;

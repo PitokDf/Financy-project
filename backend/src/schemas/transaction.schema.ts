@@ -20,6 +20,7 @@ export const CreateTransactionSchema = z.object({
 
 export const UpdateTransactionSchema = CreateTransactionSchema.partial().extend({
     id: z.string().optional(),
+    categoryName: z.string().optional(),
 });
 
 export const TransactionResponseSchema = CreateTransactionSchema.extend({

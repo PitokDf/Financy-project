@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { setLocaleCookie } from "@/lib/locale-cookie";
 
 interface LanguageDialogProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export function LanguageDialog({ isOpen, onClose, onLanguageChange }: LanguageDi
 
   const handleSelectLanguage = (newLocale: string) => {
     if (newLocale !== locale) {
-      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+      setLocaleCookie(newLocale);
       onLanguageChange?.(newLocale);
       if (newLocale === "en") {
         toast.success("Language changed to English");
