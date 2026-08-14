@@ -6,6 +6,8 @@ import {
   LoginDTO,
   RegisterDTO,
   ResetPasswordDTO,
+  ResendVerificationDTO,
+  VerifyEmailDTO,
 } from "@/schemas/user.schema";
 import { AuthService } from "@/service/auth.service";
 import { Auth } from "@/utils/auth";
@@ -28,10 +30,24 @@ export class AuthController {
     const data = req.body as RegisterDTO;
     const result = await this.authService.register(data);
 
-    Auth.setTokenCookieHttpOnly(res, result.token, { duration: 3, unit: "d" });
-
     return ResponseUtil.success(res, result.user);
   });
+
+  public verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.body as VerifyEmailDTO;
+    const result = await this.authService.verifyEmail(token);
+
+    return ResponseUtil.success(res, result);
+  });
+
+  public resendVerification = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { email } = req.body as ResendVerificationDTO;
+      const result = await this.authService.resendVerification(email);
+
+      return ResponseUtil.success(res, result);
+    },
+  );
 
   public logout = asyncHandler(async (req: Request, res: Response) => {
     Auth.clearTokenCookieHttpOnly(res);

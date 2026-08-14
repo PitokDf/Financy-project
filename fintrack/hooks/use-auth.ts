@@ -31,7 +31,27 @@ export const useAuth = () => {
         },
 
         onSuccess: () => {
-            toast.success('Akun berhasil dibuat! Selamat datang di FinTrack!');
+            toast.success('Akun berhasil dibuat! Silakan verifikasi email Anda.');
+        }
+    })
+
+    const verifyEmail = useMutation({
+        mutationFn: async (token: string) => {
+            const result = await axiosClient.post('/auth/verify-email', { token });
+            return result.data;
+        },
+        onSuccess: () => {
+            toast.success('Email berhasil diverifikasi! Silakan masuk.');
+        }
+    })
+
+    const resendVerification = useMutation({
+        mutationFn: async (email: string) => {
+            const result = await axiosClient.post('/auth/resend-verification', { email });
+            return result.data;
+        },
+        onSuccess: () => {
+            toast.success('Email verifikasi telah dikirim ulang!');
         }
     })
 
@@ -101,5 +121,9 @@ export const useAuth = () => {
         forgotPasswordLoading: forgotPassword.isPending,
         resetPasswordMutation: resetPassword.mutateAsync,
         resetPasswordLoading: resetPassword.isPending,
+        verifyEmailMutation: verifyEmail.mutateAsync,
+        verifyEmailLoading: verifyEmail.isPending,
+        resendVerificationMutation: resendVerification.mutateAsync,
+        resendVerificationLoading: resendVerification.isPending,
     }
 }

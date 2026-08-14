@@ -3,14 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, } from 'lucide-react';
-import { useAuthStore } from '@/lib/zustand/auth-store';
 import { RegisterForm, RegisterFormData } from './_components/register-form';
 import { useAuth } from '@/hooks/use-auth';
 import { setLocaleCookie } from '@/lib/locale-cookie';
 import Image from 'next/image';
 
 export default function RegisterPage() {
-    const { setAuth } = useAuthStore();
     const { registerMutation } = useAuth()
     const router = useRouter();
 
@@ -18,8 +16,7 @@ export default function RegisterPage() {
         try {
             const user = await registerMutation(data);
             setLocaleCookie(user.language || "id");
-            setAuth(user);
-            router.replace('/dashboard');
+            router.replace(`/verify-email?email=${encodeURIComponent(user.email)}`);
         } catch (error) {
             throw error
         }

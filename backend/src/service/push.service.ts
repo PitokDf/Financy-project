@@ -41,7 +41,10 @@ export class PushService {
         }
       };
 
-      return webpush.sendNotification(pushSubscription, payload).catch(async (error) => {
+      return webpush.sendNotification(pushSubscription, payload, {
+        TTL: 3600,
+        urgency: "high",
+      }).catch(async (error) => {
         if (error.statusCode === 404 || error.statusCode === 410) {
           await PushRepository.delete(sub.endpoint);
         } else {

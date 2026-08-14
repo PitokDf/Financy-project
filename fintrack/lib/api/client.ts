@@ -23,7 +23,8 @@ axiosClient.interceptors.response.use(
             currentPath !== "/login" &&
             currentPath !== "/register" &&
             currentPath !== "/forgot-password" &&
-            currentPath !== "/reset-password"
+            currentPath !== "/reset-password" &&
+            currentPath !== "/verify-email"
           ) {
             window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
           }

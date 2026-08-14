@@ -8,6 +8,8 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  resendVerificationSchema,
+  verifyEmailSchema,
 } from "@/schemas/user.schema";
 import { AuthService } from "@/service/auth.service";
 import { Router } from "express";
@@ -44,6 +46,18 @@ authRouter.post(
   "/reset-password",
   validateSchema(resetPasswordSchema),
   controller.resetPassword,
+);
+
+authRouter.post(
+  "/verify-email",
+  validateSchema(verifyEmailSchema),
+  controller.verifyEmail,
+);
+
+authRouter.post(
+  "/resend-verification",
+  validateSchema(resendVerificationSchema),
+  controller.resendVerification,
 );
 
 export default authRouter;

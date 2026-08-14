@@ -22,6 +22,7 @@ export const errorHandler = (
     let statusCode: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string = Messages.INTERNAL_ERROR;
     let errors: any[] | undefined;
+    let messageCode: string | undefined;
 
     if (err instanceof ZodError) {
         statusCode = HttpStatus.BAD_REQUEST;
@@ -67,6 +68,7 @@ export const errorHandler = (
         statusCode = err.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
         message = err.message;
         errors = err.errors;
+        messageCode = err.messageCode;
     }
 
     else if (err instanceof SyntaxError && 'body' in err) {
@@ -86,7 +88,11 @@ export const errorHandler = (
 
     console.log(err)
 
-    ResponseUtil.error(res, message, errors, statusCode);
+    if (messageCode) {
+        ResponseUtil.error(res, messageCode as any, errors, statusCode);
+    } else {
+        ResponseUtil.error(res, message, errors, statusCode);
+    }
 };
 
 export const asyncHandler = (fn: Function) => {

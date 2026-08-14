@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
-import { TrendingUp, Shield, Zap, ArrowRight } from "lucide-react";
+import { TrendingUp, Zap, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/lib/zustand/auth-store";
 import { ReusableForm } from "@/components/ui/reuseable-form";
 import { useAuth } from "@/hooks/use-auth";
 import { setLocaleCookie } from "@/lib/locale-cookie";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z
@@ -32,11 +33,15 @@ const FEATURES = [
 
 function LoginContent() {
   const { setAuth } = useAuthStore();
-  const { loginMutation } = useAuth();
+  const { loginMutation, resendVerificationMutation } = useAuth();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
   const errorParam = searchParams.get("error");
+  const verifiedParam = searchParams.get("verified");
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resending, setResending] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +50,26 @@ function LoginContent() {
     }
   }, [errorParam]);
 
+  useEffect(() => {
+    if (verifiedParam === "success") {
+      setSuccessMsg("Email berhasil diverifikasi! Silakan masuk.");
+    }
+  }, [verifiedParam]);
+
+  const handleResend = async () => {
+    if (!unverifiedEmail) return;
+    setResending(true);
+    try {
+      await resendVerificationMutation(unverifiedEmail);
+      setSuccessMsg("Email verifikasi telah dikirim ulang. Cek email Anda.");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      toast.error(err.message || "Gagal mengirim ulang email verifikasi.");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       const user = await loginMutation(data);
@@ -52,7 +77,13 @@ function LoginContent() {
       setAuth(user);
 
       router.push(redirectUrl ?? "/dashboard");
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as { messageCode?: string };
+      if (err.messageCode === "EMAIL_NOT_VERIFIED") {
+        setErrorMsg("");
+        setUnverifiedEmail(data.email);
+        return;
+      }
       throw error;
     }
   };
@@ -110,6 +141,38 @@ function LoginContent() {
           <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3 mb-4">
             <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <p className="text-sm text-destructive font-medium">{errorMsg}</p>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-emerald-700 font-medium">{successMsg}</p>
+          </div>
+        )}
+
+        {unverifiedEmail && (
+          <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-amber-700 font-medium">
+                Email belum diverifikasi. Silakan verifikasi email Anda untuk
+                bisa masuk.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary font-semibold hover:underline disabled:opacity-60"
+              >
+                {resending ? (
+                  <span className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                Kirim ulang email verifikasi
+              </button>
+            </div>
           </div>
         )}
 

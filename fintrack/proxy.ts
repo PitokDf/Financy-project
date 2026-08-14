@@ -22,6 +22,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/register") ||
     request.nextUrl.pathname.startsWith("/forgot-password") ||
+    request.nextUrl.pathname.startsWith("/verify-email") ||
     request.nextUrl.pathname.startsWith("/reset-password");
   const isPublicRoute = request.nextUrl.pathname === "/";
 
@@ -39,7 +40,7 @@ export async function proxy(request: NextRequest) {
   if (token && !isTokenValid && !isAssetRoute && !isAuthRoute) {
     const response = NextResponse.redirect(
       new URL(
-        `/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}&test=123`,
+        `/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`,
         request.url,
       ),
     );
@@ -50,7 +51,7 @@ export async function proxy(request: NextRequest) {
   if (!isTokenValid && !isAuthRoute && !isPublicRoute && !isAssetRoute) {
     return NextResponse.redirect(
       new URL(
-        `/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}&test=125`,
+        `/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`,
         request.url,
       ),
     );

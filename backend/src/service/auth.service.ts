@@ -1,14 +1,20 @@
 import crypto from "crypto";
 import { HttpStatus } from "@/constants/http-status";
-import { Messages } from "@/constants/message";
+import { MessageCodes, Messages } from "@/constants/message";
 import { AppError } from "@/errors/app-error";
 import { UserRepository } from "@/repositories/user.repository";
 import { UserSettingService } from "@/service/user-setting.service";
 import { ChangePassword, LoginDTO, RegisterDTO } from "@/schemas/user.schema";
 import { BcryptUtil, JwtUtil } from "@/utils";
 import prisma from "@/config/prisma";
-import { sendResetPasswordEmail } from "./email.service";
+import {
+  isEmailConfigured,
+  sendResetPasswordEmail,
+  sendVerificationEmail,
+} from "./email.service";
 import logger from "@/utils/winston.logger";
+
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 jam
 
 export class AuthService {
   constructor(private readonly userRepo: typeof UserRepository) {}
@@ -20,15 +26,104 @@ export class AuthService {
 
     const hashedPassword = await BcryptUtil.hash(data.password);
 
+    const autoVerify = !isEmailConfigured;
+
     const user = await this.userRepo.create({
       name: data.name,
       email: data.email,
       password: hashedPassword,
+      ...(autoVerify ? { emailVerifiedAt: new Date() } : {}),
     });
 
-    const token = JwtUtil.generate({ ...user, user_id: user.id }, "3d");
+    if (!autoVerify) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS);
 
-    return { user: { ...user, language: "id" }, token };
+      await prisma.emailVerificationToken.create({
+        data: { token, userId: user.id, expiresAt },
+      });
+
+      try {
+        await sendVerificationEmail(user.email, user.name, token);
+      } catch (error) {
+        logger.error("[Auth] Failed to send verification email:", error);
+      }
+    }
+
+    const { password: _password, ...userData } = user;
+    return {
+      user: {
+        ...userData,
+        emailVerified: autoVerify,
+        language: "id",
+      },
+    };
+  };
+
+  public verifyEmail = async (token: string) => {
+    const verificationToken = await prisma.emailVerificationToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!verificationToken)
+      throw new AppError(
+        "Token verifikasi tidak valid",
+        HttpStatus.BAD_REQUEST,
+      );
+    if (verificationToken.used)
+      throw new AppError("Token sudah digunakan", HttpStatus.BAD_REQUEST);
+    if (verificationToken.expiresAt < new Date())
+      throw new AppError(
+        "Token sudah kedaluwarsa. Silakan kirim ulang email verifikasi.",
+        HttpStatus.BAD_REQUEST,
+      );
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: verificationToken.userId },
+        data: { emailVerifiedAt: new Date() },
+      }),
+      prisma.emailVerificationToken.update({
+        where: { id: verificationToken.id },
+        data: { used: true },
+      }),
+    ]);
+
+    return { message: "Email berhasil diverifikasi" };
+  };
+
+  public resendVerification = async (email: string) => {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user)
+      throw new AppError("Email tidak ditemukan", HttpStatus.NOT_FOUND);
+    if (!user.password)
+      throw new AppError(
+        "Akun ini terdaftar via Google SSO dan sudah terverifikasi.",
+        HttpStatus.BAD_REQUEST,
+      );
+    if (user.emailVerifiedAt)
+      throw new AppError("Email sudah diverifikasi.", HttpStatus.BAD_REQUEST);
+
+    await prisma.emailVerificationToken.updateMany({
+      where: { userId: user.id, used: false },
+      data: { used: true },
+    });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS);
+
+    await prisma.emailVerificationToken.create({
+      data: { token, userId: user.id, expiresAt },
+    });
+
+    try {
+      await sendVerificationEmail(user.email, user.name, token);
+    } catch (error) {
+      logger.error("[Auth] Failed to resend verification email:", error);
+    }
+
+    return { message: "Email verifikasi telah dikirim ulang" };
   };
 
   public changePassword = async (data: ChangePassword, email: string) => {
@@ -82,6 +177,15 @@ export class AuthService {
 
     if (!isValidPassword)
       throw new AppError(Messages.INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+
+    if (!user.emailVerifiedAt) {
+      throw new AppError(
+        Messages.EMAIL_NOT_VERIFIED,
+        HttpStatus.FORBIDDEN,
+        undefined,
+        MessageCodes.EMAIL_NOT_VERIFIED,
+      );
+    }
 
     const token = JwtUtil.generate({ ...user, user_id: user.id }, "3d");
 

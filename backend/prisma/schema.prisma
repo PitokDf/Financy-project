@@ -19,6 +19,9 @@ model User {
   password String? @db.VarChar(125) // hashed with bcrypt, null for Google OAuth users
   name     String  @db.VarChar(125)
 
+  // Email verification (null = not verified, only for email/password users)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -36,6 +39,7 @@ model User {
   pushSubscriptions PushSubscription[]
   scheduledExpenses  ScheduledExpense[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -437,4 +441,19 @@ model PasswordResetToken {
   @@index([token])
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("email_verification_tokens")
 }

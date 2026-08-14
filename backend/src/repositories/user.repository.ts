@@ -69,10 +69,20 @@ export class UserRepository {
   }
 
   static async create(
-    data: Pick<User, "name" | "email"> & { password?: string },
+    data: Pick<User, "name" | "email"> & {
+      password?: string;
+      emailVerifiedAt?: Date | null;
+    },
   ): Promise<User> {
     return prisma.user.create({
       data: data as any,
+    });
+  }
+
+  static async markEmailVerified(id: string): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { emailVerifiedAt: new Date() },
     });
   }
 

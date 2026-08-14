@@ -8,6 +8,7 @@ export interface User {
     badgeCount?: number;
     hasPassword?: boolean;
     language?: string;
+    emailVerified?: boolean;
 }
 
 export interface AuthState {

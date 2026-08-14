@@ -182,38 +182,112 @@ export class TransactionRepository {
     categoryId: string,
     monthsLimit = 6,
   ) => {
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - monthsLimit);
-    startDate.setDate(1); // Start from the beginning of the month
+    const { windowStart, windowEnd } = this.monthlyWindow(monthsLimit);
 
     const transactions = await prisma.transaction.findMany({
       where: {
         userId,
         categoryId,
         type: "EXPENSE",
-        date: { gte: startDate },
+        date: { gte: windowStart, lt: windowEnd },
       },
       select: {
         amount: true,
         date: true,
       },
-      orderBy: { date: "desc" },
     });
+
+    return this.aggregateByMonth(transactions, monthsLimit);
+  };
+
+  public getMonthlyAggregatesByCategories = async (
+    userId: string,
+    categoryIds: string[],
+    monthsLimit = 6,
+  ) => {
+    const empty = new Map<
+      string,
+      Array<{ monthKey: string; total: number }>
+    >();
+    if (!categoryIds.length) return empty;
+
+    const { windowStart, windowEnd } = this.monthlyWindow(monthsLimit);
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        categoryId: { in: categoryIds },
+        type: "EXPENSE",
+        date: { gte: windowStart, lt: windowEnd },
+      },
+      select: {
+        categoryId: true,
+        amount: true,
+        date: true,
+      },
+    });
+
+    const grouped = new Map<string, Array<{ amount: number; date: Date }>>();
+    transactions.forEach((t) => {
+      if (!t.categoryId) return;
+      const list = grouped.get(t.categoryId) || [];
+      list.push({ amount: t.amount, date: t.date });
+      grouped.set(t.categoryId, list);
+    });
+
+    const result = new Map<
+      string,
+      Array<{ monthKey: string; total: number }>
+    >();
+    grouped.forEach((list, categoryId) => {
+      result.set(categoryId, this.aggregateByMonth(list, monthsLimit));
+    });
+
+    return result;
+  };
+
+  private monthlyWindow = (monthsLimit: number) => {
+    const windowEnd = new Date();
+    windowEnd.setDate(1);
+    windowEnd.setHours(0, 0, 0, 0);
+
+    const windowStart = new Date(
+      windowEnd.getFullYear(),
+      windowEnd.getMonth() - monthsLimit,
+      1,
+    );
+
+    return { windowStart, windowEnd };
+  };
+
+  private aggregateByMonth = (
+    transactions: Array<{ amount: number; date: Date }>,
+    monthsLimit: number,
+  ) => {
+    const { windowEnd } = this.monthlyWindow(monthsLimit);
+
+    const monthKeys: string[] = [];
+    for (let i = 1; i <= monthsLimit; i++) {
+      const d = new Date(windowEnd.getFullYear(), windowEnd.getMonth() - i, 1);
+      monthKeys.push(
+        `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`,
+      );
+    }
 
     const aggregates = new Map<string, number>();
-
     transactions.forEach((t) => {
-      const year = t.date.getFullYear();
-      const month = t.date.getMonth() + 1;
-      const key = `${year}-${month.toString().padStart(2, "0")}`;
-
-      const current = aggregates.get(key) || 0;
-      aggregates.set(key, current + Math.abs(Number(t.amount)));
+      const key = `${t.date.getFullYear()}-${(t.date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}`;
+      aggregates.set(key, (aggregates.get(key) || 0) + Math.abs(Number(t.amount)));
     });
 
-    return Array.from(aggregates.entries())
-      .map(([monthKey, total]) => ({ monthKey, total }))
-      .sort((a, b) => b.monthKey.localeCompare(a.monthKey)); // Most recent first
+    if (aggregates.size === 0) return [];
+
+    return monthKeys.map((monthKey) => ({
+      monthKey,
+      total: aggregates.get(monthKey) || 0,
+    }));
   };
 
   public getAllForExport = async (

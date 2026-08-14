@@ -97,3 +97,15 @@ export const resetPasswordSchema = z.object({
 });
 
 export type ResetPasswordDTO = z.infer<typeof resetPasswordSchema>;
+
+export const verifyEmailSchema = z.object({
+    token: z.string().min(1, { message: "Token diperlukan" }),
+});
+
+export type VerifyEmailDTO = z.infer<typeof verifyEmailSchema>;
+
+export const resendVerificationSchema = z.object({
+    email: z.string().nonempty({ message: "Email tidak boleh kosong" }).email({ message: "Email tidak valid" }).transform(s => s.toLowerCase()),
+});
+
+export type ResendVerificationDTO = z.infer<typeof resendVerificationSchema>;

@@ -37,6 +37,7 @@ if (config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET) {
                         user = await UserRepository.create({
                             name: profile.displayName,
                             email,
+                            emailVerifiedAt: new Date(),
                         });
                     } else if (user.password) {
                         return done(null, false, { message: "Email sudah terdaftar. Silakan masuk menggunakan kata sandi." });

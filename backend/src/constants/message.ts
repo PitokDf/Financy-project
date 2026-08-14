@@ -16,6 +16,7 @@ export const MessageCodes = {
     VALIDATION_FAILED: 'VALIDATION_FAILED',
     INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
     TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
+    EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
 
     // Server Errors
     INTERNAL_ERROR: 'INTERNAL_ERROR',
@@ -41,6 +42,7 @@ export const Messages = {
     VALIDATION_FAILED: "Validasi gagal",
     INVALID_CREDENTIALS: "Email atau kata sandi salah",
     TOO_MANY_REQUESTS: "Terlalu banyak permintaan",
+    EMAIL_NOT_VERIFIED: "Email belum diverifikasi. Silakan verifikasi email Anda terlebih dahulu.",
     UNPROCESSABLE_ENTITY: "Permintaan tidak dapat diproses",
 
     INTERNAL_ERROR: "Terjadi kesalahan pada server",
